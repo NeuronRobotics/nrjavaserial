@@ -6,7 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class NativeResource {
-	public void load(String libraryName) {		
+	public void load(String libraryName) {
+		System.out.println("Loading the NRjavaSerial native lib...");
 		if(System.getProperty(libraryName + ".userlib") != null) {
 			try {
 				if(System.getProperty(libraryName + ".userlib").equalsIgnoreCase("sys")) {
@@ -19,11 +20,14 @@ public class NativeResource {
 				throw new NativeResourceException("Unable to load native resource from given path.\n" + e.getLocalizedMessage());
 			}
 		}
-			
-		loadLib(libraryName);	
+		
+		System.out.println("Attempting to load the native resource from Android..."+libraryName);
+		System.loadLibrary(libraryName.substring(libraryName.indexOf("lib")+3));
+		
 	}
 
 	private void loadLib(String name) {
+		System.out.println("Loading NRjavaSerial from the jar...");
 		try {
 			InputStream resourceSource = locateResource(name);
 			File resourceLocation = prepResourceLocation(name);
@@ -38,6 +42,8 @@ public class NativeResource {
 	private InputStream locateResource(String name) {
 		name += OSUtil.getExtension();
 		String file="";
+		/*
+		 * Unused on android
 		if(OSUtil.isOSX()) {
 			file="/native/osx/" + name;
 		}else if(OSUtil.isWindows()) {
@@ -60,8 +66,13 @@ public class NativeResource {
 				}
 			}
 		}
-		//System.out.println("Loading native file: "+file+" for os arch: "+OSUtil.getOsArch());
-		return getClass().getResourceAsStream(file);
+		*/
+		file = "/native/android/libs/armeabi/" + name;
+		System.out.println("Loading native file: "+file+" for os arch: "+OSUtil.getOsArch());
+		InputStream s =getClass().getResourceAsStream(file);
+		if(s==null)
+			throw new NativeResourceException("Unable to load deployed native resource from Jar, resource not existant");
+		return s;
 	}
 	
 	private void loadResource(File resource) {
@@ -156,6 +167,13 @@ public class NativeResource {
 			return getOsArch().startsWith("arm");
 		}
 		public static boolean isCortexA8(){
+			if(isARM()){
+				//TODO check for cortex a8 vs arm9 generic
+				return true;
+			}
+			return false;
+		}
+		public static boolean isAndroid(){
 			if(isARM()){
 				//TODO check for cortex a8 vs arm9 generic
 				return true;

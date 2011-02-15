@@ -4,7 +4,7 @@
  
   <property name="app.path"      value="/${app.name}"/>
   <property name="build.home"    value="${basedir}/build"/>
-  <property name="lib.home"      value="${basedir}/lib"/>
+  <property name="build.native"    value="${basedir}/build/native"/>
   <property name="dist.home"     value="${basedir}/target"/>
   <property name="docs.home"     value="${basedir}/docs"/>
   <property name="src.home"      value="${basedir}/src"/>
@@ -26,19 +26,15 @@
   </target>
 
   <target name="prepare" description="Create the file structure for assembly">
-    <mkdir  dir="${build.home}"/>
-  	
-    <mkdir  dir="${build.home}/lib"/>
-  	
-    <copy  todir="${build.home}/lib">
-    	<fileset dir="${basedir}/lib" includes="*"/>
-    </copy>
+	    <mkdir  dir="${build.home}"/>
+	    <mkdir  dir="${build.native}"/>
+    	<mkdir  dir="${build.native}/android"/>
+    	<mkdir  dir="${build.native}/android/libs"/>
+    	<mkdir  dir="${build.native}/android/libs/armeabi"/>
   </target>
 
   <path id="compile.classpath">
-    <fileset dir="${lib.home}">
-      <include name="*.jar"/>
-    </fileset>  	
+    
   </path>
 	
   <target name="compile" depends="prepare"
@@ -55,6 +51,9 @@
     <copy  todir="${build.home}">
       <fileset dir="${src.home}" excludes="**/*.java"/>
     </copy>
+  	<copy  todir="${build.native}/android/libs/armeabi">
+  	      <fileset dir="${basedir}/libs/armeabi/" />
+  	</copy>	
   </target>
 
   <target name="dist"
@@ -67,6 +66,8 @@
       </manifest>
       <fileset dir="build">
         <include name="**/*.class"/>
+    	<!--<include name="**/*.so"/>-->
+    		
         <exclude name="test/*.class"/>
       </fileset>
     </jar>
