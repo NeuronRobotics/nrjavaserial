@@ -71,31 +71,6 @@ struct preopened *preopened_port = NULL;
 #define RXTXVersion(foo) Java_gnu_io_RXTXVersion_ ## foo
 #define RXTXCommDriver(foo) Java_gnu_io_RXTXCommDriver_ ## foo
 
-#if defined(__sun__) || defined(__hpux__)
-/*----------------------------------------------------------
-cfmakeraw
-
-   accept:      termios to be set to raw
-   perform:     initializes the termios structure.
-   return:      int 0 on success
-   exceptions:  none
-   comments:    this is how linux cfmakeraw works.
-		termios(3) manpage
-----------------------------------------------------------*/
-
-int cfmakeraw ( struct termios *term )
-{
-	ENTER( "cfmakeraw" );
-	term->c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
-	term->c_oflag &= ~OPOST;
-	term->c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
-	term->c_cflag &= ~(CSIZE|PARENB);
-	term->c_cflag |= CS8;
-	LEAVE( "cfmakeraw" );
-	return( 0 );
-}
-#endif /* __sun__  || __hpux__ */
-
 #ifdef DEBUG_TIMING
 struct timeval snow, enow, seloop, eeloop;
 #define report_time_eventLoop( ) { \
