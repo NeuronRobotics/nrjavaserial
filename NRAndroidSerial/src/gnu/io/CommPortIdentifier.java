@@ -322,7 +322,11 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 				//and writing them into our CommPortIndex through our method
 				//{@link #addPortName(java.lang.String, int, gnu.io.CommDriver)}
 				//This works while lock on Sync is held
+				
+				//kharrington
 				CommDriver RXTXDriver = (CommDriver) Class.forName("gnu.io.RXTXCommDriver").newInstance();
+				//CommDriver RXTXDriver = new RXTXCommDriver();
+				
 				RXTXDriver.initialize();
 				//Restore old CommPortIdentifier objects where possible, 
 				//in order to support proper ownership event handling.
