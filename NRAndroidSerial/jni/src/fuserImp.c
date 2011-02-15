@@ -3,13 +3,7 @@
 #else /* dima */
 #include "../include/gnu_io_CommPortIdentifier.h"
 #endif /* dima */
-#ifndef __linux__
-JNIEXPORT jstring JNICALL Java_gnu_io_CommPortIdentifier_native_1psmisc_1report_1owner (JNIEnv *env, jobject obj, jstring arg)
-{
-	return (*env)->NewStringUTF(env, "Unknown Application");
-	/* return("Unknown Application\n"); */
-}
-#else
+
 /* loosly based on fuser.c by Werner Almesberger. */
 
 /* Copyright 1993-1998 Werner Almesberger. See file COPYING for details. 
@@ -304,4 +298,4 @@ JNIEXPORT jstring JNICALL Java_gnu_io_CommPortIdentifier_native_1psmisc_1report_
 	(*env)->ReleaseStringUTFChars(env, arg, str);
 	return (*env)->NewStringUTF(env, returnstring);
 }
-#endif /* __linux__ */
+
