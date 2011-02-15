@@ -325,7 +325,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 				
 				//kharrington
 				CommDriver RXTXDriver = (CommDriver) Class.forName("gnu.io.RXTXCommDriver").newInstance();
-				//CommDriver RXTXDriver = new RXTXCommDriver();
+				//RXTXCommDriver RXTXDriver = new RXTXCommDriver();
 				
 				RXTXDriver.initialize();
 				//Restore old CommPortIdentifier objects where possible, 

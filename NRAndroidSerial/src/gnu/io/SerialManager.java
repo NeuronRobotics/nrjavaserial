@@ -5,6 +5,7 @@ public class SerialManager {
 	private static SerialManager instance;
 	private static boolean loaded = false;
 	private SerialManager() {
+		System.out.println("Starting the NRjavaSerial Serial Manager...");
 		if(!loaded) {
 			loaded = true;
 			
