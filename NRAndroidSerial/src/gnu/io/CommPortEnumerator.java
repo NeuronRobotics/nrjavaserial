@@ -91,8 +91,10 @@ class CommPortEnumerator implements Enumeration
 		if(debug) System.out.println("CommPortEnumerator:nextElement()");
 		synchronized (CommPortIdentifier.Sync)
 		{
-			if(index != null) index = index.next;
-			else index=CommPortIdentifier.CommPortIndex;
+			if(index != null) 
+				index = index.next;
+			else 
+				index=CommPortIdentifier.CommPortIndex;
 			return(index);
 		}
 	}
@@ -109,9 +111,10 @@ class CommPortEnumerator implements Enumeration
 		if(debug) System.out.println("CommPortEnumerator:hasMoreElements() " + CommPortIdentifier.CommPortIndex == null ? false : true );
 		synchronized (CommPortIdentifier.Sync)
 		{
-			if(index != null) return index.next == null ? false : true;
-			else return CommPortIdentifier.CommPortIndex == null ?
-				false : true;
+			if(index != null) 
+				return index.next == null ? false : true;
+			else 
+				return CommPortIdentifier.CommPortIndex == null ? false : true;
 		}
 	}
 }
