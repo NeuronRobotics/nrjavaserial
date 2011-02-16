@@ -4154,6 +4154,7 @@ RXTXVersion.nativeGetVersion
 JNIEXPORT jstring JNICALL RXTXVersion(nativeGetVersion) (JNIEnv *env,
 	jclass jclazz )
 {
+	printf("Native getting nativeversion");
 	return (*env)->NewStringUTF( env, "RXTX-2.2pre2" );
 }
 
