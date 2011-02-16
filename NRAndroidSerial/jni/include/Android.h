@@ -1,4 +1,6 @@
-
+#define DEBUG 1
+#include <sys/utsname.h>
+#define UTS_RELEASE "2.6.17-1.2630.fc6"
 #include "/usr/include/linux/serial.h"
 #include "config.h"
 #include "gnu_io_RXTXPort.h"

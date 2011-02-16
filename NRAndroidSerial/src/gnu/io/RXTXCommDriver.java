@@ -123,7 +123,6 @@ public class RXTXCommDriver implements CommDriver
 		deviceDirectory.
 		registerScannedPorts() assigns CandidatePortPrefixes to
 		something less than 50 prefixes.
-
 		Trent
 		*/
 
@@ -198,6 +197,26 @@ public class RXTXCommDriver implements CommDriver
 			}
 		}
 	}
+		private void checkLinux(String PortName, int PortType){
+			String root="/dev/";
+        	File dir = new File(root);
+        	String[] children = dir.list(); 
+        	if (children != null) { // Either dir does not exist or is not a directory 
+    			for (String filename :children){ // Get filename of file or directory 
+    				String p = root+filename;
+    				if (filename.contains("ttyACM") || filename.contains("rfcomm") || filename.contains("ttyS")|| filename.contains("ttyUSB") ){
+    					if (testRead(p,PortType)){
+    						CommPortIdentifier.addPortName(p,PortType,this);
+    					}else{
+    						System.err.println("Failed to read: "+p);
+    					}
+    					
+    				}
+    				
+    			} 
+        		
+        	}
+		}
         private void registerValidPorts(
 		String CandidateDeviceNames[],
 		String ValidPortPrefixes[],
@@ -282,6 +301,8 @@ public class RXTXCommDriver implements CommDriver
 					if( osName.equals("Solaris") ||
 						osName.equals("SunOS"))
 						checkSolaris(PortName,PortType);
+					else if(osName.equals("Linux"))
+						checkLinux(PortName,PortType);
 					else if (testRead(PortName, PortType))
 					{
 						CommPortIdentifier.addPortName(
