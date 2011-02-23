@@ -19,7 +19,6 @@ public class NativeResource {
 				throw new NativeResourceException("Unable to load native resource from given path.\n" + e.getLocalizedMessage());
 			}
 		}
-			
 		loadLib(libraryName);	
 	}
 
@@ -59,8 +58,9 @@ public class NativeResource {
 					file="/native/linux/x86_32/" + name;
 				}
 			}
+		}else{
+			System.err.println("Can't load native file: "+name+" for os arch: "+OSUtil.getOsArch());
 		}
-		//System.out.println("Loading native file: "+file+" for os arch: "+OSUtil.getOsArch());
 		return getClass().getResourceAsStream(file);
 	}
 	
@@ -163,15 +163,15 @@ public class NativeResource {
 			return false;
 		}
 		public static boolean isWindows() {
-			return getOsName().startsWith("Windows");
+			return getOsName().toLowerCase().startsWith("windows") ||getOsName().toLowerCase().startsWith("microsoft") || getOsName().toLowerCase().startsWith("ms");
 		}
 		
 		public static boolean isLinux() {
-			return getOsName().startsWith("Linux");
+			return getOsName().toLowerCase().startsWith("linux");
 		}
 		
 		public static boolean isOSX() {
-			return getOsName().startsWith("Mac OS X");
+			return getOsName().toLowerCase().startsWith("mac");
 		}
 		
 		public static String getExtension() {
