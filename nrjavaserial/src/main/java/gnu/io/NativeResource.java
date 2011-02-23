@@ -16,6 +16,7 @@ public class NativeResource {
 				}
 				return;
 			} catch (Exception e){
+				e.printStackTrace();
 				throw new NativeResourceException("Unable to load native resource from given path.\n" + e.getLocalizedMessage());
 			}
 		}
@@ -30,6 +31,7 @@ public class NativeResource {
 			loadResource(resourceLocation);
 			
 		} catch (IOException ex) {
+			ex.printStackTrace();
 			throw new NativeResourceException("Unable to load deployed native resource");
 		}
 	}
@@ -60,7 +62,9 @@ public class NativeResource {
 			}
 		}else{
 			System.err.println("Can't load native file: "+name+" for os arch: "+OSUtil.getOsArch());
+			return null;
 		}
+		System.out.println("Loading "+file);
 		return getClass().getResourceAsStream(file);
 	}
 	
