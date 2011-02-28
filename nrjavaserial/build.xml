@@ -86,6 +86,6 @@
    	</javadoc>
   </target>
 
-  <target name="deploy" depends="clean, prepare, compile, dist, javadoc"
+  <target name="deploy" depends="clean, prepare, compile, dist"
    description="Builds the full deployment" />
 </project>
