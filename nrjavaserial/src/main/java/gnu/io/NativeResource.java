@@ -29,20 +29,23 @@ public class NativeResource {
 			File resourceLocation = prepResourceLocation(name);
 			copyResource(resourceSource, resourceLocation);
 			loadResource(resourceLocation);
-			RXTXCommDriver.nativeGetVersion();
-			System.out.println("JNI test ok");
 		} catch (UnsatisfiedLinkError ex) {
 			try{
 				System.loadLibrary(name.substring(name.indexOf("lib")+3));
-				RXTXCommDriver.nativeGetVersion();
 			}catch(UnsatisfiedLinkError e){
-				System.err.println("Failed to load local JNI as well as: \n"+System.getProperty("java.library.path"));
-				e.printStackTrace();
-				throw new NativeResourceException("Unable to load deployed native resource");
+				try{
+					System.loadLibrary("rxtxSerial");			
+				}catch(UnsatisfiedLinkError er){
+					System.err.println("Failed to load local JNI as well as: \n"+System.getProperty("java.library.path"));
+					er.printStackTrace();
+					throw new NativeResourceException("Unable to load deployed native resource");
+				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		//RXTXCommDriver.nativeGetVersion();
+		System.out.println("JNI test ok");
 	}
 	
 	private InputStream locateResource(String name) {
