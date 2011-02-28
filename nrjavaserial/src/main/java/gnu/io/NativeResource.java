@@ -25,12 +25,18 @@ public class NativeResource {
 
 	private void loadLib(String name) {
 		try {
+			//System.out.println("Locating resource");
 			InputStream resourceSource = locateResource(name);
+			//System.out.println("Preping resource location");
 			File resourceLocation = prepResourceLocation(name);
+			//System.out.println("Copying resource");
 			copyResource(resourceSource, resourceLocation);
+			//System.out.println("Loading resource");
 			loadResource(resourceLocation);
-			
-		} catch (IOException ex) {
+			System.out.println("Native Library Loaded");
+			RXTXCommDriver.nativeGetVersion();
+			System.out.println("JNI test ok");
+		} catch (Exception ex) {
 			ex.printStackTrace();
 			throw new NativeResourceException("Unable to load deployed native resource");
 		}
@@ -69,6 +75,8 @@ public class NativeResource {
 	}
 	
 	private void loadResource(File resource) {
+		if(!resource.canRead())
+			throw new RuntimeException("Cant open JNI file: "+resource.getAbsolutePath());
 		System.load(resource.getAbsolutePath());
 	}
 
@@ -148,12 +156,13 @@ public class NativeResource {
 		if(fd == null || !fd.canRead()) {
 			throw new NativeResourceException("Unable to deploy native resource");
 		}
-		
+		System.out.println("Local file: "+fd.getAbsolutePath());
 		return fd;
 	}
 	
 	private static class OSUtil {
 		public static boolean is64Bit() {
+			//System.out.println("Arch: "+getOsArch());
 			return getOsArch().startsWith("x86_64") || getOsArch().startsWith("amd64");
 		}
 		public static boolean isARM() {
@@ -167,6 +176,7 @@ public class NativeResource {
 			return false;
 		}
 		public static boolean isWindows() {
+			//System.out.println("OS name: "+getOsName());
 			return getOsName().toLowerCase().startsWith("windows") ||getOsName().toLowerCase().startsWith("microsoft") || getOsName().toLowerCase().startsWith("ms");
 		}
 		

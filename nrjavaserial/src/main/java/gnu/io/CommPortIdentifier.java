@@ -109,7 +109,8 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 		} 
 		catch (Throwable e) 
 		{
-			System.err.println(e + " thrown while loading " + "gnu.io.RXTXCommDriver");
+			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 
 		String OS;
