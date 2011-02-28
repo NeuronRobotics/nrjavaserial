@@ -1,0 +1,91 @@
+<project name="Neuron Robotics Java Serial" default="deploy" basedir=".">
+
+  <property file="build.properties"/>
+ 
+  <property name="app.path"      value="/${app.name}"/>
+  <property name="build.home"    value="${basedir}/build"/>
+  <property name="lib.home"      value="${basedir}/src/main/c/resources"/>
+  <property name="dist.home"     value="${basedir}/target"/>
+  <property name="docs.home"     value="${basedir}/docs"/>
+  <property name="src.home"      value="${basedir}/src/main/java"/>
+	
+	
+  <property name="compile.debug"       value="true"/>
+  <property name="compile.deprecation" value="false"/>
+  <property name="compile.optimize"    value="true"/>
+
+  <property name="compile.debug"       value="true"/>
+  <property name="compile.deprecation" value="false"/>
+  <property name="compile.optimize"    value="true"/>
+	
+  <property name="jar.module" value="${app.name}-${app.version}.jar"/>
+	
+  <target name="clean"
+   description="Delete old build and dist directories">
+    <delete dir="${build.home}"/>
+    <delete dir="${dist.home}"/>
+  </target>
+
+  <target name="prepare" description="Create the file structure for assembly">
+    <mkdir  dir="${build.home}"/>
+  	
+    <mkdir  dir="${build.home}/lib"/>
+  	
+    <copy  todir="${build.home}/lib">
+    	<fileset dir="${lib.home}" includes="**/*"/>
+    </copy>
+  </target>
+
+  <path id="compile.classpath">
+    <fileset dir="${lib.home}">
+      <include name="*.jar"/>
+    </fileset>  	
+  </path>
+	
+  <target name="compile" depends="prepare"
+   description="Compile Java sources">
+    <mkdir    dir="${build.home}"/>
+    <javac srcdir="${src.home}"
+          destdir="${build.home}"
+            debug="${compile.debug}"
+      deprecation="${compile.deprecation}"
+         optimize="${compile.optimize}">
+        <classpath refid="compile.classpath"/>
+    </javac>
+  	
+    <copy  todir="${build.home}">
+      <fileset dir="${src.home}" excludes="**/*.java"/>
+    </copy>
+  </target>
+
+  <target name="dist"
+   description="Create binary distribution">
+  	<mkdir dir="${dist.home}/docs/api"/>
+  	
+    <jar jarfile="${dist.home}/${app.name}-${app.version}.jar">
+      <manifest>
+        <attribute name="Sealed" value="true"/>
+      </manifest>
+      <fileset dir="build">
+        <include name="**/*.class"/>
+      	<include name="**/*.png"/>
+        <exclude name="test/*.class"/>
+      </fileset>
+      <fileset dir="${build.home}/lib" includes="**/*" />
+    </jar>
+  	
+  </target>	
+	
+  <target name="javadoc" depends="compile"
+   description="Create Javadoc API documentation">
+    
+    <javadoc sourcepath="${src.home}" destdir="${dist.home}/docs/api" packagenames="*" 
+    	source="1.6" splitindex="true" use="true" version="true">
+      <classpath refid="compile.classpath"/> 
+      <bottom><![CDATA[<script type="text/javascript" src="/googleanalytics.js"></script>]]></bottom>
+   	</javadoc>
+  </target>
+
+  <target name="deploy" depends="clean, prepare, compile, dist, javadoc"
+   description="Builds the full deployment" />
+</project>
