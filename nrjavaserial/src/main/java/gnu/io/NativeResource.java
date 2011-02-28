@@ -33,12 +33,18 @@ public class NativeResource {
 			copyResource(resourceSource, resourceLocation);
 			//System.out.println("Loading resource");
 			loadResource(resourceLocation);
-			System.out.println("Native Library Loaded");
 			RXTXCommDriver.nativeGetVersion();
 			System.out.println("JNI test ok");
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			throw new NativeResourceException("Unable to load deployed native resource");
+		} catch (UnsatisfiedLinkError ex) {
+			try{
+				System.loadLibrary(name.substring(name.indexOf("lib")+3));
+			}catch(UnsatisfiedLinkError e){
+				System.err.println("Failed to load local JNI as well as: \n"+System.getProperty("java.library.path"));
+				e.printStackTrace();
+				throw new NativeResourceException("Unable to load deployed native resource");
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 	
