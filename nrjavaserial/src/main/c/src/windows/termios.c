@@ -1884,8 +1884,7 @@ show_DCB()
    win32api:     None
    comments:
 ----------------------------------------------------------*/
-void show_DCB( myDCB )
-{
+void show_DCB( DCB myDCB ){
 
 #ifdef DEBUG_HOSED
 	char message[80];
