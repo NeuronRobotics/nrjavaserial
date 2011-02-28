@@ -71,6 +71,7 @@ import java.util.StringTokenizer;
 /**
    This is the JavaComm for Linux driver.
 */
+@SuppressWarnings("unused")
 public class RXTXCommDriver implements CommDriver
 {
 
@@ -96,8 +97,9 @@ public class RXTXCommDriver implements CommDriver
 		String LibVersion;
 		try {
 		        LibVersion = RXTXVersion.nativeGetVersion();
-		} catch ( Error UnsatisfiedLinkError )
+		} catch ( Error er )
 		{
+			er.printStackTrace();
 			// for rxtx prior to 2.1.7
 			LibVersion = nativeGetVersion();
 		}
