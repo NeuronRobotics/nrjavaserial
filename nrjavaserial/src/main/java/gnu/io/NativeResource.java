@@ -25,19 +25,16 @@ public class NativeResource {
 
 	private void loadLib(String name) {
 		try {
-			//System.out.println("Locating resource");
 			InputStream resourceSource = locateResource(name);
-			//System.out.println("Preping resource location");
 			File resourceLocation = prepResourceLocation(name);
-			//System.out.println("Copying resource");
 			copyResource(resourceSource, resourceLocation);
-			//System.out.println("Loading resource");
 			loadResource(resourceLocation);
 			RXTXCommDriver.nativeGetVersion();
 			System.out.println("JNI test ok");
 		} catch (UnsatisfiedLinkError ex) {
 			try{
 				System.loadLibrary(name.substring(name.indexOf("lib")+3));
+				RXTXCommDriver.nativeGetVersion();
 			}catch(UnsatisfiedLinkError e){
 				System.err.println("Failed to load local JNI as well as: \n"+System.getProperty("java.library.path"));
 				e.printStackTrace();
