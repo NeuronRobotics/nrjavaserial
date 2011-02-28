@@ -101,7 +101,7 @@ public class RXTXCommDriver implements CommDriver
 		{
 			er.printStackTrace();
 			// for rxtx prior to 2.1.7
-			LibVersion = nativeGetVersion();
+			//LibVersion = nativeGetVersion();
 		}
 	}
 
@@ -113,7 +113,7 @@ public class RXTXCommDriver implements CommDriver
 	private native boolean testRead(String dev, int type);
 	private native String getDeviceDirectory();
 	// for rxtx prior to 2.1.7
-	public static native String nativeGetVersion();
+	//public static native String nativeGetVersion();
 
 	private final String[] getValidPortPrefixes(String CandidatePortPrefixes[])
 	{
