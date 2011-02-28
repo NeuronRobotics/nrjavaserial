@@ -26,6 +26,14 @@ LINKWIN32 =wine "C:\MinGW\bin\gcc.exe" -shared -Wl,--out-implib,librxtxSerial.a
 CCWIN64 = wine "C:\MinGW\bin\gcc.exe" $(WININCLUDE32)  -m64 -O3 -Wall -c -DBUILD_DLL
 LINKWIN64 =wine "C:\MinGW\bin\gcc.exe" -shared -m64 -Wl,--out-implib,librxtxSerial.a
 
+#Native Windows
+WININCLUDE32N=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\MinGW\include" -I"C:\Program Files\Java\jdk1.6.0_22\include\win32" -I"C:\Program Files\Java\jdk1.6.0_22\include"
+CCWIN32N = "C:\MinGW\bin\gcc.exe" $(WININCLUDE32N) -O3 -Wall -c -DBUILD_DLL
+LINKWIN32N ="C:\MinGW\bin\gcc.exe" -shared -Wl,--out-implib,librxtxSerial.a
+
+CCWIN64N = "C:\MinGW\bin\gcc.exe" $(WININCLUDE32N) -O3 -Wall -c -DBUILD_DLL
+LINKWIN64N ="C:\MinGW\bin\gcc.exe" -shared  -Wl,--out-implib,librxtxSerial.a
+
 all:
 	echo "Specify a system: make linux, make windows, make osx"
 dirs:
@@ -41,6 +49,15 @@ dirs:
 	 mkdir -p resources/native/windows/x86_64/; \
 	 mkdir -p resources/native/osx/; \
 	 fi
+	 
+windowsLocal:
+	$(CCWIN32N) src/windows/init.c -o build/init.o
+	$(CCWIN32N) src/windows/termios.c -o build/termios.o
+	$(CCWIN32N) src/fixup.c -o build/fixup.o
+	$(CCWIN32N) src/fuserImp.c -o build/fuserImp.o
+	$(CCWIN32N) src/SerialImp.c -o build/SerialImp.o
+	$(LINKWIN32N) -o"resources/native/windows/x86_32/libNRJavaSerial.dll" build/SerialImp.o build/fuserImp.o build/fixup.o build/termios.o build/init.o
+	
 windows:dirs
 	export WINEPREFIX=/home/hephaestus/.wine/
 	$(CCWIN32) src/windows/init.c -o build/init.o
