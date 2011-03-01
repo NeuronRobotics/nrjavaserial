@@ -34,7 +34,7 @@ public class NativeResource {
 				System.loadLibrary(name.substring(name.indexOf("lib")+3));
 			}catch(UnsatisfiedLinkError e){
 				try{
-					System.loadLibrary("rxtxSerial");			
+					System.loadLibrary( "rxtxSerial");			
 				}catch(UnsatisfiedLinkError er){
 					System.err.println("Failed to load local JNI as well as: \n"+System.getProperty("java.library.path"));
 					er.printStackTrace();
@@ -44,7 +44,7 @@ public class NativeResource {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		//RXTXCommDriver.nativeGetVersion();
+		RXTXCommDriver.nativeGetVersion();
 		System.out.println("JNI test ok");
 	}
 	
@@ -218,6 +218,7 @@ public class NativeResource {
 			return System.getProperty("os.arch");
 		}
 		
+		@SuppressWarnings("unused")
 		public static String getIdentifier() {
 			return getOsName() + " : " + getOsArch();
 		}
