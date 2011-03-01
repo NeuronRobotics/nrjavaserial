@@ -87,5 +87,7 @@ public class RXTXVersion
 	{
 		return(Version);
 	}
-	public static native String nativeGetVersion();
+	public static String nativeGetVersion(){
+		return NativeResource.nativeGetVersion();
+	}
 }
