@@ -6,8 +6,11 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class NativeResource {
+	
+	public static native String nativeGetVersion();
+	
 	private boolean loaded = false;
-	public void load(String libraryName) {		
+	public synchronized void load(String libraryName) {		
 		if(System.getProperty(libraryName + ".userlib") != null) {
 			try {
 				if(System.getProperty(libraryName + ".userlib").equalsIgnoreCase("sys")) {
@@ -28,30 +31,43 @@ public class NativeResource {
 		if(loaded)
 			return;
 		loaded = true;
+		String libName = name.substring(name.indexOf("lib")+3);
 		try {
 			//start by assuming the library can be loaded from the jar
 			InputStream resourceSource = locateResource(name);
 			File resourceLocation = prepResourceLocation(name);
 			copyResource(resourceSource, resourceLocation);
 			loadResource(resourceLocation);
+			nativeGetVersion();
 		} catch (UnsatisfiedLinkError ex) {
 			try{
 				//check to see if the library is availible in standard locations
-				System.loadLibrary(name.substring(name.indexOf("lib")+3));
+				System.out.println("Trying to load: "+libName);
+				System.loadLibrary(libName);
+				nativeGetVersion();
 			}catch(UnsatisfiedLinkError e){
 				try{
-					//last ditch effort to load
-					System.loadLibrary( "rxtxSerial");			
+					System.out.println("Trying to load: "+name);
+					//load whole name
+					System.loadLibrary( name);	
+					nativeGetVersion();
 				}catch(UnsatisfiedLinkError er){
-					System.err.println("Failed to load local JNI as well as: \n"+System.getProperty("java.library.path"));
-					er.printStackTrace();
-					throw new NativeResourceException("Unable to load deployed native resource");
+					try{
+						name = "rxtxSerial";
+						System.out.println("Trying to load: "+name);
+						//last ditch effort to load
+						System.loadLibrary( name);	
+						nativeGetVersion();
+					}catch(UnsatisfiedLinkError err){
+						System.err.println("Failed to load all possible JNI local and from: \n"+System.getProperty("java.library.path"));
+						err.printStackTrace();
+						throw new NativeResourceException("Unable to load deployed native resource");
+					}
 				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		RXTXCommDriver.nativeGetVersion();
 		System.out.println("JNI test ok");
 	}
 	
@@ -108,6 +124,7 @@ public class NativeResource {
 
 	private File prepResourceLocation(String fileName) {		
 		String tmpDir = System.getProperty("java.io.tmpdir");
+		//String tmpDir = "M:\\";
 		if ((tmpDir == null) || (tmpDir.length() == 0)) {
 			tmpDir = "tmp";
 		}
