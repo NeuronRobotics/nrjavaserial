@@ -96,7 +96,7 @@ public class RXTXCommDriver implements CommDriver
 		String JarVersion = RXTXVersion.getVersion();
 		String LibVersion;
 		try {
-		        LibVersion = RXTXVersion.nativeGetVersion();
+		        LibVersion =  RXTXVersion.nativeGetVersion();
 		} catch ( Error er )
 		{
 			er.printStackTrace();
@@ -113,8 +113,9 @@ public class RXTXCommDriver implements CommDriver
 	private native boolean testRead(String dev, int type);
 	private native String getDeviceDirectory();
 	// for rxtx prior to 2.1.7
-	public static native String nativeGetVersion();
-
+	public static String nativeGetVersion(){
+		return NativeResource.nativeGetVersion();
+	}
 	private final String[] getValidPortPrefixes(String CandidatePortPrefixes[])
 	{
 		/*
