@@ -19,23 +19,25 @@ CCLINANDROID=~/Desktop/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3/pr
 LINKLINANDROID=~/Desktop/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/arm-linux-androideabi/bin/g++ -shared
 
 #Wine Windows
-WINLINKOPT = -shared -Wl,--out-implib,--add-stdcall-alias
+WINLINKOPT = -shared -Wl,--out-implib,--add-stdcall-alias -DBUILD_DLL
+WINCCOPT = -O3 -Wall -c -DBUILD_DLL
 
 WININCLUDE32=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\MinGW\include" -I"C:\Program Files\Java\jdk1.6.0_22\include\win32" -I"C:\Program Files\Java\jdk1.6.0_22\include"
-CCWIN32 = wine "C:\MinGW\bin\gcc.exe" $(WININCLUDE32) -O3 -Wall -c -DBUILD_DLL
+CCWIN32 = wine "C:\MinGW\bin\gcc.exe" $(WININCLUDE32) -m32 $(WINCCOPT)
 LINKWIN32 =wine "C:\MinGW\bin\gcc.exe" $(WINLINKOPT)
 
 WININCLUDE64=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\MinGW64\include" -I"C:\Program Files\Java\jdk1.6.0_22\include\win32" -I"C:\Program Files\Java\jdk1.6.0_22\include"
-CCWIN64 = wine "C:\MinGW64\bin\gcc.exe" $(WININCLUDE64)  -m64 -O3 -Wall -c -DBUILD_DLL
+CCWIN64 = wine "C:\MinGW64\bin\gcc.exe" $(WININCLUDE64) -m64 $(WINCCOPT)
 LINKWIN64 =wine "C:\MinGW64\bin\gcc.exe" $(WINLINKOPT)
 
 #Native Windows
-WININCLUDE32N=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\MinGW32\include" -I"C:\Program Files\Java\jdk1.6.0_22\include\win32" -I"C:\Program Files\Java\jdk1.6.0_22\include"
-CCWIN32N = "C:\MinGW32\bin\gcc.exe" $(WININCLUDE32N) -O3 -Wall -c -DBUILD_DLL
+JDKDIR = "C:\Program Files\Java\jdk1.6.0_24\include\"
+WININCLUDE32N=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\MinGW32\include" -I"C:\Program Files\Java\jdk1.6.0_24\include\"
+CCWIN32N = "C:\MinGW32\bin\gcc.exe" $(WININCLUDE32N) -m32 $(WINCCOPT)
 LINKWIN32N ="C:\MinGW32\bin\gcc.exe" $(WINLINKOPT)
 
-WININCLUDE64N=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\MinGW64\include" -I"C:\Program Files\Java\jdk1.6.0_22\include\win32" -I"C:\Program Files\Java\jdk1.6.0_22\include"
-CCWIN64N = "C:\MinGW64\bin\gcc.exe" $(WININCLUDE64N) -m64 -O3 -Wall -c -DBUILD_DLL
+WININCLUDE64N=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\MinGW64\include" -I"C:\Program Files\Java\jdk1.6.0_24\include\"
+CCWIN64N = "C:\MinGW64\bin\gcc.exe" $(WININCLUDE64N) -m64 $(WINCCOPT)
 LINKWIN64N ="C:\MinGW64\bin\gcc.exe" $(WINLINKOPT)
 
 all:
@@ -55,19 +57,21 @@ dirs:
 	 fi
 	 
 windowsLocal:
-	$(CCWIN32N) src/windows/init.c -o build/init.o
-	$(CCWIN32N) src/windows/termios.c -o build/termios.o
-	$(CCWIN32N) src/fixup.c -o build/fixup.o
-	$(CCWIN32N) src/fuserImp.c -o build/fuserImp.o
-	$(CCWIN32N) src/SerialImp.c -o build/SerialImp.o
+	$(CCWIN64N) -c src/windows/init.c -o build/init.o
+	$(CCWIN64N) -c src/windows/termios.c -o build/termios.o
+	$(CCWIN64N) -c src/fixup.c -o build/fixup.o
+	$(CCWIN64N) -c src/fuserImp.c -o build/fuserImp.o
+	$(CCWIN64N) -c src/SerialImp.c -o build/SerialImp.o
+	$(LINKWIN64N) -o"resources/native/windows/x86_64/libNRJavaSerial.dll" build/SerialImp.o build/fuserImp.o build/fixup.o build/termios.o build/init.o
+	
+	$(CCWIN32N) -c src/windows/init.c -o build/init.o
+	$(CCWIN32N) -c src/windows/termios.c -o build/termios.o
+	$(CCWIN32N) -c src/fixup.c -o build/fixup.o
+	$(CCWIN32N) -c src/fuserImp.c -o build/fuserImp.o
+	$(CCWIN32N) -c src/SerialImp.c -o build/SerialImp.o
 	$(LINKWIN32N) -o"resources/native/windows/x86_32/libNRJavaSerial.dll" build/SerialImp.o build/fuserImp.o build/fixup.o build/termios.o build/init.o
 		
-	$(CCWIN64N) src/windows/init.c -o build/init.o
-	$(CCWIN64N) src/windows/termios.c -o build/termios.o
-	$(CCWIN64N) src/fixup.c -o build/fixup.o
-	$(CCWIN64N) src/fuserImp.c -o build/fuserImp.o
-	$(CCWIN64N) src/SerialImp.c -o build/SerialImp.o
-	$(LINKWIN64N) -o"resources/native/windows/x86_64/libNRJavaSerial.dll" build/SerialImp.o build/fuserImp.o build/fixup.o build/termios.o build/init.o
+
 	
 windows:dirs
 	export WINEPREFIX=/home/hephaestus/.wine/
