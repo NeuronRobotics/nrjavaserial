@@ -85,7 +85,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 	private int PortType;
 	private final static boolean debug = false;
 	static Object Sync;
-	Vector ownershipListener;
+	Vector<CommPortOwnershipListener> ownershipListener;
 
 
 
@@ -193,7 +193,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 
 		if( ownershipListener == null )
 		{
-			ownershipListener = new Vector();
+			ownershipListener = new Vector<CommPortOwnershipListener>();
 		}
 
 		/* is the ownership listener already in the list? */
@@ -303,14 +303,14 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 	exceptions:
 	comments:
 ------------------------------------------------------------------------------*/
-	static public Enumeration getPortIdentifiers() 
+	static public Enumeration<?> getPortIdentifiers() 
 	{ 
 		if(debug) System.out.println("static CommPortIdentifier:getPortIdentifiers()");
 		//Do not allow anybody get any ports while we are re-initializing
 		//because the CommPortIndex points to invalid instances during that time
 		synchronized(Sync) {
 			//Remember old ports in order to restore them for ownership events later
-			HashMap oldPorts = new HashMap();
+			HashMap<String, CommPortIdentifier> oldPorts = new HashMap<String, CommPortIdentifier>();
 			CommPortIdentifier p = CommPortIndex;
 			while(p!=null) {
 				oldPorts.put(p.PortName, p);
@@ -527,7 +527,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 		if (ownershipListener != null)
 		{
 			CommPortOwnershipListener c;
-			for ( Enumeration e = ownershipListener.elements();
+			for ( Enumeration<CommPortOwnershipListener> e = ownershipListener.elements();
 				e.hasMoreElements(); 
 				c.ownershipChange(eventType))
 				c = (CommPortOwnershipListener) e.nextElement();
