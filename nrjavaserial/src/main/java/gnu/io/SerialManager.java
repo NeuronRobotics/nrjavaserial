@@ -12,7 +12,7 @@ public class SerialManager {
 				NativeResource nr = new NativeResource();
 				nr.load("libNRJavaSerial");
 			} catch(Exception e) {
-				e.printStackTrace();
+				
 			}
 		}
 	}

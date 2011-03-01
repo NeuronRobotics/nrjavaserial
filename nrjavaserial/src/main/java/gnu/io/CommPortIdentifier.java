@@ -85,7 +85,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 	private int PortType;
 	private final static boolean debug = false;
 	static Object Sync;
-	Vector<CommPortOwnershipListener> ownershipListener;
+	Vector ownershipListener;
 
 
 
@@ -109,8 +109,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 		} 
 		catch (Throwable e) 
 		{
-			e.printStackTrace();
-			throw new RuntimeException(e);
+			System.err.println(e + " thrown while loading " + "gnu.io.RXTXCommDriver");
 		}
 
 		String OS;
@@ -193,7 +192,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 
 		if( ownershipListener == null )
 		{
-			ownershipListener = new Vector<CommPortOwnershipListener>();
+			ownershipListener = new Vector();
 		}
 
 		/* is the ownership listener already in the list? */
@@ -303,14 +302,14 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 	exceptions:
 	comments:
 ------------------------------------------------------------------------------*/
-	static public Enumeration<CommPortIdentifier>  getPortIdentifiers() 
+	static public Enumeration getPortIdentifiers() 
 	{ 
 		if(debug) System.out.println("static CommPortIdentifier:getPortIdentifiers()");
 		//Do not allow anybody get any ports while we are re-initializing
 		//because the CommPortIndex points to invalid instances during that time
 		synchronized(Sync) {
 			//Remember old ports in order to restore them for ownership events later
-			HashMap<String, CommPortIdentifier> oldPorts = new HashMap<String, CommPortIdentifier>();
+			HashMap oldPorts = new HashMap();
 			CommPortIdentifier p = CommPortIndex;
 			while(p!=null) {
 				oldPorts.put(p.PortName, p);
@@ -527,7 +526,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 		if (ownershipListener != null)
 		{
 			CommPortOwnershipListener c;
-			for ( Enumeration<CommPortOwnershipListener> e = ownershipListener.elements();
+			for ( Enumeration e = ownershipListener.elements();
 				e.hasMoreElements(); 
 				c.ownershipChange(eventType))
 				c = (CommPortOwnershipListener) e.nextElement();

@@ -71,7 +71,6 @@ import java.util.StringTokenizer;
 /**
    This is the JavaComm for Linux driver.
 */
-@SuppressWarnings("unused")
 public class RXTXCommDriver implements CommDriver
 {
 
@@ -96,10 +95,9 @@ public class RXTXCommDriver implements CommDriver
 		String JarVersion = RXTXVersion.getVersion();
 		String LibVersion;
 		try {
-		        LibVersion =  RXTXVersion.nativeGetVersion();
-		} catch ( Error er )
+		        LibVersion = RXTXVersion.nativeGetVersion();
+		} catch ( Error UnsatisfiedLinkError )
 		{
-			er.printStackTrace();
 			// for rxtx prior to 2.1.7
 			LibVersion = nativeGetVersion();
 		}
@@ -113,9 +111,8 @@ public class RXTXCommDriver implements CommDriver
 	private native boolean testRead(String dev, int type);
 	private native String getDeviceDirectory();
 	// for rxtx prior to 2.1.7
-	public static String nativeGetVersion(){
-		return NativeResource.nativeGetVersion();
-	}
+	public static native String nativeGetVersion();
+
 	private final String[] getValidPortPrefixes(String CandidatePortPrefixes[])
 	{
 		/*
