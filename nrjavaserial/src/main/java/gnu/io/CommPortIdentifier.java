@@ -303,7 +303,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 	exceptions:
 	comments:
 ------------------------------------------------------------------------------*/
-	static public Enumeration<?> getPortIdentifiers() 
+	static public Enumeration<CommPortIdentifier>  getPortIdentifiers() 
 	{ 
 		if(debug) System.out.println("static CommPortIdentifier:getPortIdentifiers()");
 		//Do not allow anybody get any ports while we are re-initializing
