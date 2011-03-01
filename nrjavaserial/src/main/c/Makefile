@@ -30,9 +30,9 @@ CCWIN64 = wine "C:\MinGW64\bin\gcc.exe" $(WININCLUDE64)  -m64 -O3 -Wall -c -DBUI
 LINKWIN64 =wine "C:\MinGW64\bin\gcc.exe" $(WINLINKOPT)
 
 #Native Windows
-WININCLUDE32N=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\MinGW\include" -I"C:\Program Files\Java\jdk1.6.0_22\include\win32" -I"C:\Program Files\Java\jdk1.6.0_22\include"
-CCWIN32N = "C:\MinGW\bin\gcc.exe" $(WININCLUDE32N) -O3 -Wall -c -DBUILD_DLL
-LINKWIN32N ="C:\MinGW\bin\gcc.exe" $(WINLINKOPT)
+WININCLUDE32N=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\MinGW32\include" -I"C:\Program Files\Java\jdk1.6.0_22\include\win32" -I"C:\Program Files\Java\jdk1.6.0_22\include"
+CCWIN32N = "C:\MinGW32\bin\gcc.exe" $(WININCLUDE32N) -O3 -Wall -c -DBUILD_DLL
+LINKWIN32N ="C:\MinGW32\bin\gcc.exe" $(WINLINKOPT)
 
 WININCLUDE64N=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\MinGW64\include" -I"C:\Program Files\Java\jdk1.6.0_22\include\win32" -I"C:\Program Files\Java\jdk1.6.0_22\include"
 CCWIN64N = "C:\MinGW64\bin\gcc.exe" $(WININCLUDE64N) -m64 -O3 -Wall -c -DBUILD_DLL
