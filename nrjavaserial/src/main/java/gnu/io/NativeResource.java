@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class NativeResource {
+	private boolean loaded = false;
 	public void load(String libraryName) {		
 		if(System.getProperty(libraryName + ".userlib") != null) {
 			try {
@@ -24,16 +25,22 @@ public class NativeResource {
 	}
 
 	private void loadLib(String name) {
+		if(loaded)
+			return;
+		loaded = true;
 		try {
+			//start by assuming the library can be loaded from the jar
 			InputStream resourceSource = locateResource(name);
 			File resourceLocation = prepResourceLocation(name);
 			copyResource(resourceSource, resourceLocation);
 			loadResource(resourceLocation);
 		} catch (UnsatisfiedLinkError ex) {
 			try{
+				//check to see if the library is availible in standard locations
 				System.loadLibrary(name.substring(name.indexOf("lib")+3));
 			}catch(UnsatisfiedLinkError e){
 				try{
+					//last ditch effort to load
 					System.loadLibrary( "rxtxSerial");			
 				}catch(UnsatisfiedLinkError er){
 					System.err.println("Failed to load local JNI as well as: \n"+System.getProperty("java.library.path"));
