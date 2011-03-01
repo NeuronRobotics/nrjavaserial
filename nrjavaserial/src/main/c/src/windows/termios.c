@@ -88,7 +88,9 @@ extern void report_error( char * );
 #define SIGIO 0
 
 int my_errno;
-extern int errno;
+
+int errnoMINE;
+
 struct termios_list
 {
 	char filename[80];
@@ -1299,7 +1301,7 @@ int serial_write( int fd, char *Str, int length )
 			report( "serial_write error\n" );
 			/* report("Condition 1 Detected in write()\n"); */
 			YACK();
-			errno = EIO;
+			errnoMINE = EIO;
 			nBytes=-1;
 			goto end;
 		}
@@ -1311,7 +1313,7 @@ int serial_write( int fd, char *Str, int length )
 			{
 				/* report("Condition 2 Detected in write()\n"); */
 				YACK();
-				errno = EIO;
+				errnoMINE = EIO;
 				nBytes = -1;
 				goto end;
 				/* ClearErrors( index, &Stat ); */
@@ -1526,7 +1528,7 @@ int serial_read( int fd, void *vb, int size )
 	if ( !index )
 	{
 		LEAVE( "serial_read 7" );
-		errno = EIO;
+		errnoMINE = EIO;
 		printf("2\n");
 		return -1;
 	}
@@ -1557,7 +1559,7 @@ int serial_read( int fd, void *vb, int size )
 				sprintf( message, "now = %i start = %i time = %i total =%i\n", now, start, index->ttyset->c_cc[VTIME]*100, total);
 				report( message );
 */
-				errno = EAGAIN;
+				errnoMINE = EAGAIN;
 				printf("3\n");
 				return -1;	/* read timeout */
 			}
@@ -1648,7 +1650,7 @@ int serial_read( int fd, void *vb, int size )
 					break;
 				default:
 					YACK();
-					errno = EIO;
+					errnoMINE = EIO;
 					printf("6\n");
 					return -1;
 			}
@@ -3207,7 +3209,7 @@ fail:
 	YACK();
 	sprintf( message, "< select called error %i\n", n );
 	report( message );
-	errno = EBADFD;
+	errnoMINE = EBADFD;
 	LEAVE( "serial_select" );
 	return( 1 );
 }
