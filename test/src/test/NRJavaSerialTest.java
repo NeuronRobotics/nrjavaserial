@@ -1,5 +1,6 @@
 package test;
 
+import gnu.io.RXTXCommDriver;
 import gnu.io.SerialManager;
 
 public class NRJavaSerialTest {
@@ -9,7 +10,7 @@ public class NRJavaSerialTest {
 	 */
 	public static void main(String[] args) {
 		try{
-			SerialManager.getInstance();
+			RXTXCommDriver.nativeGetVersion();
 		}catch(Exception ex){
 			ex.printStackTrace();
 		}catch(Error er){
