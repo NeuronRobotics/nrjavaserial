@@ -1,7 +1,11 @@
 
-OSXINCLUDE=-I"./include" -I"./include/target"  -I/usr/lib/jvm/java-6-openjdk/include/
-CCOSX=gcc $(OSXINCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -m32 -MMD
-LINKOSX=g++ -m32 -shared 
+
+OSXJAVAINCLUDEDIR = /System/Library/Frameworks/JavaVM.framework/Versions/1.3.1/Home/../../../Headers
+OSXJAVAINCLUDE = -I $(OSXJAVAINCLUDEDIR)
+OSXJAVANATINC = -I $(OSXJAVAINCLUDEDIR )/./
+OSXINCLUDE=-I"./include" -I"./include/target"  $(OSXJAVAINCLUDE) $(OSXJAVANATINC)
+CCOSX=cc $(OSXINCLUDE) -g -O2 -D_BSD_SOURCE -bundle
+LINKOSX=cc  -module -framework JavaVM -framework IOKit -framework CoreFoundation 
 
 
 LINOBJ=build/fixup.o build/fuserImp.o build/SerialImp.o
