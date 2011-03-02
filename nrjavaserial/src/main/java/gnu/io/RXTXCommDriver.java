@@ -76,12 +76,13 @@ public class RXTXCommDriver implements CommDriver
 
 	private final static boolean debug = false;
 	private final static boolean devel = false;
+	private final static boolean noVersionOutput = "true".equals( System.getProperty( "gnu.io.rxtx.NoVersionOutput" ) );
 
 	static
 	{
 		if(debug ) System.out.println("RXTXCommDriver {}");
+		//System.loadLibrary( "rxtxSerial" );
 		SerialManager.getInstance();
-
 		/*
 		   Perform a crude check to make sure people don't mix
 		   versions of the Jar and native lib
@@ -100,6 +101,25 @@ public class RXTXCommDriver implements CommDriver
 		{
 			// for rxtx prior to 2.1.7
 			LibVersion = nativeGetVersion();
+		}
+		if ( devel )
+		{
+			if ( ! noVersionOutput )
+			{
+				System.out.println("Stable Library");
+				System.out.println("=========================================");
+				System.out.println("Native lib Version = " + LibVersion );
+				System.out.println("Java lib Version   = " + JarVersion );
+			}
+		}
+
+		if ( ! JarVersion.equals( LibVersion ) )
+		{
+			//System.out.println( "WARNING:  RXTX Version mismatch\n\tJar version = " + JarVersion + "\n\tnative lib Version = " + LibVersion );
+		}
+		else if ( debug )
+		{
+			System.out.println( "RXTXCommDriver:\n\tJar version = " + JarVersion + "\n\tnative lib Version = " + LibVersion );
 		}
 	}
 
@@ -128,7 +148,8 @@ public class RXTXCommDriver implements CommDriver
 		*/
 
 		String ValidPortPrefixes[]=new String [256];
-		if (debug) System.out.println("\nRXTXCommDriver:getValidPortPrefixes()");
+		if (debug)
+			System.out.println("\nRXTXCommDriver:getValidPortPrefixes()");
 		if(CandidatePortPrefixes==null)
 		{
 			if (debug)
@@ -558,6 +579,7 @@ public class RXTXCommDriver implements CommDriver
 						"ttyUSB", // for USB frobs
 						"rfcomm",       // bluetooth serial device
 						"ttyircomm", // linux IrCommdevices (IrDA serial emu)
+						"ttyACM"
 						};
 						CandidatePortPrefixes=Temp;
 					}
@@ -829,7 +851,8 @@ public class RXTXCommDriver implements CommDriver
 	*/
 	public CommPort getCommPort( String PortName, int PortType )
 	{
-		if (debug) System.out.println("RXTXCommDriver:getCommPort("+PortName+","+PortType+")");
+		if (debug) System.out.println("RXTXCommDriver:getCommPort("
+			+PortName+","+PortType+")");
 		try {
 			switch (PortType) {
 				case CommPortIdentifier.PORT_SERIAL:
@@ -843,11 +866,13 @@ public class RXTXCommDriver implements CommDriver
 						return new RXTXPort( deviceDirectory + PortName );
 					}
 				default:
-					if (debug) System.out.println("unknown PortType  "+PortType+" passed to RXTXCommDriver.getCommPort()");
+					if (debug)
+						System.out.println("unknown PortType  "+PortType+" passed to RXTXCommDriver.getCommPort()");
 			}
 		} catch( PortInUseException e ) {
 			if (debug)
-				System.out.println("Port "+PortName+" in use by another application");
+				System.out.println(
+					"Port "+PortName+" in use by another application");
 		}
 		return null;
 	}

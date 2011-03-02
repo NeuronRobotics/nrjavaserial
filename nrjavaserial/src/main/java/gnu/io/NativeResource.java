@@ -7,10 +7,11 @@ import java.io.InputStream;
 
 public class NativeResource {
 	
-	public static native String nativeGetVersion();
-	
 	private boolean loaded = false;
-	public synchronized void load(String libraryName) {		
+	public synchronized void load(String libraryName) {	
+		if(loaded)
+			return;
+		loaded = true;
 		if(System.getProperty(libraryName + ".userlib") != null) {
 			try {
 				if(System.getProperty(libraryName + ".userlib").equalsIgnoreCase("sys")) {
@@ -28,9 +29,7 @@ public class NativeResource {
 	}
 
 	private void loadLib(String name) {
-		if(loaded)
-			return;
-		loaded = true;
+
 		String libName = name.substring(name.indexOf("lib")+3);
 		try {
 			//start by assuming the library can be loaded from the jar
@@ -42,19 +41,19 @@ public class NativeResource {
 		} catch (UnsatisfiedLinkError ex) {
 			try{
 				//check to see if the library is availible in standard locations
-				System.out.println("Trying to load: "+libName);
+				//System.out.println("Trying to load: "+libName);
 				System.loadLibrary(libName);
 				nativeGetVersion();
 			}catch(UnsatisfiedLinkError e){
 				try{
-					System.out.println("Trying to load: "+name);
+					//System.out.println("Trying to load: "+name);
 					//load whole name
 					System.loadLibrary( name);	
 					nativeGetVersion();
 				}catch(UnsatisfiedLinkError er){
 					try{
 						name = "rxtxSerial";
-						System.out.println("Trying to load: "+name);
+						//System.out.println("Trying to load: "+name);
 						//last ditch effort to load
 						System.loadLibrary( name);	
 						nativeGetVersion();
@@ -68,9 +67,13 @@ public class NativeResource {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.out.println("JNI test ok");
+		//System.out.println("JNI test ok");
 	}
 	
+	private void nativeGetVersion()throws UnsatisfiedLinkError {
+		
+	}
+
 	private InputStream locateResource(String name) {
 		name += OSUtil.getExtension();
 		String file="";
@@ -99,7 +102,7 @@ public class NativeResource {
 			System.err.println("Can't load native file: "+name+" for os arch: "+OSUtil.getOsArch());
 			return null;
 		}
-		System.out.println("Loading "+file);
+		//System.out.println("Loading "+file);
 		return getClass().getResourceAsStream(file);
 	}
 	
@@ -186,7 +189,7 @@ public class NativeResource {
 		if(fd == null || !fd.canRead()) {
 			throw new NativeResourceException("Unable to deploy native resource");
 		}
-		System.out.println("Local file: "+fd.getAbsolutePath());
+		//System.out.println("Local file: "+fd.getAbsolutePath());
 		return fd;
 	}
 	
