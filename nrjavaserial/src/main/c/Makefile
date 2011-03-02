@@ -1,4 +1,9 @@
 
+OSXINCLUDE=-I"./include" -I"./include/target"  -I/usr/lib/jvm/java-6-openjdk/include/
+CCOSX=gcc $(OSXINCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -m32 -MMD
+LINKOSX=g++ -m32 -shared 
+
+
 LINOBJ=build/fixup.o build/fuserImp.o build/SerialImp.o
 LININCLUDE=-I"./include" -I"./include/target" -I/usr/src/linux-headers-2.6.32-26-generic/include/ -I/usr/lib/jvm/java-6-openjdk/include/
 
@@ -123,5 +128,12 @@ armAndroid:dirs
 	$(CCLINANDROID) src/fuserImp.c -o build/fuserImp.o
 	$(CCLINANDROID) src/SerialImp.c -o build/SerialImp.o
 	$(LINKLINANDROID) -o"resources/native/linux/ARM_ANDROID/libNRJavaSerial.so" $(LINOBJ)
+	rm -rf build	
+	
+osx:dirs
+	$(CCOSX) src/fixup.c -o build/fixup.o
+	$(CCOSX) src/fuserImp.c -o build/fuserImp.o
+	$(CCOSX) src/SerialImp.c -o build/SerialImp.o
+	$(LINKOSX) -o"resources/native/osx/libNRJavaSerial.jnilib" $(LINOBJ)
 	rm -rf build	
 	
