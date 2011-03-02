@@ -72,7 +72,8 @@ class CommPortEnumerator implements Enumeration
 	private final static boolean debug = false;
 	static
 	{
-		if (debug) System.out.println("CommPortEnumerator:{}");
+		if (debug)
+			System.out.println("CommPortEnumerator:{}");
 	}
 
 	CommPortEnumerator()
