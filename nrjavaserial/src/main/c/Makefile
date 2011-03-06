@@ -1,10 +1,9 @@
 
 
-OSXJAVAINCLUDEDIR = /System/Library/Frameworks/JavaVM.framework/Versions/1.3.1/Home/../../../Headers
+OSXJAVAINCLUDEDIR = /System/Library/Frameworks/JavaVM.framework/Headers
 OSXJAVAINCLUDE = -I $(OSXJAVAINCLUDEDIR)
-OSXJAVANATINC = -I $(OSXJAVAINCLUDEDIR )/./
-OSXINCLUDE=-I"./include" -I"./include/target"  $(OSXJAVAINCLUDE) $(OSXJAVANATINC)
-CCOSX=cc $(OSXINCLUDE) -g -O2 -D_BSD_SOURCE -bundle
+OSXINCLUDE=-I"./include" -I"./include/target"  $(OSXJAVAINCLUDE)
+CCOSX=cc $(OSXINCLUDE)  -framework JavaVM -framework IOKit -framework CoreFoundation  -g -O2 -D_BSD_SOURCE -bundle
 LINKOSX=cc  -module -framework JavaVM -framework IOKit -framework CoreFoundation 
 
 
@@ -135,9 +134,8 @@ armAndroid:dirs
 	rm -rf build	
 	
 osx:dirs
-	$(CCOSX) src/fixup.c -o build/fixup.o
 	$(CCOSX) src/fuserImp.c -o build/fuserImp.o
 	$(CCOSX) src/SerialImp.c -o build/SerialImp.o
-	$(LINKOSX) -o"resources/native/osx/libNRJavaSerial.jnilib" $(LINOBJ)
+	$(LINKOSX) -o "./resources/native/osx/libNRJavaSerial.jnilib" build/fuserImp.o build/SerialImp.o
 	rm -rf build	
 	
