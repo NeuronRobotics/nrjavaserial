@@ -147,7 +147,7 @@
 #include	<lockdev.h>
 #endif /* LIBLOCKDEV */
 
-extern int errnoMINE;
+int errnoMINE;
 
 #include "SerialImp.h"
 
