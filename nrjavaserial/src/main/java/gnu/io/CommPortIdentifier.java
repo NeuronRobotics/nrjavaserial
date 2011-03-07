@@ -120,7 +120,8 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 			if (debug)
 				System.out.println("Have not implemented native_psmisc_report_owner(PortName)); in CommPortIdentifier");
 		}
-		System.loadLibrary( "rxtxSerial" );
+		//System.loadLibrary( "rxtxSerial" );
+		SerialManager.getInstance();
 	}
 	CommPortIdentifier ( String pn, CommPort cp, int pt, CommDriver driver) 
 	{
@@ -323,7 +324,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 				//and writing them into our CommPortIndex through our method
 				//{@link #addPortName(java.lang.String, int, gnu.io.CommDriver)}
 				//This works while lock on Sync is held
-				CommDriver RXTXDriver = (CommDriver) Class.forName("gnu.io.RXTXCommDriver").newInstance();
+				RXTXCommDriver RXTXDriver = new RXTXCommDriver();
 				RXTXDriver.initialize();
 				//Restore old CommPortIdentifier objects where possible, 
 				//in order to support proper ownership event handling.

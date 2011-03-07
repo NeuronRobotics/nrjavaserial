@@ -75,7 +75,8 @@ public class RXTXVersion
 	private static String Version;
 
 	static {
-		System.loadLibrary( "rxtxSerial" );
+		//System.loadLibrary( "rxtxSerial" );
+		SerialManager.getInstance();
 		Version = "RXTX-2.2pre2";
 	}
 	/**
