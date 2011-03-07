@@ -94,6 +94,7 @@ public abstract class CommPort extends Object {
 	public abstract int getInputBufferSize();
 	public abstract void setOutputBufferSize( int size );
 	public abstract int getOutputBufferSize();
+	@SuppressWarnings("static-access")
 	public void close() 
 	{
 		if (debug) System.out.println("CommPort:close()");
