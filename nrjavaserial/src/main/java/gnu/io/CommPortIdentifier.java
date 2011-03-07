@@ -85,6 +85,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 	private int PortType;
 	private final static boolean debug = false;
 	static Object Sync;
+	@SuppressWarnings("unchecked")
 	Vector ownershipListener;
 
 
@@ -186,6 +187,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 	exceptions:
 	comments:   
 ------------------------------------------------------------------------------*/
+	@SuppressWarnings("unchecked")
 	public void addPortOwnershipListener(CommPortOwnershipListener c) 
 	{ 
 		if(debug) System.out.println("CommPortIdentifier:addPortOwnershipListener()");
@@ -304,6 +306,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 	exceptions:
 	comments:
 ------------------------------------------------------------------------------*/
+	@SuppressWarnings("unchecked")
 	static public Enumeration getPortIdentifiers() 
 	{ 
 		if(debug) System.out.println("static CommPortIdentifier:getPortIdentifiers()");
@@ -407,6 +410,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 	exceptions:  PortInUseException if in use.
 	comments:
 ------------------------------------------------------------------------------*/
+	@SuppressWarnings("unused")
 	private boolean HideOwnerEvents;
 
 	public CommPort open(String TheOwner, int i) 
@@ -522,6 +526,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 	exceptions:
 	comments:
 ------------------------------------------------------------------------------*/
+	@SuppressWarnings("unchecked")
 	void fireOwnershipEvent(int eventType)
 	{
 		if(debug) System.out.println("CommPortIdentifier:fireOwnershipEvent( " + eventType + " )");

@@ -66,6 +66,10 @@ import java.util.*;
 
 public class SerialPortEvent extends EventObject
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7933235826241348039L;
 	public static final int DATA_AVAILABLE      =1;
 	public static final int OUTPUT_BUFFER_EMPTY =2;
 	public static final int CTS                 =3;
