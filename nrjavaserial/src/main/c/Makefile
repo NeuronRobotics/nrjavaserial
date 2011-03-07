@@ -1,5 +1,3 @@
-
-
 OSXJAVAINCLUDEDIR = /System/Library/Frameworks/JavaVM.framework/Headers
 OSXJAVAINCLUDE = -I $(OSXJAVAINCLUDEDIR)
 OSXINCLUDE=-I"./include" -I"./include/target"  $(OSXJAVAINCLUDE)
