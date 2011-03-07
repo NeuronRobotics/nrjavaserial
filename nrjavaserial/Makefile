@@ -1,10 +1,10 @@
 
 all:
 	ant
-windowsLocal:
+windows:
 	make -C .\src\main\c windowsLocal
 	ant
-windows:
+wine:
 	make -C src/main/c windows
 	ant
 linux:
