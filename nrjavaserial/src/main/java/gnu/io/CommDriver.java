@@ -56,7 +56,6 @@
 |   All trademarks belong to their respective owners.
 --------------------------------------------------------------------------*/
 package gnu.io;
-import java.util.*;
 
 /**
 * @author Trent Jarvi

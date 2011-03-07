@@ -56,7 +56,6 @@
 |   All trademarks belong to their respective owners.
 --------------------------------------------------------------------------*/
 package gnu.io;
-import java.util.*;
 
 /**
 * Exception thrown when a method does not support the requested functionality.
@@ -65,6 +64,7 @@ import java.util.*;
 * @since JDK1.0
 */
 
+@SuppressWarnings("serial")
 public class UnsupportedCommOperationException extends Exception
 {
 /**

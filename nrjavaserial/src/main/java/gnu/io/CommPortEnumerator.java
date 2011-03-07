@@ -66,6 +66,7 @@ import java.util.Enumeration;
 */
 
 
+@SuppressWarnings("unchecked")
 class CommPortEnumerator implements Enumeration
 {
 	private CommPortIdentifier index;

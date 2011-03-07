@@ -56,7 +56,6 @@
 |   All trademarks belong to their respective owners.
 --------------------------------------------------------------------------*/
 package gnu.io;
-import java.util.*;
 
 /**
 * The port requested is currently in use
@@ -68,6 +67,10 @@ import java.util.*;
 
 public class PortInUseException extends Exception
 {
+/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7233413293849446117L;
 /**
 the owner of the port requested.
 */

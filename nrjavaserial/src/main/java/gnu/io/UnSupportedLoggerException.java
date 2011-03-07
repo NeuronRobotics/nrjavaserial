@@ -56,7 +56,6 @@
 |   All trademarks belong to their respective owners.
 --------------------------------------------------------------------------*/
 package gnu.io;
-import java.util.*;
 
 /**
 * Exception thrown when a method does not support the requested functionality.
@@ -67,6 +66,10 @@ import java.util.*;
 
 public class UnSupportedLoggerException extends Exception
 {
+/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3270209386138681632L;
 /**
 * create an instances with no message about why the Exception was thrown.
 * @since JDK1.0

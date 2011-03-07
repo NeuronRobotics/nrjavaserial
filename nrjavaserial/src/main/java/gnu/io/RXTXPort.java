@@ -199,7 +199,9 @@ final public class RXTXPort extends SerialPort
 	*  If speed is not a predifined speed it is assumed to be
 	*  the actual speed desired.
 	*/
+	@SuppressWarnings("unused")
 	private native int nativeGetParity( int fd );
+	@SuppressWarnings("unused")
 	private native int nativeGetFlowControlMode( int fd );
 	public synchronized void setSerialPortParams( int b, int d, int s,
 		int p )
@@ -717,8 +719,10 @@ final public class RXTXPort extends SerialPort
 						event + ")" );
 				break;
 		}
-		if( debug_events && debug_verbose )
-			z.reportln(  "	checking flags " );
+		if( debug_events ) {
+			if (debug_verbose)
+				z.reportln(  "	checking flags " );
+		}
 
 		switch( event )
 		{
@@ -756,12 +760,16 @@ final public class RXTXPort extends SerialPort
 				System.err.println( "unknown event: " + event);
 				return(false);
 		}
-		if( debug_events && debug_verbose )
-			z.reportln(  "	getting event" );
+		if( debug_events ) {
+			if (debug_verbose)
+				z.reportln(  "	getting event" );
+		}
 		SerialPortEvent e = new SerialPortEvent(this, event, !state,
 			state );
-		if( debug_events && debug_verbose )
-			z.reportln(  "	sending event" );
+		if( debug_events ) {
+			if (debug_verbose)
+				z.reportln(  "	sending event" );
+		}
 		if(monThreadisInterrupted) 
 		{
 			if( debug_events )
@@ -773,8 +781,10 @@ final public class RXTXPort extends SerialPort
 			SPEventListener.serialEvent( e );
 		}
 
-		if( debug_events && debug_verbose )
-			z.reportln(  "	sendEvent return" );
+		if( debug_events ) {
+			if (debug_verbose)
+				z.reportln(  "	sendEvent return" );
+		}
 
 		if (fd == 0 ||  SPEventListener == null || monThread == null) 
 		{
@@ -862,10 +872,11 @@ final public class RXTXPort extends SerialPort
 				return;
  			}
 				
-			if ( debug && monThread.isAlive() )
-			{
-				z.reportln( "	MonThread is still alive!");
+			if ( debug ) {
+				if (monThread.isAlive()) {
+					z.reportln( "	MonThread is still alive!");
 
+				}
 			}
 			
 		}
