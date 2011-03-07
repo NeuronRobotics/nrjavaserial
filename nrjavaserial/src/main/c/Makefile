@@ -3,8 +3,8 @@
 OSXJAVAINCLUDEDIR = /System/Library/Frameworks/JavaVM.framework/Headers
 OSXJAVAINCLUDE = -I $(OSXJAVAINCLUDEDIR)
 OSXINCLUDE=-I"./include" -I"./include/target"  $(OSXJAVAINCLUDE)
-CCOSX=cc $(OSXINCLUDE)  -framework JavaVM -framework IOKit -framework CoreFoundation  -g -O2 -D_BSD_SOURCE -bundle
-LINKOSX=cc  -module -framework JavaVM -framework IOKit -framework CoreFoundation 
+CCOSX=cc $(OSXINCLUDE)  -framework JavaVM -framework IOKit -framework CoreFoundation  -g -O2 -D_BSD_SOURCE -shared
+LINKOSX=cc  -dynamiclib
 
 
 LINOBJ=build/fixup.o build/fuserImp.o build/SerialImp.o
