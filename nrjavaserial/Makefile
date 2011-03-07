@@ -1,5 +1,6 @@
 
 all:
+	echo "Please specify a system: windows wine linux osx"
 	ant
 windows:
 	make -C .\src\main\c windowsLocal
