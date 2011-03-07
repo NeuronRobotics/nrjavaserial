@@ -41,25 +41,25 @@ public class NativeResource {
 		} catch (UnsatisfiedLinkError ex) {
 			try{
 				//check to see if the library is availible in standard locations
-				//System.out.println("Trying to load: "+libName);
+				System.out.println("Trying to load: "+libName);
 				System.loadLibrary(libName);
 				nativeGetVersion();
 			}catch(UnsatisfiedLinkError e){
 				try{
-					//System.out.println("Trying to load: "+name);
+					System.out.println("Trying to load: "+name);
 					//load whole name
 					System.loadLibrary( name);	
 					nativeGetVersion();
 				}catch(UnsatisfiedLinkError er){
 					try{
 						name = "rxtxSerial";
-						//System.out.println("Trying to load: "+name);
+						System.out.println("Trying to load: "+name);
 						//last ditch effort to load
 						System.loadLibrary( name);	
 						nativeGetVersion();
 					}catch(UnsatisfiedLinkError err){
 						System.err.println("Failed to load all possible JNI local and from: \n"+System.getProperty("java.library.path"));
-						err.printStackTrace();
+						//err.printStackTrace();
 						throw new NativeResourceException("Unable to load deployed native resource");
 					}
 				}
@@ -71,7 +71,7 @@ public class NativeResource {
 	}
 	
 	private void nativeGetVersion()throws UnsatisfiedLinkError {
-		
+		CommPortIdentifier.getPortIdentifiers();
 	}
 
 	private InputStream locateResource(String name) {
@@ -109,6 +109,7 @@ public class NativeResource {
 	private void loadResource(File resource) {
 		if(!resource.canRead())
 			throw new RuntimeException("Cant open JNI file: "+resource.getAbsolutePath());
+		System.out.println("Loading: "+resource.getAbsolutePath());
 		System.load(resource.getAbsolutePath());
 	}
 
