@@ -754,6 +754,7 @@ JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
 	const char *filename = (*env)->GetStringUTFChars( env, jstr, 0 );
 	jclass jclazz = (*env)->GetObjectClass( env, jobj );
 	report_time_start( );
+
 	pid = get_java_var( env, jobj,"pid","I" );
 
 	report(">nativeClose pid\n");
@@ -786,7 +787,9 @@ JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
 		UNLOCK( filename, pid );
  		do {
 			report("nativeClose:  calling close\n");
+			#if !defined(__APPLE__)
 			result=CLOSE (fd);
+			#endif
 
 		}  while ( result < 0 && errnoMINE == EINTR );
 
