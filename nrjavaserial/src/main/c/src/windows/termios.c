@@ -1091,15 +1091,28 @@ struct termios_list *add_port( const char *filename )
 	}
 	else
 	{
-		while ( ( index->fd < port->fd ) && index->next )
+		while ( ( index->fd < port->fd ) && index->next ){
 			index = index->next;
+		}
 		if ( index->fd > port->fd )
 		{
 			/* inserting previously closed fd */
-			port->prev = index->prev;
-			port->next=index;
-			index->prev->next = port;
-			index->prev = port;
+			if ( index->prev )
+			{
+				/* adding between list items */
+				port->prev = index->prev;
+				port->next = index;
+				index->prev->next = port;
+				index->prev = port;
+			}
+			else
+			{
+				/* adding as first item in list */
+				port->prev = NULL;
+				port->next = index;
+				index->prev = port;
+				first_tl = port;
+			}
 		}
 		else
 		{
