@@ -4,7 +4,5 @@
 	<classpathentry kind="src" path="src/main/c/resources"/>
 	<classpathentry kind="con" path="org.maven.ide.eclipse.MAVEN2_CLASSPATH_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="/Applications/eclipse/plugins/edu.wpi.first.javadev.sunspotfrcsdk_1.0.5.0/sunspotfrcsdk/lib/WPILibJ/classes.jar"/>
-	<classpathentry kind="lib" path="/Applications/eclipse/plugins/edu.wpi.first.javadev.sunspotfrcsdk_1.0.5.0/sunspotfrcsdk/lib/squawk_device.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
