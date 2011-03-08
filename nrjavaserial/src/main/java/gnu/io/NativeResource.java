@@ -27,23 +27,41 @@ public class NativeResource {
 		}
 		loadLib(libraryName);	
 	}
+	
+	private void inJarLoad(String name)throws UnsatisfiedLinkError{
+		//start by assuming the library can be loaded from the jar
+		InputStream resourceSource = locateResource(name);
+		File resourceLocation = prepResourceLocation(name);
+		try {
+			copyResource(resourceSource, resourceLocation);
+		} catch (IOException e) {
+			throw new UnsatisfiedLinkError();
+		}
+		loadResource(resourceLocation);
+		nativeGetVersion();
+	}
 
 	private void loadLib(String name) {
 
 		String libName = name.substring(name.indexOf("lib")+3);
 		try {
-			//start by assuming the library can be loaded from the jar
-			InputStream resourceSource = locateResource(name);
-			File resourceLocation = prepResourceLocation(name);
-			copyResource(resourceSource, resourceLocation);
-			loadResource(resourceLocation);
-			nativeGetVersion();
+			inJarLoad(name);
+			return;
 		} catch (UnsatisfiedLinkError ex) {
+			if(OSUtil.isOSX()){
+				try{
+					inJarLoad("libNRJavaSerial_legacy");
+					return;
+				}catch(UnsatisfiedLinkError errr){
+					
+				}
+			}
 			try{
 				//check to see if the library is availible in standard locations
 				System.out.println("Trying to load: "+libName);
 				System.loadLibrary(libName);
 				nativeGetVersion();
+				return;
 			}catch(UnsatisfiedLinkError e){
 				try{
 					System.out.println("Trying to load: "+name);
@@ -58,14 +76,20 @@ public class NativeResource {
 						System.loadLibrary( name);	
 						nativeGetVersion();
 					}catch(UnsatisfiedLinkError err){
+						if(OSUtil.isOSX()){
+							try{
+								
+							}catch(UnsatisfiedLinkError errr){
+								System.err.println("Failed to load all possible JNI local and from: \n"+System.getProperty("java.library.path"));
+								throw new NativeResourceException("Unable to load deployed native resource");
+							}
+						}
 						System.err.println("Failed to load all possible JNI local and from: \n"+System.getProperty("java.library.path"));
 						//err.printStackTrace();
 						throw new NativeResourceException("Unable to load deployed native resource");
 					}
 				}
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 		//System.out.println("JNI test ok");
 	}
