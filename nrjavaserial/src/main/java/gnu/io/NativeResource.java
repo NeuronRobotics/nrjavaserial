@@ -50,6 +50,7 @@ public class NativeResource {
 		} catch (UnsatisfiedLinkError ex) {
 			if(OSUtil.isOSX()){
 				try{
+					ex.printStackTrace();
 					inJarLoad("libNRJavaSerial_legacy");
 					return;
 				}catch(UnsatisfiedLinkError errr){
