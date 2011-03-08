@@ -779,21 +779,25 @@ JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
 	*/
 
 	ENTER( "RXTXPort:nativeClose" );
+
 	if (fd > 0)
 	{
 		report("nativeClose: discarding remaining data (tcflush)\n");
 		/* discard any incoming+outgoing data not yet read/sent */
 		tcflush(fd, TCIOFLUSH);
+		
 		UNLOCK( filename, pid );
+
  		do {
 			report("nativeClose:  calling close\n");
-			#if !defined(__APPLE__)
+			//#if !defined(__APPLE__)
 			result=CLOSE (fd);
-			#endif
+			//#endif
 
 		}  while ( result < 0 && errnoMINE == EINTR );
 
 	}
+	
 	report("nativeClose: Delete jclazz\n");
 	(*env)->DeleteLocalRef( env, jclazz );
 	report("nativeClose: release filename\n");
@@ -4879,10 +4883,16 @@ JNIEXPORT void JNICALL RXTXPort(interruptEventLoop)(JNIEnv *env,
 	termios_interrupt_event_loop( index->fd, 1 );
 #endif /* WIN32 */
 #if !defined(TIOCSERGETLSR) && !defined(WIN32)
+
+
 	/* make sure that the drainloop unblocks from tcdrain */
 	pthread_kill(index->drain_tid, SIGABRT);
 	/* TODO use wait/join/SIGCHLD/?? instead of sleep? */
 	usleep(50 * 1000);
+#if defined(__APPLE__)
+	//If you continue on in OSX you get an invalid memory access error
+	return;
+#endif
 	/*
 	Under normal conditions, SIGABRT will unblock tcdrain. However
 	a non-responding USB device combined with an unclean driver
