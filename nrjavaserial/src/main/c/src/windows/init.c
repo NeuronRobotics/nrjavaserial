@@ -4,6 +4,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <jni.h>
+
 /**
  * Lcc requuires that there should be LibraryMain function and seeks
  * by default for LibMain. This might be someway not usefull for jni
