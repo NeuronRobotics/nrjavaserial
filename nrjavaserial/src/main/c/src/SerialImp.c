@@ -188,41 +188,6 @@ int cfmakeraw ( struct termios *term )
 }
 #endif /* __sun__  || __hpux__ */
 
-#ifdef DEBUG_TIMING
-struct timeval snow, enow, seloop, eeloop;
-#define report_time_eventLoop( ) { \
-	if ( seloop.tv_sec == eeloop.tv_sec && seloop.tv_usec == eeloop.tv_usec ) \
-	{ \
-		gettimeofday(&eeloop, NULL); \
-		seloop.tv_sec = eeloop.tv_sec; \
-		seloop.tv_usec = eeloop.tv_usec; \
-		printf("%8i sec : %8i usec\n", eeloop.tv_sec - seloop.tv_sec, eeloop.tv_usec - seloop.tv_usec); \
-	} \
-}
-#define report_time( ) \
-{ \
-	struct timeval now; \
-	gettimeofday(&now, NULL); \
-	mexPrintf("%8s : %5i : %8i sec : %8i usec\n", __TIME__, __LINE__, now.tv_sec, now.tv_usec); \
-}
-#define report_time_start( ) \
-{ \
-	gettimeofday(&snow, NULL); \
-	mexPrintf("%8s : %5i : %8i sec : %8i usec", __TIME__, __LINE__, snow.tv_sec, snow.tv_usec); \
-}
-#define report_time_end( ) \
-{ \
-	gettimeofday(&enow, NULL); \
-	mexPrintf("%8i sec : %8i usec\n", enow.tv_sec - snow.tv_sec, enow.tv_sec - snow.tv_sec?snow.tv_usec-enow.tv_usec:enow.tv_usec - snow.tv_usec); \
-}
-#else
-#define report_time_eventLoop( ){};
-#define report_time( ) {}
-#define report_time_start( ) {}
-#define report_time_end( ) {}
-#endif /* DEBUG_TIMING */
-
-
 struct event_info_struct *master_index = NULL;
 
 
@@ -279,10 +244,10 @@ JNIEXPORT void JNICALL RXTXPort(Initialize)(
 	jclass jclazz
 	)
 {
-#if defined DEBUG && defined(__linux__)
+#if defined(DEBUG) && defined(__linux__) && defined(UTS_RELEASE)
 	struct utsname name;
 	char message[80];
-#endif /* DEBUG && __linux__ */
+#endif /* DEBUG && __linux__ && UTS_RELEASE */
 	/* This bit of code checks to see if there is a signal handler installed
 	   for SIGIO, and installs SIG_IGN if there is not.  This is necessary
 	   for the native threads jdk, but we don't want to do it with green
@@ -309,16 +274,13 @@ JNIEXPORT void JNICALL RXTXPort(Initialize)(
 	ENTER( "RXTXPort:Initialize" );
 #ifdef PRERELEASE
 	/*  this is just for avoiding confusion while testing new libraries */
-#ifdef DEBUG_MW
-	mexPrintf("RXTX Prerelease for testing  Tue Feb 19 18:00:27 EST 2002\n");
-#else
 	printf("RXTX Prerelease for testing  Thu Feb 21 19:31:38\n");
-#endif /* DEBUG_MW */
 #endif /* PRERELEASE */
-#if DEBUG_TIMING
+#if defined(DEBUG_TIMING) && ! defined(WIN32)
+	/* WIN32 does not have gettimeofday() */
 	gettimeofday(&seloop, NULL);
-#endif /* DEBUG_TIMING */
-#if defined(DEBUG) && defined(__linux__)
+#endif /* DEBUG_TIMING && ! WIN32 */
+#if defined(DEBUG) && defined(__linux__) && defined(UTS_RELEASE)
 	/* Lets let people who upgraded kernels know they may have problems */
 	if (uname (&name) == -1)
 	{
@@ -334,7 +296,7 @@ JNIEXPORT void JNICALL RXTXPort(Initialize)(
 		getchar();
 	}
 	LEAVE( "RXTXPort:Initialize" );
-#endif /* DEBUG && __linux__ */
+#endif /* DEBUG && __linux__ && UTS_RELEASE */
 }
 
 /*----------------------------------------------------------
@@ -754,7 +716,6 @@ JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
 	const char *filename = (*env)->GetStringUTFChars( env, jstr, 0 );
 	jclass jclazz = (*env)->GetObjectClass( env, jobj );
 	report_time_start( );
-
 	pid = get_java_var( env, jobj,"pid","I" );
 
 	report(">nativeClose pid\n");
@@ -779,25 +740,18 @@ JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
 	*/
 
 	ENTER( "RXTXPort:nativeClose" );
-
 	if (fd > 0)
 	{
 		report("nativeClose: discarding remaining data (tcflush)\n");
 		/* discard any incoming+outgoing data not yet read/sent */
 		tcflush(fd, TCIOFLUSH);
-		
 		UNLOCK( filename, pid );
-
  		do {
 			report("nativeClose:  calling close\n");
-			//#if !defined(__APPLE__)
 			result=CLOSE (fd);
-			//#endif
-
 		}  while ( result < 0 && errnoMINE == EINTR );
 
 	}
-	
 	report("nativeClose: Delete jclazz\n");
 	(*env)->DeleteLocalRef( env, jclazz );
 	report("nativeClose: release filename\n");
@@ -865,7 +819,6 @@ int set_port_params( JNIEnv *env, int fd, int cspeed, int dataBits,
 		/* hang up the modem aka drop DTR  */
 		/* Unix should handle this */
 		/*
-		mexPrintf("dropping DTR\n");
 		printf("dropping DTR\n");
 		*/
 		ioctl( fd, TIOCMGET, &result );
@@ -978,7 +931,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeSetSerialPortParams)(
     For some reason the native exceptions are not being caught.  Moving this
     to the Java side fixed the issue.  taj.
 		throw_java_exception( env, UNSUPPORTED_COMM_OPERATION,
-			"nativeSetSerialPortParams", strerror( errno ) );
+			"nativeSetSerialPortParams", strerror( errnoMINE ) );
 */
 		return(1);
 	}
@@ -1345,7 +1298,7 @@ void *drain_loop( void *arg )
 	}
 end:
 	report("------------------ drain_loop exiting ---------------------\n");
-	eis->closing = 1;
+	eis->drain_loop_running = 0;
 	pthread_exit( NULL );
 	return( NULL );
 }
@@ -1451,6 +1404,7 @@ int init_threads( struct event_info_struct *eis )
 	pthread_create( &tid, NULL, drain_loop, (void *) eis );
 	pthread_detach( tid );
 	eis->drain_tid = tid;
+	eis->drain_loop_running = 1;
 #endif /* TIOCSERGETLSR */
 	report("init_threads: get eis\n");
 	jeis  = (*eis->env)->GetFieldID( eis->env, eis->jclazz, "eis", "J" );
@@ -1493,7 +1447,6 @@ JNIEXPORT void JNICALL RXTXPort(writeByte)( JNIEnv *env,
 	}  while (result < 0 && errnoMINE==EINTR);
 	if( result < 0 )
 	{
-		/* mexPrintf("GOT IT!!!\n"); */
 		goto fail;
 	}
 /*
@@ -1503,7 +1456,7 @@ JNIEXPORT void JNICALL RXTXPort(writeByte)( JNIEnv *env,
 		report_verbose( "nativeDrain: trying tcdrain\n" );
 		result=tcdrain(fd);
 		count++;
-	}  while (result && errno==EINTR && count <3);
+	}  while (result && errnoMINE==EINTR && count <3);
 #endif */ /* __sun __ */
 #ifndef TIOCSERGETLSR
 	if( ! interrupted )
@@ -1587,7 +1540,6 @@ JNIEXPORT void JNICALL RXTXPort(writeArray)( JNIEnv *env,
 	}  while ( ( total < count ) && (result < 0 && errnoMINE==EINTR ) );
 	if( result < 0 )
 	{
-		/* mexPrintf("GOT IT!!!\n"); */
 		goto fail;
 	}
 /*
@@ -1597,7 +1549,7 @@ JNIEXPORT void JNICALL RXTXPort(writeArray)( JNIEnv *env,
 		report_verbose( "nativeDrain: trying tcdrain\n" );
 		result=tcdrain(fd);
 		icount++;
-	}  while (result && errno==EINTR && icount <3);
+	}  while (result && errnoMINE==EINTR && icount <3);
 #endif */ /* __sun__ */
 	(*env)->ReleaseByteArrayElements( env, jbarray, body, 0 );
 #ifndef TIOCSERGETLSR
@@ -3517,7 +3469,11 @@ JNIEXPORT jint JNICALL RXTXPort(readArray)( JNIEnv *env,
 	ENTER( "readArray" );
 	report_time_start( );
 */
+#ifdef __LCC__
+	if( (size_t) length > SSIZE_MAX ) {
+#else
 	if( (size_t) length > SSIZE_MAX || (size_t) length < 0 ) {
+#endif /* __LCC__ */
 		report( "RXTXPort:readArray length > SSIZE_MAX" );
 		LEAVE( "RXTXPort:readArray" );
 		throw_java_exception( env, ARRAY_INDEX_OUT_OF_BOUNDS,
@@ -3590,7 +3546,11 @@ JNIEXPORT jint JNICALL RXTXPort(readTerminatedArray)( JNIEnv *env,
 	ENTER( "readArray" );
 	report_time_start( );
 */
+#ifdef __LCC__
+	if( (size_t) length > SSIZE_MAX ) {
+#else
 	if( (size_t) length > SSIZE_MAX || (size_t) length < 0 ) {
+#endif /* __LCC__ */
 		report( "RXTXPort:readArray length > SSIZE_MAX" );
 		LEAVE( "RXTXPort:readArray" );
 		throw_java_exception( env, ARRAY_INDEX_OUT_OF_BOUNDS,
@@ -3668,12 +3628,12 @@ JNIEXPORT jint JNICALL RXTXPort(nativeavailable)( JNIEnv *env,
 	}
 /*
 	sprintf(message, "    nativeavailable: FIORDCHK result %d, \
-		errno %d\n", result , result == -1 ? errno : 0);
+		errnoMINE %d\n", result , result == -1 ? errnoMINE : 0);
 	report_verbose( message );
 	if( result )
 	{
 		sprintf(message, "    nativeavailable: FIORDCHK result %d, \
-				errno %d\n", result , result == -1 ? errno : 0);
+				errnoMINE %d\n", result , result == -1 ? errnoMINE : 0);
 		report( message );
 	}
 	LEAVE( "RXTXPort:nativeavailable" );
@@ -3907,6 +3867,7 @@ int port_has_changed_fionread( struct event_info_struct *eis )
 
 	rc = ioctl( eis->fd, FIONREAD, &change );
 	sprintf( message, "port_has_changed_fionread: change is %i ret is %i\n", change, eis->ret );
+	report_verbose( message );
 #if defined(__unixware__) || defined(__sun__)
 	/*
 	   On SCO OpenServer FIONREAD always fails for serial devices,
@@ -3917,9 +3878,7 @@ int port_has_changed_fionread( struct event_info_struct *eis )
 	if( (rc != -1 && change) || (rc == -1 && eis->ret > 0) )
 		return( 1 );
 #else
-	sprintf( message, "port_has_changed_fionread: change is %i\n", change );
-	report_verbose( message );
-	if( change )
+	if( rc != -1 && change )
 		return( 1 );
 #endif /* __unixware__  || __sun__ */
 	return( 0 );
@@ -3981,7 +3940,7 @@ system_wait
    exceptions:  none
    comments:
 ----------------------------------------------------------*/
-void system_wait()
+void system_wait(void)
 {
 #if defined (__sun__ )
 	struct timespec retspec, tspec;
@@ -4029,9 +3988,9 @@ int driver_has_tiocgicount( struct event_info_struct * eis )
 	}
 	else
 		return(1);
-#endif /*  TIOCGICOUNT */
+#else
 	return(0);
-
+#endif  /*  TIOCGICOUNT */
 }
 
 /*----------------------------------------------------------
@@ -4302,15 +4261,17 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
 	jint port_type
 )
 {
+	const char *name = (*env)->GetStringUTFChars(env, tty_name, 0);
+	int ret = JNI_TRUE;
+#ifndef WIN32
 	struct termios ttyset;
 	char c;
+	int fd;
+	int pid = -1;
+#endif
 #ifdef TRENT_IS_HERE_DEBUGGING_ENUMERATION
 	char message[80];
 #endif /* TRENT_IS_HERE_DEBUGGING_ENUMERATION */
-	int fd;
-	const char *name = (*env)->GetStringUTFChars(env, tty_name, 0);
-	int ret = JNI_TRUE;
-	int pid = -1;
 	/* We opened the file in this thread, use this pid to unlock */
 #ifndef WIN32
 	pid = getpid();
@@ -4339,7 +4300,7 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
 	ret = serial_test((char *) full_windows_name );
 	(*env)->ReleaseStringUTFChars( env, tty_name, name );
 	return(ret);
-#endif /* WIN32 */
+#else /* ! WIN32 */
 
 	/*
 		LOCK is one of three functions defined in SerialImp.h
@@ -4447,7 +4408,7 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
               pseudo-terminal device that is locked.
 
               man 2 read
-              If O_NONBLOCK is set, read() returns -1 and sets errno
+              If O_NONBLOCK is set, read() returns -1 and sets errnoMINE
               to EAGAIN.
 
               -- should be OK.
@@ -4460,7 +4421,7 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
 
               Win32
 
-              neither errno is currently set.  Comment added to termios.c
+              neither errnoMINE is currently set.  Comment added to termios.c
               serial_open().
 
               -- should be OK
@@ -4514,6 +4475,7 @@ END:
 	CLOSE( fd );
 	LEAVE( "RXTXPort:testRead" );
 	return ret;
+#endif /* ! WIN32 */
 }
 
 #if defined(__APPLE__)
@@ -4534,7 +4496,7 @@ createSerialIterator(io_iterator_t *serialIterator)
     kern_return_t    kernResult;
     mach_port_t        masterPort;
     CFMutableDictionaryRef    classesToMatch;
-    if ((kernResult=IOMasterPort( (int) NULL, &masterPort ) ) != KERN_SUCCESS)
+    if ((kernResult=IOMasterPort( MACH_PORT_NULL, &masterPort ) ) != KERN_SUCCESS)
     {
 	printf( "IOMasterPort returned %d\n", kernResult);
 	return kernResult;
@@ -4615,7 +4577,7 @@ registerKnownSerialPorts(JNIEnv *env, jobject jobj, jint portType) /* dima */
         if (mid == 0) {
             printf( "getMethodID of CommDriver.addPortName failed\n" );
         } else {
-            while (theObject = IOIteratorNext(theSerialIterator))
+            while ( (theObject = IOIteratorNext(theSerialIterator)) )
             {
  /* begin dima */
             	jstring	tempJstring;
@@ -4883,28 +4845,27 @@ JNIEXPORT void JNICALL RXTXPort(interruptEventLoop)(JNIEnv *env,
 	termios_interrupt_event_loop( index->fd, 1 );
 #endif /* WIN32 */
 #if !defined(TIOCSERGETLSR) && !defined(WIN32)
-
-
 	/* make sure that the drainloop unblocks from tcdrain */
 	pthread_kill(index->drain_tid, SIGABRT);
 	/* TODO use wait/join/SIGCHLD/?? instead of sleep? */
 	usleep(50 * 1000);
-#if defined(__APPLE__)
-	//If you continue on in OSX you get an invalid memory access error
-	return;
-#endif
 	/*
 	Under normal conditions, SIGABRT will unblock tcdrain. However
 	a non-responding USB device combined with an unclean driver
 	may still block. This is very ugly because it may block the call
 	to close indefinetly.
 	*/
-	if (index->closing != 1) {
+#if defined(__APPLE__)
+ 	//If you continue on in OSX you get an invalid memory access error
+	return;
+#endif
+	if (index->drain_loop_running != 0) {
 		/* good bye tcdrain, and thanks for all the fish */
 		report("interruptEventLoop: canceling blocked drain thread\n");
 		pthread_cancel(index->drain_tid);
-		index->closing = 1;
+		index->drain_loop_running = 0;
 	}
+	index->closing = 1;
 #endif
 	report("interruptEventLoop: interrupted\n");
 }
@@ -5110,11 +5071,7 @@ void throw_java_exception( JNIEnv *env, char *exc, char *foo, char *msg )
 ----------------------------------------------------------*/
 void report_warning(char *msg)
 {
-#ifndef DEBUG_MW
-	fprintf(stderr, msg);
-#else
-	mexWarnMsgTxt( (const char *) msg );
-#endif /* DEBUG_MW */
+	fprintf(stderr, "%s", msg);
 }
 
 /*----------------------------------------------------------
@@ -5129,11 +5086,7 @@ void report_warning(char *msg)
 void report_verbose(char *msg)
 {
 #ifdef DEBUG_VERBOSE
-#ifdef DEBUG_MW
-	mexErrMsgTxt( msg );
-#else
-	fprintf(stderr, msg);
-#endif /* DEBUG_MW */
+	fprintf(stderr, "%s", msg);
 #endif /* DEBUG_VERBOSE */
 }
 /*----------------------------------------------------------
@@ -5147,11 +5100,7 @@ void report_verbose(char *msg)
 ----------------------------------------------------------*/
 void report_error(char *msg)
 {
-#ifndef DEBUG_MW
-	fprintf(stderr, msg);
-#else
-	mexWarnMsgTxt( msg );
-#endif /* DEBUG_MW */
+	fprintf(stderr, "%s", msg);
 }
 
 /*----------------------------------------------------------
@@ -5166,11 +5115,7 @@ void report_error(char *msg)
 void report(char *msg)
 {
 #ifdef DEBUG
-#	ifndef DEBUG_MW
-		fprintf(stderr, msg);
-#	else
-		mexPrintf( msg );
-#	endif /* DEBUG_MW */
+	fprintf(stderr, "%s", msg);
 #endif /* DEBUG */
 }
 
@@ -5377,7 +5322,7 @@ int fhs_lock( const char *filename, int pid )
 	if( fd < 0 )
 	{
 		sprintf( message,
-			"RXTX fhs_lock() Error: creating lock file: %s: %s\n",
+			"RXTX fhs_lock() Error: opening lock file: %s: %s\n",
 			file, strerror(errnoMINE) );
 		report_error( message );
 		return 1;
@@ -5385,7 +5330,15 @@ int fhs_lock( const char *filename, int pid )
 	sprintf( lockinfo, "%10d\n",(int) getpid() );
 	sprintf( message, "fhs_lock: creating lockfile: %s\n", lockinfo );
 	report( message );
-	write( fd, lockinfo, 11 );
+	if( ( write( fd, lockinfo, 11 ) ) < 0 )
+	{
+		sprintf( message,
+				"RXTX fhs_lock() Error: writing lock file: %s: %s\n",
+				file, strerror(errnoMINE) );
+		report_error( message );
+		close( fd );
+		return 1;
+	}
 	close( fd );
 	return 0;
 }
@@ -5478,12 +5431,20 @@ int uucp_lock( const char *filename, int pid )
 	if( fd < 0 )
 	{
 		sprintf( message,
-			"RXTX uucp_lock() Error: creating lock file: %s\n",
-			lockfilename );
+			"RXTX uucp_lock() Error: opening lock file: %s: %s\n",
+			lockfilename, strerror(errnoMINE) );
 		report_error( message );
 		return 1;
 	}
-	write( fd, lockinfo,11 );
+	if( ( write( fd, lockinfo, 11 ) ) < 0 )
+	{
+		sprintf( message,
+			"RXTX uucp_lock() Error: writing lock file: %s: %s\n",
+			lockfilename, strerror(errnoMINE) );
+		report_error( message );
+		close( fd );
+		return 1;
+	}
 	close( fd );
 	return 0;
 }
@@ -5942,7 +5903,23 @@ int is_device_locked( const char *port_filename )
 
 		/* check if its a stale lock */
 		fd=open( file, O_RDONLY );
-		read( fd, pid_buffer, 11 );
+		if( fd < 0 )
+		{
+			sprintf( message,
+					"RXTX is_device_locked() Error: opening lock file: %s: %s\n",
+					file, strerror(errnoMINE) );
+			report_warning( message );
+			return 1;
+		}
+		if ( ( read( fd, pid_buffer, 11 ) ) < 0 ) 
+		{
+			sprintf( message,
+					"RXTX is_device_locked() Error: reading lock file: %s: %s\n",
+					file, strerror(errnoMINE) );
+			report_warning( message );
+			close( fd );
+			return 1;
+		}
 		/* FIXME null terminiate pid_buffer? need to check in Solaris */
 		close( fd );
 		sscanf( pid_buffer, "%d", &pid );
@@ -6020,7 +5997,7 @@ void dump_termios(char *foo,struct termios *ttyset)
 	{
 		fprintf(stderr,"%d=%x ", i, ttyset->c_cc[i]);
 	}
-	fprintf(stderr,"\n" );
+	fprintf(stderr, "\n" );
 #endif /* DEBUG */
 }
 
@@ -6173,4 +6150,3 @@ int printj(JNIEnv *env, wchar_t *fmt, ...)
 	(*env)->CallStaticVoidMethod(env, cls, mid, 1);
 */
 #endif /* asdf */
-
