@@ -98,13 +98,13 @@ typedef unsigned int    tcflag_t;
 /* structs are from linux includes or linux man pages to match
    interfaces.
 */
-
+/*
 struct timespec
 {
 	time_t	tv_sec;
 	long	tv_nsec;
 };
-
+*/
 #define NCCS 32
 struct termios
   {
