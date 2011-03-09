@@ -135,7 +135,6 @@ public class RXTXCommDriver implements CommDriver
 	public static String nativeGetVersionWrapper() throws UnsatisfiedLinkError {
 		return nativeGetVersion();
 	}
-	@SuppressWarnings("unused")
 	private final String[] getValidPortPrefixes(String CandidatePortPrefixes[])
 	{
 		/*
@@ -402,7 +401,7 @@ public class RXTXCommDriver implements CommDriver
     *  gnu.io.rxtx.ParallelPorts=/dev/lp0:
     *
     */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({  "rawtypes" })
 	private boolean registerSpecifiedPorts(int PortType)
 	{
 		String val = null;

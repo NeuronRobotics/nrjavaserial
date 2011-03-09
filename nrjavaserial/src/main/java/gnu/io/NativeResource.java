@@ -38,7 +38,7 @@ public class NativeResource {
 			throw new UnsatisfiedLinkError();
 		}
 		loadResource(resourceLocation);
-		nativeGetVersion();
+		testNativeCode();
 	}
 
 	private void loadLib(String name) {
@@ -50,41 +50,33 @@ public class NativeResource {
 		} catch (UnsatisfiedLinkError ex) {
 			if(OSUtil.isOSX()){
 				try{
-					ex.printStackTrace();
+					//ex.printStackTrace();
 					inJarLoad("libNRJavaSerial_legacy");
 					return;
 				}catch(UnsatisfiedLinkError errr){
-					
+					//continue on
 				}
 			}
 			try{
 				//check to see if the library is availible in standard locations
-				System.out.println("Trying to load: "+libName);
+				//System.out.println("Trying to load: "+libName);
 				System.loadLibrary(libName);
-				nativeGetVersion();
+				testNativeCode();
 				return;
 			}catch(UnsatisfiedLinkError e){
 				try{
-					System.out.println("Trying to load: "+name);
+					//System.out.println("Trying to load: "+name);
 					//load whole name
 					System.loadLibrary( name);	
-					nativeGetVersion();
+					testNativeCode();
 				}catch(UnsatisfiedLinkError er){
 					try{
 						name = "rxtxSerial";
-						System.out.println("Trying to load: "+name);
+						//System.out.println("Trying to load: "+name);
 						//last ditch effort to load
 						System.loadLibrary( name);	
-						nativeGetVersion();
+						testNativeCode();
 					}catch(UnsatisfiedLinkError err){
-						if(OSUtil.isOSX()){
-							try{
-								
-							}catch(UnsatisfiedLinkError errr){
-								System.err.println("Failed to load all possible JNI local and from: \n"+System.getProperty("java.library.path"));
-								throw new NativeResourceException("Unable to load deployed native resource");
-							}
-						}
 						System.err.println("Failed to load all possible JNI local and from: \n"+System.getProperty("java.library.path"));
 						//err.printStackTrace();
 						throw new NativeResourceException("Unable to load deployed native resource");
@@ -95,7 +87,7 @@ public class NativeResource {
 		//System.out.println("JNI test ok");
 	}
 	
-	private void nativeGetVersion()throws UnsatisfiedLinkError {
+	private void testNativeCode()throws UnsatisfiedLinkError {
 		CommPortIdentifier.getPortIdentifiers();
 	}
 
@@ -134,7 +126,7 @@ public class NativeResource {
 	private void loadResource(File resource) {
 		if(!resource.canRead())
 			throw new RuntimeException("Cant open JNI file: "+resource.getAbsolutePath());
-		System.out.println("Loading: "+resource.getAbsolutePath());
+		//System.out.println("Loading: "+resource.getAbsolutePath());
 		System.load(resource.getAbsolutePath());
 	}
 
