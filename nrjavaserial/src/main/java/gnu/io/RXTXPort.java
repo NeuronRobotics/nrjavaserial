@@ -199,9 +199,7 @@ final public class RXTXPort extends SerialPort
 	*  If speed is not a predifined speed it is assumed to be
 	*  the actual speed desired.
 	*/
-	@SuppressWarnings("unused")
 	private native int nativeGetParity( int fd );
-	@SuppressWarnings("unused")
 	private native int nativeGetFlowControlMode( int fd );
 	public synchronized void setSerialPortParams( int b, int d, int s,
 		int p )
