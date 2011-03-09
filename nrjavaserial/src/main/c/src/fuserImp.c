@@ -178,7 +178,7 @@ extern void show_user(const char tstring[],char *rs)
     const struct passwd *pw;
     const char *user,*scan;
     char tmp[10],path[PATH_MAX+1],comm[COMM_LEN+1];
-    int dummy;
+    int dummy,ret;
     int keeper;
     pid_t self;
     const char *name;
@@ -203,7 +203,11 @@ extern void show_user(const char tstring[],char *rs)
     sprintf(path,PROC_BASE "/%d/stat",item->u.proc.pid);
     strcpy(comm,"???");
     if ( ( f = fopen(path,"r") ) ) {
-	(void) fscanf(f,"%d (%[^)]",&dummy,comm);
+	ret = fscanf(f,"%d (%[^)]",&dummy,comm);
+	if ( ret == EOF || ret != 2 )
+	{
+	strcpy(comm,"???");
+	}
 	(void) fclose(f);
     }
     name = comm;

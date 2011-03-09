@@ -1,11 +1,6 @@
 #ifdef TRENT_IS_HERE
 #define TRACE
 #define DEBUG
-#define DEBUG_MW
-#ifdef DEBUG_MW
-	extern void mexWarMsgTxt( const char * );
-	extern void mexPrintf( const char *, ... );
-#endif /* DEBUG_MW */
 #endif /* TRENT_IS_HERE */
 extern void report( char * );
 extern void report_warning( char * );
@@ -88,9 +83,7 @@ extern void report_error( char * );
 #define SIGIO 0
 
 int my_errno;
-
-int errnoMINE;
-
+extern int errno;
 struct termios_list
 {
 	char filename[80];
@@ -992,7 +985,7 @@ get_free_fd()
    comments:
 ----------------------------------------------------------*/
 
-int get_free_fd()
+int get_free_fd(void)
 {
 	int next, last;
 	struct termios_list *index = first_tl;
@@ -1091,9 +1084,8 @@ struct termios_list *add_port( const char *filename )
 	}
 	else
 	{
-		while ( ( index->fd < port->fd ) && index->next ){
+		while ( ( index->fd < port->fd ) && index->next )
 			index = index->next;
-		}
 		if ( index->fd > port->fd )
 		{
 			/* inserting previously closed fd */
@@ -1104,7 +1096,7 @@ struct termios_list *add_port( const char *filename )
 				port->next = index;
 				index->prev->next = port;
 				index->prev = port;
-			}
+			} 
 			else
 			{
 				/* adding as first item in list */
@@ -1113,6 +1105,7 @@ struct termios_list *add_port( const char *filename )
 				index->prev = port;
 				first_tl = port;
 			}
+
 		}
 		else
 		{
@@ -1314,7 +1307,7 @@ int serial_write( int fd, char *Str, int length )
 			report( "serial_write error\n" );
 			/* report("Condition 1 Detected in write()\n"); */
 			YACK();
-			errnoMINE = EIO;
+			errno = EIO;
 			nBytes=-1;
 			goto end;
 		}
@@ -1326,7 +1319,7 @@ int serial_write( int fd, char *Str, int length )
 			{
 				/* report("Condition 2 Detected in write()\n"); */
 				YACK();
-				errnoMINE = EIO;
+				errno = EIO;
 				nBytes = -1;
 				goto end;
 				/* ClearErrors( index, &Stat ); */
@@ -1541,7 +1534,7 @@ int serial_read( int fd, void *vb, int size )
 	if ( !index )
 	{
 		LEAVE( "serial_read 7" );
-		errnoMINE = EIO;
+		errno = EIO;
 		printf("2\n");
 		return -1;
 	}
@@ -1572,7 +1565,7 @@ int serial_read( int fd, void *vb, int size )
 				sprintf( message, "now = %i start = %i time = %i total =%i\n", now, start, index->ttyset->c_cc[VTIME]*100, total);
 				report( message );
 */
-				errnoMINE = EAGAIN;
+				errno = EAGAIN;
 				printf("3\n");
 				return -1;	/* read timeout */
 			}
@@ -1663,7 +1656,7 @@ int serial_read( int fd, void *vb, int size )
 					break;
 				default:
 					YACK();
-					errnoMINE = EIO;
+					errno = EIO;
 					printf("6\n");
 					return -1;
 			}
@@ -1899,7 +1892,8 @@ show_DCB()
    win32api:     None
    comments:
 ----------------------------------------------------------*/
-void show_DCB( DCB myDCB ){
+void show_DCB( DCB myDCB )
+{
 
 #ifdef DEBUG_HOSED
 	char message[80];
@@ -2657,10 +2651,13 @@ fstat()
    comments:  this is just to keep the eventLoop happy.
 ----------------------------------------------------------*/
 
+#if ! defined( __LCC__ )
 int fstat( int fd, ... )
 {
 	return( 0 );
 }
+#endif
+
 /*----------------------------------------------------------
 ioctl()
 
@@ -2691,7 +2688,7 @@ int ioctl( int fd, int request, ... )
 {
 	unsigned long dwStatus = 0;
 	va_list ap;
-	int *arg, ret, result, old_flag;
+	int *arg, ret, old_flag;
 	char message[80];
 
 #ifdef TIOCGSERIAL
@@ -2821,12 +2818,10 @@ int ioctl( int fd, int request, ... )
 			if ( *arg & TIOCM_RTS )
 			{
 				index->MSR |= TIOCM_RTS;
-				result &= SETRTS;
 			}
 			else
 			{
 				index->MSR &= ~TIOCM_RTS;
-				result &= CLRRTS;
 			}
 			if( EscapeCommFunction( index->hComm,
 				( *arg & TIOCM_RTS ) ? SETRTS : CLRRTS ) )
@@ -3222,7 +3217,7 @@ fail:
 	YACK();
 	sprintf( message, "< select called error %i\n", n );
 	report( message );
-	errnoMINE = EBADFD;
+	errno = EBADFD;
 	LEAVE( "serial_select" );
 	return( 1 );
 }
