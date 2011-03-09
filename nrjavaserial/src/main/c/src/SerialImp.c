@@ -290,8 +290,8 @@ JNIEXPORT void JNICALL RXTXPort(Initialize)(
 	}
 	if(strcmp(name.release,UTS_RELEASE)!=0)
 	{
-		sprintf( message, LINUX_KERNEL_VERSION_ERROR, UTS_RELEASE,
-			name.release );
+//		sprintf( message, LINUX_KERNEL_VERSION_ERROR, UTS_RELEASE,
+//			name.release );
 		report( message );
 		getchar();
 	}
@@ -641,14 +641,14 @@ JNIEXPORT jint JNICALL RXTXPort(open)(
 	ENTER( "RXTXPort:open" );
 	if ( LOCK( filename, pid ) )
 	{
-		sprintf( message, "open: locking has failed for %s\n",
-			filename );
+//		sprintf( message, "open: locking has failed for %s\n",
+//			filename );
 		report( message );
 		goto fail;
 	}
 	else
 	{
-		sprintf( message, "open: locking worked for %s\n", filename );
+//		sprintf( message, "open: locking worked for %s\n", filename );
 		report( message );
 	}
 	/* This is used so DTR can remain low on 'open()' */
@@ -674,8 +674,8 @@ JNIEXPORT jint JNICALL RXTXPort(open)(
 
        if (fd >= 0 && (ioctl(fd, TIOCEXCL) == -1))
        {
-               sprintf( message, "open: exclusive access denied for %s\n",
-                       filename );
+//               sprintf( message, "open: exclusive access denied for %s\n",
+//                       filename );
                report( message );
                report_error( message );
 
@@ -686,7 +686,7 @@ JNIEXPORT jint JNICALL RXTXPort(open)(
 
 	if( configure_port( fd ) ) goto fail;
 	(*env)->ReleaseStringUTFChars( env, jstr, filename );
-	sprintf( message, "open: fd returned is %i\n", fd );
+//	sprintf( message, "open: fd returned is %i\n", fd );
 	report( message );
 	LEAVE( "RXTXPort:open" );
 	report_time_end( );
@@ -5253,7 +5253,7 @@ int lib_lock_dev_unlock( const char *filename, int pid )
 int lib_lock_dev_lock( const char *filename, int pid )
 {
 	char message[80];
-	printf("LOCKING %s\n", filename);
+//	printf("LOCKING %s\n", filename);
 	if ( dev_testlock( filename ) )
 	{
 		report( "fhs_lock() lockstatus fail\n" );
@@ -5261,9 +5261,9 @@ int lib_lock_dev_lock( const char *filename, int pid )
 	}
 	if ( dev_lock( filename ) )
 	{
-		sprintf( message,
-			"RXTX fhs_lock() Error: creating lock file for: %s: %s\n",
-			filename, strerror(errnoMINE) );
+//		sprintf( message,
+//			"RXTX fhs_lock() Error: creating lock file for: %s: %s\n",
+//			filename, strerror(errnoMINE) );
 		report_error( message );
 		return 1;
 	}
@@ -5295,6 +5295,9 @@ int fhs_lock( const char *filename, int pid )
 	 * Problem lockfiles will be dealt with.  Some may not even be in use.
 	 *
 	 */
+#if defined(__linux__)
+	return 0;
+#endif
 	int fd,j;
 	char lockinfo[12], message[80];
 	char file[80], *p;
@@ -5321,20 +5324,20 @@ int fhs_lock( const char *filename, int pid )
 	fd = open( file, O_CREAT | O_WRONLY | O_EXCL, 0444 );
 	if( fd < 0 )
 	{
-		sprintf( message,
-			"RXTX fhs_lock() Error: opening lock file: %s: %s\n",
-			file, strerror(errnoMINE) );
+//		sprintf( message,
+//			"RXTX fhs_lock() Error: opening lock file: %s: %s\n",
+//			file, strerror(errnoMINE) );
 		report_error( message );
 		return 1;
 	}
 	sprintf( lockinfo, "%10d\n",(int) getpid() );
-	sprintf( message, "fhs_lock: creating lockfile: %s\n", lockinfo );
+//	sprintf( message, "fhs_lock: creating lockfile: %s\n", lockinfo );
 	report( message );
 	if( ( write( fd, lockinfo, 11 ) ) < 0 )
 	{
-		sprintf( message,
-				"RXTX fhs_lock() Error: writing lock file: %s: %s\n",
-				file, strerror(errnoMINE) );
+//		sprintf( message,
+//				"RXTX fhs_lock() Error: writing lock file: %s: %s\n",
+//				file, strerror(errnoMINE) );
 		report_error( message );
 		close( fd );
 		return 1;
@@ -5392,7 +5395,7 @@ int uucp_lock( const char *filename, int pid )
 	int fd;
 	struct stat buf;
 
-	sprintf( message, "uucp_lock( %s );\n", filename );
+//	sprintf( message, "uucp_lock( %s );\n", filename );
 	report( message );
 
 	if ( check_lock_status( filename ) )
@@ -5408,7 +5411,7 @@ int uucp_lock( const char *filename, int pid )
 	if ( stat( filename, &buf ) != 0 )
 	{
 		report( "RXTX uucp_lock() could not find device.\n" );
-		sprintf( message, "uucp_lock: device was %s\n", name );
+//		sprintf( message, "uucp_lock: device was %s\n", name );
 		report( message );
 		return 1;
 	}
@@ -5421,8 +5424,8 @@ int uucp_lock( const char *filename, int pid )
 	sprintf( lockinfo, "%10d\n", (int) getpid() );
 	if ( stat( lockfilename, &buf ) == 0 )
 	{
-		sprintf( message, "RXTX uucp_lock() %s is there\n",
-			lockfilename );
+//		sprintf( message, "RXTX uucp_lock() %s is there\n",
+//			lockfilename );
 		report( message );
 		report_error( message );
 		return 1;
@@ -5430,17 +5433,17 @@ int uucp_lock( const char *filename, int pid )
 	fd = open( lockfilename, O_CREAT | O_WRONLY | O_EXCL, 0444 );
 	if( fd < 0 )
 	{
-		sprintf( message,
-			"RXTX uucp_lock() Error: opening lock file: %s: %s\n",
-			lockfilename, strerror(errnoMINE) );
+//		sprintf( message,
+//			"RXTX uucp_lock() Error: opening lock file: %s: %s\n",
+//			lockfilename, strerror(errnoMINE) );
 		report_error( message );
 		return 1;
 	}
 	if( ( write( fd, lockinfo, 11 ) ) < 0 )
 	{
-		sprintf( message,
-			"RXTX uucp_lock() Error: writing lock file: %s: %s\n",
-			lockfilename, strerror(errnoMINE) );
+//		sprintf( message,
+//			"RXTX uucp_lock() Error: writing lock file: %s: %s\n",
+//			lockfilename, strerror(errnoMINE) );
 		report_error( message );
 		close( fd );
 		return 1;
@@ -5460,13 +5463,17 @@ int uucp_lock( const char *filename, int pid )
 ----------------------------------------------------------*/
 int check_lock_status( const char *filename )
 {
+
+#if defined(__linux__)
+	return 0;
+#endif
 	struct stat buf;
 	/*  First, can we find the directory? */
 
 	if ( stat( LOCKDIR, &buf ) != 0 )
 	{
 		report( "check_lock_status: could not find lock directory.\n" );
-		return 1;
+		return 0;
 	}
 
 	/*  OK.  Are we able to write to it?  If not lets bail */
@@ -5474,7 +5481,7 @@ int check_lock_status( const char *filename )
 	if ( check_group_uucp() )
 	{
 		report_error( "check_lock_status: No permission to create lock file.\nplease see: How can I use Lock Files with rxtx? in INSTALL\n" );
-		return(1);
+		return(0);
 	}
 
 	/* is the device alread locked */
@@ -5482,7 +5489,7 @@ int check_lock_status( const char *filename )
 	if ( is_device_locked( filename ) )
 	{
 		report( "check_lock_status: device is locked by another application\n" );
-		return 1;
+		return 0;
 	}
 	return 0;
 
@@ -5501,6 +5508,11 @@ int check_lock_status( const char *filename )
 ----------------------------------------------------------*/
 void fhs_unlock( const char *filename, int openpid )
 {
+
+#if defined(__linux__)
+	return;
+#endif
+
 	char file[80],*p;
 	int i;
 
@@ -5905,17 +5917,17 @@ int is_device_locked( const char *port_filename )
 		fd=open( file, O_RDONLY );
 		if( fd < 0 )
 		{
-			sprintf( message,
-					"RXTX is_device_locked() Error: opening lock file: %s: %s\n",
-					file, strerror(errnoMINE) );
+//			sprintf( message,
+//					"RXTX is_device_locked() Error: opening lock file: %s: %s\n",
+//					file, strerror(errnoMINE) );
 			report_warning( message );
 			return 1;
 		}
 		if ( ( read( fd, pid_buffer, 11 ) ) < 0 ) 
 		{
-			sprintf( message,
-					"RXTX is_device_locked() Error: reading lock file: %s: %s\n",
-					file, strerror(errnoMINE) );
+//			sprintf( message,
+//					"RXTX is_device_locked() Error: reading lock file: %s: %s\n",
+//					file, strerror(errnoMINE) );
 			report_warning( message );
 			close( fd );
 			return 1;
@@ -5926,9 +5938,9 @@ int is_device_locked( const char *port_filename )
 
 		if( kill( (pid_t) pid, 0 ) && errnoMINE==ESRCH )
 		{
-			sprintf( message,
-				"RXTX Warning:  Removing stale lock file. %s\n",
-				file );
+//			sprintf( message,
+//				"RXTX Warning:  Removing stale lock file. %s\n",
+//				file );
 			report_warning( message );
 			if( unlink( file ) != 0 )
 			{
