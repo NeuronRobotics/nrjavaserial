@@ -68,26 +68,8 @@
 #define LEAVE(x)
 #endif /* TRACE */
 #if defined(_MSC_VER)
-#define YACK() \
-{ \
-	char *allocTextBuf, message[80]; \
-	unsigned long nChars; \
-	unsigned int errorCode = GetLastError(); \
-	nChars = FormatMessage ( \
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | \
-		FORMAT_MESSAGE_FROM_SYSTEM, \
-		NULL, \
-		errorCode, \
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), \
-		(LPSTR)&allocTextBuf, \
-		16, \
-		NULL ); \
-	_snprintf_s( message, 80, 80, "Error 0x%x at %s(%d): %s\n", errorCode, __FILE__, __LINE__, allocTextBuf); \
-	report_error( message ); \
-	LocalFree(allocTextBuf); \
-	Sleep(1); \
-}
-#else
+#  define snprintf _snprintf
+#endif
 
 #define YACK() \
 { \
@@ -104,11 +86,11 @@
 		16, \
 		NULL ); \
 	snprintf( message, 80, "Error 0x%x at %s(%d): %s\n", errorCode, __FILE__, __LINE__, allocTextBuf); \
+	message[sizeof(message)-1] = '\0'; /* needed for MS CRT snprintf */ \
 	report_error( message ); \
 	LocalFree(allocTextBuf); \
 	Sleep(1); \
 }
-#endif
 typedef unsigned char   cc_t;
 typedef unsigned int    speed_t;
 typedef unsigned int    tcflag_t;
@@ -116,13 +98,13 @@ typedef unsigned int    tcflag_t;
 /* structs are from linux includes or linux man pages to match
    interfaces.
 */
-/*
+
 struct timespec
 {
 	time_t	tv_sec;
 	long	tv_nsec;
 };
-*/
+
 #define NCCS 32
 struct termios
   {
@@ -490,7 +472,9 @@ find a way to get/set buad_base and divisor directly.
 
 /* ioctl errors */
 #define ENOIOCTLCMD	515
-#define EBADFD		 77
+#if ! defined( __LCC__ )
+	#define EBADFD		 77
+#endif
 /* modem lines */
 #define TIOCM_LE    0x001
 #define TIOCM_DTR   0x002
