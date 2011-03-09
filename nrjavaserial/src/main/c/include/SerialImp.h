@@ -139,6 +139,7 @@ struct event_info_struct
 #if !defined(TIOCSERGETLSR) && !defined(WIN32)
 	int writing;
 	int output_buffer_empty_flag;
+	int drain_loop_running;
 	pthread_t drain_tid;
 #endif /* !TIOCSERGETLSR !WIN32 */
 #	if defined(TIOCGICOUNT)
@@ -286,50 +287,69 @@ Trent
 #	define WRITE write
 #	define READ read
 #	define SELECT select
+#endif /* WIN32 */
+
+#if defined(DEBUG_TIMING) && ! defined(WIN32) /* WIN32 does not have gettimeofday() */
 struct timeval snow, enow, seloop, eeloop;
-#define report_time_start_rs( ) \
-{ \
-	gettimeofday(&snow, NULL); \
-}
-#define report_time_end_rs( ) \
-{ \
-	gettimeofday(&enow, NULL); \
-	mexPrintf("%8i sec : %8i usec\n", enow.tv_sec - snow.tv_sec, enow.tv_sec - snow.tv_sec?snow.tv_usec-enow.tv_usec:enow.tv_usec - snow.tv_usec); \
-}
-#ifdef DEBUG_TIMING
-struct timeval snow, enow, seloop, eeloop;
+#ifdef __APPLE__
 #define report_time_eventLoop( ) { \
 	if ( seloop.tv_sec == eeloop.tv_sec && seloop.tv_usec == eeloop.tv_usec ) \
 	{ \
 		gettimeofday(&eeloop, NULL); \
 		seloop.tv_sec = eeloop.tv_sec; \
 		seloop.tv_usec = eeloop.tv_usec; \
-		mexPrintf("%8i sec : %8i usec\n", eeloop.tv_sec - seloop.tv_sec, eeloop.tv_usec - seloop.tv_usec); \
+		printf("%8li sec : %8i usec\n", eeloop.tv_sec - seloop.tv_sec, eeloop.tv_usec - seloop.tv_usec); \
 	} \
 }
 #define report_time( ) \
 { \
 	struct timeval now; \
 	gettimeofday(&now, NULL); \
-	mexPrintf("%8s : %5i : %8i sec : %8i usec\n", __TIME__, __LINE__, now.tv_sec, now.tv_usec); \
+	printf("%8s : %5i : %8li sec : %8i usec\n", __TIME__, __LINE__, now.tv_sec, now.tv_usec); \
 }
 #define report_time_start( ) \
 { \
 	gettimeofday(&snow, NULL); \
-	mexPrintf("%8s : %5i : %8i sec : %8i usec", __TIME__, __LINE__, snow.tv_sec, snow.tv_usec); \
+	printf("%8s : %5i : %8li sec : %8i usec", __TIME__, __LINE__, snow.tv_sec, snow.tv_usec); \
 }
 #define report_time_end( ) \
 { \
 	gettimeofday(&enow, NULL); \
-	mexPrintf("%8i sec : %8i usec\n", enow.tv_sec - snow.tv_sec, enow.tv_sec - snow.tv_sec?snow.tv_usec-enow.tv_usec:enow.tv_usec - snow.tv_usec); \
+	printf("%8li sec : %8i usec\n", enow.tv_sec - snow.tv_sec, enow.tv_sec - snow.tv_sec?snow.tv_usec-enow.tv_usec:enow.tv_usec - snow.tv_usec); \
 }
-#else
+#else /* ! __APPLE__ */
+#define report_time_eventLoop( ) { \
+if ( seloop.tv_sec == eeloop.tv_sec && seloop.tv_usec == eeloop.tv_usec ) \
+{ \
+gettimeofday(&eeloop, NULL); \
+seloop.tv_sec = eeloop.tv_sec; \
+seloop.tv_usec = eeloop.tv_usec; \
+printf("%8li sec : %8li usec\n", eeloop.tv_sec - seloop.tv_sec, eeloop.tv_usec - seloop.tv_usec); \
+} \
+}
+#define report_time( ) \
+{ \
+struct timeval now; \
+gettimeofday(&now, NULL); \
+printf("%8s : %5i : %8li sec : %8li usec\n", __TIME__, __LINE__, now.tv_sec, now.tv_usec); \
+}
+#define report_time_start( ) \
+{ \
+gettimeofday(&snow, NULL); \
+printf("%8s : %5i : %8li sec : %8li usec", __TIME__, __LINE__, snow.tv_sec, snow.tv_usec); \
+}
+#define report_time_end( ) \
+{ \
+gettimeofday(&enow, NULL); \
+printf("%8li sec : %8li usec\n", enow.tv_sec - snow.tv_sec, enow.tv_sec - snow.tv_sec?snow.tv_usec-enow.tv_usec:enow.tv_usec - snow.tv_usec); \
+}
+#endif  /* __APPLE__ */
+#else /* ! DEBUG_TIMING || WIN32 */
 #define report_time_eventLoop( ){};
 #define report_time( ) {}
 #define report_time_start( ) {}
 #define report_time_end( ) {}
-
-#endif /* DEBUG_TIMING */
+#endif /* DEBUG_TIMING && ! WIN32 */
 
 /* #define TRACE */
 #ifdef TRACE
@@ -339,8 +359,6 @@ struct timeval snow, enow, seloop, eeloop;
 #define ENTER(x)
 #define LEAVE(x)
 #endif /* TRACE */
-
-#endif /* WIN32 */
 
 /* allow people to override the directories */
 /* #define USER_LOCK_DIRECTORY "/home/tjarvi/1.5/build" */
@@ -433,19 +451,6 @@ Flow Control defines inspired by reading how mgetty by Gert Doering does it
 #endif
 
 /* PROTOTYPES */
-#ifdef DEBUG_MW
-extern void mexWarnMsgTxt( const char * );
-extern void mexErrMsgTxt( const char * );
-#ifndef __APPLE__
-extern int mexPrintf( const char *, ... );
-#	define printf mexPrintf
-#endif
-#endif /* DEBUG_MW */
-
-#ifdef __APPLE__
-#   define mexPrintf printf
-#endif
-
 #ifdef __BEOS__
 struct tpid_info_struct *add_tpid( struct tpid_info_struct * );
 data_rate translate_speed( JNIEnv*, jint  );
