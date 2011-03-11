@@ -72,13 +72,16 @@ import java.util.StringTokenizer;
 */
 public class RXTXCommDriver implements CommDriver
 {
-
+	static ArrayList<String> ports =new ArrayList<String>();
+	
 	private final static boolean debug = false;
 	private final static boolean devel = false;
 	private final static boolean noVersionOutput = "true".equals( System.getProperty( "gnu.io.rxtx.NoVersionOutput" ) );
 
 	static
 	{
+		if(ports==null)
+			ports =new ArrayList<String>();
 		if(debug ) System.out.println("RXTXCommDriver {}");
 		//System.loadLibrary( "rxtxSerial" );
 		SerialManager.getInstance();
@@ -134,6 +137,11 @@ public class RXTXCommDriver implements CommDriver
 	
 	public static String nativeGetVersionWrapper() throws UnsatisfiedLinkError {
 		return nativeGetVersion();
+	}
+	public ArrayList<String> getPortIdentifierList() {
+		ports =new ArrayList<String>();
+		registerScannedPorts(CommPortIdentifier.PORT_SERIAL);
+		return ports;
 	}
 	private final String[] getValidPortPrefixes(String CandidatePortPrefixes[])
 	{
@@ -221,7 +229,7 @@ public class RXTXCommDriver implements CommDriver
 			}
 		}
 	}
-        private void registerValidPorts(
+		private void registerValidPorts(
 		String CandidateDeviceNames[],
 		String ValidPortPrefixes[],
 		int PortType
@@ -307,11 +315,21 @@ public class RXTXCommDriver implements CommDriver
 						checkSolaris(PortName,PortType);
 					else if (testRead(PortName, PortType))
 					{
-						CommPortIdentifier.addPortName(
-								PortName,
-								PortType,
-								this
-						);
+						try{
+							CommPortIdentifier.getPortIdentifier(PortName);
+						}catch(NoSuchPortException e){
+							CommPortIdentifier.addPortName(
+									PortName,
+									PortType,
+									this
+							);
+						}
+						boolean ok=true;
+						for(String s :ports)
+							if(s.contains(PortName))
+								ok=false;
+						if(ok)
+							ports.add(PortName);
 					}
 				}
 			}
@@ -463,6 +481,8 @@ public class RXTXCommDriver implements CommDriver
     */
 	private void registerScannedPorts(int PortType)
 	{
+		osName=System.getProperty("os.name");
+		deviceDirectory=getDeviceDirectory();
 		String[] CandidateDeviceNames;
 		if (debug)
 			System.out.println("scanning device directory "+deviceDirectory+" for ports of type "+PortType);
