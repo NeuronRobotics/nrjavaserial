@@ -58,6 +58,7 @@
 package  gnu.io;
 
 import  java.io.FileDescriptor;
+import java.util.ArrayList;
 import java.util.HashMap;
 import  java.util.Vector;
 import  java.util.Enumeration;
@@ -360,6 +361,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 		}
 		return new CommPortEnumerator();
 	}
+	
 /*------------------------------------------------------------------------------
 	getPortType()
 	accept:
