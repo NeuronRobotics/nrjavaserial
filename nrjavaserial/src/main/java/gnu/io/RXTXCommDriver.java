@@ -315,15 +315,15 @@ public class RXTXCommDriver implements CommDriver
 						checkSolaris(PortName,PortType);
 					else if (testRead(PortName, PortType))
 					{
-						try{
-							CommPortIdentifier.getPortIdentifier(PortName);
-						}catch(NoSuchPortException e){
+						//try{
+							//CommPortIdentifier.getPortIdentifier(PortName);
+						//}catch(NoSuchPortException e){
 							CommPortIdentifier.addPortName(
 									PortName,
 									PortType,
 									this
 							);
-						}
+						//}
 						boolean ok=true;
 						for(String s :ports)
 							if(s.contains(PortName))
