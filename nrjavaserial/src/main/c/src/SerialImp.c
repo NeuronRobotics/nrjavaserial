@@ -745,12 +745,12 @@ JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
 		report("nativeClose: discarding remaining data (tcflush)\n");
 		/* discard any incoming+outgoing data not yet read/sent */
 		tcflush(fd, TCIOFLUSH);
-		UNLOCK( filename, pid );
+
  		do {
 			report("nativeClose:  calling close\n");
 			result=CLOSE (fd);
 		}  while ( result < 0 && errnoMINE == EINTR );
-
+ 		UNLOCK( filename, pid );
 	}
 	report("nativeClose: Delete jclazz\n");
 	(*env)->DeleteLocalRef( env, jclazz );
