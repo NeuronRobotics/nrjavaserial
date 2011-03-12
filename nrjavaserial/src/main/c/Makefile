@@ -103,12 +103,14 @@ linux:dirs
 	$(CCLIN32) src/fixup.c -o build/fixup.o
 	$(CCLIN32) src/fuserImp.c -o build/fuserImp.o
 	$(CCLIN32) src/SerialImp.c -o build/SerialImp.o
+	rm "resources/native/linux/x86_32/libNRJavaSerial.so"
 	$(LINKLIN32) -o"resources/native/linux/x86_32/libNRJavaSerial.so" $(LINOBJ)
 	rm build/*
 	
 	$(CCLIN64) src/fixup.c -o build/fixup.o
 	$(CCLIN64) src/fuserImp.c -o build/fuserImp.o
 	$(CCLIN64) src/SerialImp.c -o build/SerialImp.o
+	rm "resources/native/linux/x86_64/libNRJavaSerial.so"
 	$(LINKLIN64) -o"resources/native/linux/x86_64/libNRJavaSerial.so" $(LINOBJ)
 	rm -rf build
 armChumby:	dirs

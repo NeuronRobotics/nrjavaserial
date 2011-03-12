@@ -931,7 +931,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeSetSerialPortParams)(
     For some reason the native exceptions are not being caught.  Moving this
     to the Java side fixed the issue.  taj.
 		throw_java_exception( env, UNSUPPORTED_COMM_OPERATION,
-			"nativeSetSerialPortParams", strerror( errnoMINE ) );
+			"nativeSetSerialPortParams", strerror( errno ) );
 */
 		return(1);
 	}
@@ -1456,7 +1456,7 @@ JNIEXPORT void JNICALL RXTXPort(writeByte)( JNIEnv *env,
 		report_verbose( "nativeDrain: trying tcdrain\n" );
 		result=tcdrain(fd);
 		count++;
-	}  while (result && errnoMINE==EINTR && count <3);
+	}  while (result && errno==EINTR && count <3);
 #endif */ /* __sun __ */
 #ifndef TIOCSERGETLSR
 	if( ! interrupted )
@@ -1549,7 +1549,7 @@ JNIEXPORT void JNICALL RXTXPort(writeArray)( JNIEnv *env,
 		report_verbose( "nativeDrain: trying tcdrain\n" );
 		result=tcdrain(fd);
 		icount++;
-	}  while (result && errnoMINE==EINTR && icount <3);
+	}  while (result && errno==EINTR && icount <3);
 #endif */ /* __sun__ */
 	(*env)->ReleaseByteArrayElements( env, jbarray, body, 0 );
 #ifndef TIOCSERGETLSR
@@ -3628,12 +3628,12 @@ JNIEXPORT jint JNICALL RXTXPort(nativeavailable)( JNIEnv *env,
 	}
 /*
 	sprintf(message, "    nativeavailable: FIORDCHK result %d, \
-		errnoMINE %d\n", result , result == -1 ? errnoMINE : 0);
+		errno %d\n", result , result == -1 ? errno : 0);
 	report_verbose( message );
 	if( result )
 	{
 		sprintf(message, "    nativeavailable: FIORDCHK result %d, \
-				errnoMINE %d\n", result , result == -1 ? errnoMINE : 0);
+				errno %d\n", result , result == -1 ? errno : 0);
 		report( message );
 	}
 	LEAVE( "RXTXPort:nativeavailable" );
@@ -4408,7 +4408,7 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
               pseudo-terminal device that is locked.
 
               man 2 read
-              If O_NONBLOCK is set, read() returns -1 and sets errnoMINE
+              If O_NONBLOCK is set, read() returns -1 and sets errno
               to EAGAIN.
 
               -- should be OK.
@@ -4421,7 +4421,7 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
 
               Win32
 
-              neither errnoMINE is currently set.  Comment added to termios.c
+              neither errno is currently set.  Comment added to termios.c
               serial_open().
 
               -- should be OK
@@ -5263,7 +5263,7 @@ int lib_lock_dev_lock( const char *filename, int pid )
 	{
 //		sprintf( message,
 //			"RXTX fhs_lock() Error: creating lock file for: %s: %s\n",
-//			filename, strerror(errnoMINE) );
+//			filename, strerror(errno) );
 		report_error( message );
 		return 1;
 	}
@@ -5296,7 +5296,7 @@ int fhs_lock( const char *filename, int pid )
 	 *
 	 */
 #if defined(__linux__)
-	return 0;
+	//return 0;
 #endif
 	int fd,j;
 	char lockinfo[12], message[80];
@@ -5324,20 +5324,20 @@ int fhs_lock( const char *filename, int pid )
 	fd = open( file, O_CREAT | O_WRONLY | O_EXCL, 0444 );
 	if( fd < 0 )
 	{
-//		sprintf( message,
-//			"RXTX fhs_lock() Error: opening lock file: %s: %s\n",
-//			file, strerror(errnoMINE) );
+		sprintf( message,
+			"RXTX fhs_lock() Error: opening lock file: %s: %s\n",
+			file, strerror(errno) );
 		report_error( message );
 		return 1;
 	}
 	sprintf( lockinfo, "%10d\n",(int) getpid() );
-//	sprintf( message, "fhs_lock: creating lockfile: %s\n", lockinfo );
+	sprintf( message, "fhs_lock: creating lockfile: %s\n", lockinfo );
 	report( message );
 	if( ( write( fd, lockinfo, 11 ) ) < 0 )
 	{
-//		sprintf( message,
-//				"RXTX fhs_lock() Error: writing lock file: %s: %s\n",
-//				file, strerror(errnoMINE) );
+		sprintf( message,
+				"RXTX fhs_lock() Error: writing lock file: %s: %s\n",
+				file, strerror(errno) );
 		report_error( message );
 		close( fd );
 		return 1;
@@ -5391,7 +5391,7 @@ int fhs_lock( const char *filename, int pid )
 int uucp_lock( const char *filename, int pid )
 {
 	char lockfilename[80], lockinfo[12], message[80];
-	//char name[80];
+	char name[80];
 	int fd;
 	struct stat buf;
 
@@ -5411,7 +5411,7 @@ int uucp_lock( const char *filename, int pid )
 	if ( stat( filename, &buf ) != 0 )
 	{
 		report( "RXTX uucp_lock() could not find device.\n" );
-//		sprintf( message, "uucp_lock: device was %s\n", name );
+		sprintf( message, "uucp_lock: device was %s\n", name );
 		report( message );
 		return 1;
 	}
@@ -5424,8 +5424,8 @@ int uucp_lock( const char *filename, int pid )
 	sprintf( lockinfo, "%10d\n", (int) getpid() );
 	if ( stat( lockfilename, &buf ) == 0 )
 	{
-//		sprintf( message, "RXTX uucp_lock() %s is there\n",
-//			lockfilename );
+		sprintf( message, "RXTX uucp_lock() %s is there\n",
+			lockfilename );
 		report( message );
 		report_error( message );
 		return 1;
@@ -5433,17 +5433,17 @@ int uucp_lock( const char *filename, int pid )
 	fd = open( lockfilename, O_CREAT | O_WRONLY | O_EXCL, 0444 );
 	if( fd < 0 )
 	{
-//		sprintf( message,
-//			"RXTX uucp_lock() Error: opening lock file: %s: %s\n",
-//			lockfilename, strerror(errnoMINE) );
+		sprintf( message,
+			"RXTX uucp_lock() Error: opening lock file: %s: %s\n",
+			lockfilename, strerror(errno) );
 		report_error( message );
 		return 1;
 	}
 	if( ( write( fd, lockinfo, 11 ) ) < 0 )
 	{
-//		sprintf( message,
-//			"RXTX uucp_lock() Error: writing lock file: %s: %s\n",
-//			lockfilename, strerror(errnoMINE) );
+		sprintf( message,
+			"RXTX uucp_lock() Error: writing lock file: %s: %s\n",
+			lockfilename, strerror(errno) );
 		report_error( message );
 		close( fd );
 		return 1;
@@ -5463,16 +5463,18 @@ int uucp_lock( const char *filename, int pid )
 ----------------------------------------------------------*/
 int check_lock_status( const char *filename )
 {
-
+	char message[80];
 #if defined(__linux__)
-	return 0;
+	//return 0;
 #endif
 	struct stat buf;
 	/*  First, can we find the directory? */
 
 	if ( stat( LOCKDIR, &buf ) != 0 )
 	{
-		report( "check_lock_status: could not find lock directory.\n" );
+		sprintf( message,"check_lock_status: could not find lock directory.\n" );
+		report( message );
+		report_error( message );
 		return 0;
 	}
 
@@ -5480,7 +5482,10 @@ int check_lock_status( const char *filename )
 
 	if ( check_group_uucp() )
 	{
-		report_error( "check_lock_status: No permission to create lock file.\nplease see: How can I use Lock Files with rxtx? in INSTALL\n" );
+
+		sprintf( message,"check_lock_status: No permission to create lock file.\n" );
+		report( message );
+		report_error( message );
 		return(0);
 	}
 
@@ -5488,7 +5493,10 @@ int check_lock_status( const char *filename )
 
 	if ( is_device_locked( filename ) )
 	{
-		report( "check_lock_status: device is locked by another application\n" );
+
+		sprintf( message,"check_lock_status: device is locked by another application\n"  );
+		report( message );
+		report_error( message );
 		return 0;
 	}
 	return 0;
@@ -5509,8 +5517,9 @@ int check_lock_status( const char *filename )
 void fhs_unlock( const char *filename, int openpid )
 {
 
+	char message[80];
 #if defined(__linux__)
-	return;
+	//return;
 #endif
 
 	char file[80],*p;
@@ -5530,6 +5539,9 @@ void fhs_unlock( const char *filename, int openpid )
 	else
 	{
 		report("fhs_unlock: Unable to remove LockFile\n");
+		sprintf( message,"fhs_unlock: Unable to remove LockFile\n"  );
+		report( message );
+		report_error( message );
 	}
 }
 
@@ -5919,7 +5931,7 @@ int is_device_locked( const char *port_filename )
 		{
 //			sprintf( message,
 //					"RXTX is_device_locked() Error: opening lock file: %s: %s\n",
-//					file, strerror(errnoMINE) );
+//					file, strerror(errno) );
 			report_warning( message );
 			return 1;
 		}
@@ -5927,7 +5939,7 @@ int is_device_locked( const char *port_filename )
 		{
 //			sprintf( message,
 //					"RXTX is_device_locked() Error: reading lock file: %s: %s\n",
-//					file, strerror(errnoMINE) );
+//					file, strerror(errno) );
 			report_warning( message );
 			close( fd );
 			return 1;
