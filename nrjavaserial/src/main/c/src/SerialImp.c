@@ -147,7 +147,7 @@
 #include	<lockdev.h>
 #endif /* LIBLOCKDEV */
 
-int errnoMINE;
+extern int errno;
 
 #include "SerialImp.h"
 
@@ -662,7 +662,7 @@ JNIEXPORT jint JNICALL RXTXPort(open)(
 
 	do {
 		fd=OPEN (filename, O_RDWR | O_NOCTTY | O_NONBLOCK );
-	}  while (fd < 0 && errnoMINE==EINTR);
+	}  while (fd < 0 && errno==EINTR);
 
 #ifdef OPEN_EXCL
        /*
@@ -696,7 +696,7 @@ fail:
 	(*env)->ReleaseStringUTFChars( env, jstr, filename );
 	LEAVE( "RXTXPort:open" );
 	throw_java_exception( env, PORT_IN_USE_EXCEPTION, "open",
-		strerror( errnoMINE ) );
+		strerror( errno ) );
 	return -1;
 }
 
@@ -749,7 +749,7 @@ JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
  		do {
 			report("nativeClose:  calling close\n");
 			result=CLOSE (fd);
-		}  while ( result < 0 && errnoMINE == EINTR );
+		}  while ( result < 0 && errno == EINTR );
  		UNLOCK( filename, pid );
 	}
 	report("nativeClose: Delete jclazz\n");
@@ -1286,7 +1286,7 @@ void *drain_loop( void *arg )
 				report_verbose("drain_loop:  writing not set\n");
 			}
 		}
-		else if (errnoMINE != EINTR)
+		else if (errno != EINTR)
 		{
 			report("drain_loop:  tcdrain bad fd\n");
 			goto end;
@@ -1444,7 +1444,7 @@ JNIEXPORT void JNICALL RXTXPort(writeByte)( JNIEnv *env,
 		sprintf( msg, "writeByte %c>>\n", byte );
 		report( msg );
 		result=WRITE (fd, (void * ) &byte, sizeof(unsigned char));
-	}  while (result < 0 && errnoMINE==EINTR);
+	}  while (result < 0 && errno==EINTR);
 	if( result < 0 )
 	{
 		goto fail;
@@ -1481,7 +1481,7 @@ JNIEXPORT void JNICALL RXTXPort(writeByte)( JNIEnv *env,
 	}
 fail:
 	throw_java_exception( env, IO_EXCEPTION, "writeByte",
-		strerror( errnoMINE ) );
+		strerror( errno ) );
 }
 
 /*----------------------------------------------------------
@@ -1537,7 +1537,7 @@ JNIEXPORT void JNICALL RXTXPort(writeArray)( JNIEnv *env,
 			total += result;
 		}
 		report("writeArray()\n");
-	}  while ( ( total < count ) && (result < 0 && errnoMINE==EINTR ) );
+	}  while ( ( total < count ) && (result < 0 && errno==EINTR ) );
 	if( result < 0 )
 	{
 		goto fail;
@@ -1580,7 +1580,7 @@ JNIEXPORT void JNICALL RXTXPort(writeArray)( JNIEnv *env,
 	report_time_end();
 fail:
 	if( result < 0 ) throw_java_exception( env, IO_EXCEPTION,
-		"writeArray", strerror( errnoMINE ) );
+		"writeArray", strerror( errno ) );
 }
 
 /*----------------------------------------------------------
@@ -1611,7 +1611,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeDrain)( JNIEnv *env,
 		report_verbose( "nativeDrain: trying tcdrain\n" );
 		result=tcdrain(fd);
 		count++;
-	}  while (result && errnoMINE==EINTR && count <3);
+	}  while (result && errno==EINTR && count <3);
 
 	sprintf( message, "RXTXPort:drain() returns: %i\n", result );
 	report_verbose( message );
@@ -1621,7 +1621,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeDrain)( JNIEnv *env,
 #endif /* __sun__ */
 	LEAVE( "RXTXPort:drain()" );
 	if( result ) throw_java_exception( env, IO_EXCEPTION, "nativeDrain",
-		strerror( errnoMINE ) );
+		strerror( errno ) );
 	if( interrupted ) return( JNI_FALSE );
 #if !defined(TIOCSERGETLSR) && !defined(WIN32)
 	if( eis && eis->writing )
@@ -1682,7 +1682,7 @@ JNIEXPORT jint JNICALL RXTXPort(NativegetReceiveTimeout)(
 fail:
 	LEAVE( "RXTXPort:nativegetRecieveTimeout()" );
 	throw_java_exception( env, IO_EXCEPTION, "getReceiveTimeout",
-		strerror( errnoMINE ) );
+		strerror( errno ) );
 	return -1;
 }
 
@@ -1708,7 +1708,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(NativeisReceiveTimeoutEnabled)(
 fail:
 	LEAVE( "RXTXPort:NativeisRecieveTimeoutEnabled()" );
 	throw_java_exception( env, IO_EXCEPTION, "isReceiveTimeoutEnabled",
-		strerror( errnoMINE ) );
+		strerror( errno ) );
 	return JNI_FALSE;
 }
 
@@ -2052,11 +2052,11 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeSetBaudBase)(
 	return( ( jboolean ) 0 );
 fail:
 	throw_java_exception( env, IO_EXCEPTION, "nativeSetBaudBase",
-		strerror( errnoMINE ) );
+		strerror( errno ) );
 	return( ( jboolean ) 1 );
 #else
 	throw_java_exception( env, UNSUPPORTED_COMM_OPERATION,
-		"nativeSetBaudBase", strerror( errnoMINE ) );
+		"nativeSetBaudBase", strerror( errno ) );
 	return( ( jboolean ) 1 );
 #endif /* TIOCGSERIAL */
 }
@@ -2090,11 +2090,11 @@ JNIEXPORT jint JNICALL RXTXPort(nativeGetBaudBase)(
 	return( ( jint ) ( sstruct.baud_base ) );
 fail:
 	throw_java_exception( env, IO_EXCEPTION, "nativeGetBaudBase",
-		strerror( errnoMINE ) );
+		strerror( errno ) );
 	return( ( jint ) -1 );
 #else
 	throw_java_exception( env, UNSUPPORTED_COMM_OPERATION,
-		"nativeGetBaudBase", strerror( errnoMINE ) );
+		"nativeGetBaudBase", strerror( errno ) );
 	return( ( jint ) -1 );
 #endif /* TIOCGSERIAL */
 }
@@ -2136,11 +2136,11 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeSetDivisor)(
 	return( ( jboolean ) 0 );
 fail:
 	throw_java_exception( env, IO_EXCEPTION, "nativeSetDivisor",
-		strerror( errnoMINE ) );
+		strerror( errno ) );
 	return( ( jboolean ) 1 );
 #else
 	throw_java_exception( env, UNSUPPORTED_COMM_OPERATION,
-		"nativeSetDivisor", strerror( errnoMINE ) );
+		"nativeSetDivisor", strerror( errno ) );
 	return( ( jboolean ) 1 );
 #endif /* TIOCGSERIAL */
 }
@@ -2175,11 +2175,11 @@ JNIEXPORT jint JNICALL RXTXPort(nativeGetDivisor)(
 	return( ( jint ) sstruct.custom_divisor );
 fail:
 	throw_java_exception( env, IO_EXCEPTION, "nativeGetDivisor",
-		strerror( errnoMINE ) );
+		strerror( errno ) );
 	return( ( jint ) -1 );
 #else
 	throw_java_exception( env, UNSUPPORTED_COMM_OPERATION,
-		"nativeGetDivisor", strerror( errnoMINE ) );
+		"nativeGetDivisor", strerror( errno ) );
 	return( ( jint ) -1 );
 #endif /* TIOCGSERIAL */
 }
@@ -2222,7 +2222,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticSetDSR) (JNIEnv *env,
 	{
 		do {
 			fd = OPEN (filename, O_RDWR | O_NOCTTY | O_NONBLOCK );
-		}  while (fd < 0 && errnoMINE==EINTR);
+		}  while (fd < 0 && errno==EINTR);
 		if ( configure_port( fd ) ) goto fail;
 	}
 	if ( fd < 0 ) goto fail;
@@ -2288,7 +2288,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticSetRTS) (JNIEnv *env,
 	{
 		do {
 			fd = OPEN (filename, O_RDWR | O_NOCTTY | O_NONBLOCK );
-		}  while (fd < 0 && errnoMINE==EINTR);
+		}  while (fd < 0 && errno==EINTR);
 		if ( configure_port( fd ) ) goto fail;
 	}
 	if ( fd < 0 ) goto fail;
@@ -2354,7 +2354,7 @@ JNIEXPORT void JNICALL RXTXPort(nativeStaticSetSerialPortParams) (JNIEnv *env,
 	{
 		do {
 			fd = OPEN (filename, O_RDWR | O_NOCTTY | O_NONBLOCK );
-		}  while (fd < 0 && errnoMINE==EINTR);
+		}  while (fd < 0 && errno==EINTR);
 		if ( configure_port( fd ) ) goto fail;
 	}
 
@@ -2363,7 +2363,7 @@ JNIEXPORT void JNICALL RXTXPort(nativeStaticSetSerialPortParams) (JNIEnv *env,
 		(*env)->ReleaseStringUTFChars( env, jstr, filename );
 		LEAVE( "RXTXPort:nativeStaticSetSerialPortParams" );
 		throw_java_exception( env, UNSUPPORTED_COMM_OPERATION,
-			"nativeStaticSetSerialPortParams", strerror( errnoMINE ) );
+			"nativeStaticSetSerialPortParams", strerror( errno ) );
 		return;
 	}
 
@@ -2380,7 +2380,7 @@ JNIEXPORT void JNICALL RXTXPort(nativeStaticSetSerialPortParams) (JNIEnv *env,
 		(*env)->ReleaseStringUTFChars( env, jstr, filename );
 		LEAVE( "RXTXPort:nativeStatic SetSerialPortParams" );
 		throw_java_exception( env, UNSUPPORTED_COMM_OPERATION,
-			"nativeStaticSetSerialPortParams", strerror( errnoMINE ) );
+			"nativeStaticSetSerialPortParams", strerror( errno ) );
 		return;
 	}
 
@@ -2438,7 +2438,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticSetDTR) (JNIEnv *env,
 	{
 		do {
 			fd = OPEN (filename, O_RDWR | O_NOCTTY | O_NONBLOCK );
-		}  while (fd < 0 && errnoMINE==EINTR);
+		}  while (fd < 0 && errno==EINTR);
 		if ( configure_port( fd ) ) goto fail;
 	}
 	if ( fd < 0 ) goto fail;
@@ -2923,7 +2923,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeSetParityErrorChar)( JNIEnv *env,
 
 	throw_java_exception( env, UNSUPPORTED_COMM_OPERATION,
 		"Not implemented... yet",
-		strerror( errnoMINE ) );
+		strerror( errno ) );
 	LEAVE( "nativeSetParityErrorChar" );
 	return( JNI_FALSE );
 #endif /* WIN32 */
@@ -2958,7 +2958,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeSetEndOfInputChar)( JNIEnv *env,
 	return( JNI_TRUE );
 fail:
 	throw_java_exception( env, IO_EXCEPTION, "nativeSetEndOfInputChar",
-		strerror( errnoMINE ) );
+		strerror( errno ) );
 	report( "nativeSetEndOfInputChar failed\n" );
 	LEAVE( "nativeSetEndOfInputChar" );
 	return( JNI_FALSE );
@@ -3057,7 +3057,7 @@ int read_byte_array( JNIEnv *env,
 #ifndef WIN32
 		do {
 			ret = SELECT( fd + 1, &rset, NULL, NULL, tvP );
-		} while (ret < 0 && errnoMINE==EINTR);
+		} while (ret < 0 && errno==EINTR);
 #else
 		ret = 1;
 #endif /* WIN32 */
@@ -3070,7 +3070,7 @@ int read_byte_array( JNIEnv *env,
 		else if (ret > 0)
 		{
 			if ((ret = READ( fd, buffer + bytes, left )) < 0 ){
-				if (errnoMINE != EINTR && errnoMINE != EAGAIN){
+				if (errno != EINTR && errno != EAGAIN){
 					report( "read_byte_array: read returned -1\n" );
 					LEAVE( "read_byte_array" );
 					eis->eventflags[SPE_DATA_AVAILABLE] = flag;
@@ -3144,7 +3144,7 @@ int read_byte_array(	JNIEnv *env,
 		}
 RETRY:	if ((ret = READ( fd, buffer + bytes, left )) < 0 )
 		{
-			if (errnoMINE == EINTR)
+			if (errno == EINTR)
 				goto RETRY;
 			report( "read_byte_array: read returned -1\n" );
 			LEAVE( "read_byte_array" );
@@ -3197,7 +3197,7 @@ int read_byte_array(	JNIEnv *env,
 		do {
 			if( timeout == 0 ) psleep = NULL;
 			ret=SELECT( fd + 1, &rfds, NULL, NULL, psleep );
-		}  while (ret < 0 && errnoMINE==EINTR);
+		}  while (ret < 0 && errno==EINTR);
 #else
 		/*
 		    the select() needs some work before the above will
@@ -3277,7 +3277,7 @@ JNIEXPORT void JNICALL RXTXPort(NativeEnableReceiveTimeoutThreshold)(
 fail:
 	LEAVE( "RXTXPort:NativeEnableRecieveTimeoutThreshold" );
 	throw_java_exception( env, IO_EXCEPTION, "TimeoutThreshold",
-		strerror( errnoMINE ) );
+		strerror( errno ) );
 	return;
 }
 
@@ -3432,7 +3432,7 @@ JNIEXPORT jint JNICALL RXTXPort(readByte)( JNIEnv *env,
 	if( bytes < 0 ) {
 		LEAVE( "RXTXPort:readByte" );
 		throw_java_exception( env, IO_EXCEPTION, "readByte",
-			strerror( errnoMINE ) );
+			strerror( errno ) );
 		return -1;
 	}
 /*
@@ -3487,7 +3487,7 @@ JNIEXPORT jint JNICALL RXTXPort(readArray)( JNIEnv *env,
 		report( "RXTXPort:readArray bytes < 0" );
 		LEAVE( "RXTXPort:readArray" );
 		throw_java_exception( env, IO_EXCEPTION, "readArray",
-			strerror( errnoMINE ) );
+			strerror( errno ) );
 		return -1;
 	}
 /*
@@ -3567,7 +3567,7 @@ JNIEXPORT jint JNICALL RXTXPort(readTerminatedArray)( JNIEnv *env,
 			report( "RXTXPort:readArray bytes < 0" );
 			LEAVE( "RXTXPort:readArray" );
 			throw_java_exception( env, IO_EXCEPTION, "readArray",
-				strerror( errnoMINE ) );
+				strerror( errno ) );
 			return -1;
 		}
 		if ( total > 1 && terminator[1] ==  body[total -1] &&
@@ -3645,7 +3645,7 @@ fail:
 	LEAVE( "RXTXPort:nativeavailable" );
 */
 	throw_java_exception( env, IO_EXCEPTION, "nativeavailable",
-		strerror( errnoMINE ) );
+		strerror( errno ) );
 	return (jint)result;
 }
 
@@ -4187,7 +4187,7 @@ JNIEXPORT void JNICALL RXTXPort(eventLoop)( JNIEnv *env, jobject jobj )
 			do {
 				eis.ret = SELECT( eis.fd + 1, &eis.rfds, NULL, NULL,
 					&eis.tv_sleep );
-			} while (eis.ret < 0 && errnoMINE==EINTR);
+			} while (eis.ret < 0 && errno==EINTR);
 #else
 			/*
 			    termios.c:serial_select is instable for some
@@ -4212,7 +4212,7 @@ JNIEXPORT void JNICALL RXTXPort(eventLoop)( JNIEnv *env, jobject jobj )
 			}
 			i = 0;
 #endif /* WIN32 */
-		}  while ( eis.ret < 0 && errnoMINE == EINTR );
+		}  while ( eis.ret < 0 && errno == EINTR );
 		if( eis.ret >= 0 )
 		{
 			report_serial_events( &eis );
@@ -4323,7 +4323,7 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
 	*/
 	do {
 		fd=OPEN ( name, O_RDWR | O_NOCTTY | O_NONBLOCK );
-	}  while ( fd < 0 && errnoMINE==EINTR );
+	}  while ( fd < 0 && errno==EINTR );
 
 	if( fd < 0 )
 	{
@@ -4439,13 +4439,13 @@ EAGAIN, continues to be a portability difference that we must deal with."
 		if ( READ( fd, &c, 1 ) < 0 )
 		{
 #ifdef EAGAIN
-			if ( errnoMINE != EAGAIN ) {
+			if ( errno != EAGAIN ) {
 				report( "testRead() read failed\n" );
 				ret = JNI_FALSE;
 			}
 #else
 #ifdef EWOULDBLOCK
-			if ( errnoMINE != EWOULDBLOCK )
+			if ( errno != EWOULDBLOCK )
 			{
 				report( "testRead() read failed\n" );
 				ret = JNI_FALSE;
@@ -5681,7 +5681,7 @@ int check_group_uucp()
 	{
 		report_error("check_group_uucp(): error testing lock file "
 			"creation Error details:");
-		report_error(strerror(errnoMINE));
+		report_error(strerror(errno));
 		free(testLockAbsFileName);
 		return 1;
 	}
@@ -5936,7 +5936,7 @@ int is_device_locked( const char *port_filename )
 		close( fd );
 		sscanf( pid_buffer, "%d", &pid );
 
-		if( kill( (pid_t) pid, 0 ) && errnoMINE==ESRCH )
+		if( kill( (pid_t) pid, 0 ) && errno==ESRCH )
 		{
 //			sprintf( message,
 //				"RXTX Warning:  Removing stale lock file. %s\n",
