@@ -5391,7 +5391,7 @@ int fhs_lock( const char *filename, int pid )
 int uucp_lock( const char *filename, int pid )
 {
 	char lockfilename[80], lockinfo[12], message[80];
-	char name[80];
+	//char name[80];
 	int fd;
 	struct stat buf;
 
