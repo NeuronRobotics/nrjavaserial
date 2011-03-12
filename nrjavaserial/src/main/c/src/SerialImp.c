@@ -5299,8 +5299,8 @@ int fhs_lock( const char *filename, int pid )
 	//return 0;
 #endif
 	int fd,j;
-	char lockinfo[12], message[80];
-	char file[80], *p;
+	char lockinfo[12], message[200];
+	char file[200], *p;
 
 	j = strlen( filename );
 	p = ( char * ) filename + j;
@@ -5321,15 +5321,29 @@ int fhs_lock( const char *filename, int pid )
 		report( "fhs_lock() lockstatus fail\n" );
 		return 1;
 	}
-	fd = open( file, O_CREAT | O_WRONLY | O_EXCL, 0444 );
+	fd = open( file, O_CREAT | O_WRONLY | O_EXCL, 0666 );
 	if( fd < 0 )
 	{
 		sprintf( message,
-			"RXTX fhs_lock() Error: opening lock file: %s: %s\n",
+			"RXTX fhs_lock() Warning: opening lock file: %s: %s.",
 			file, strerror(errno) );
 		report_error( message );
+		fd = open( file,  O_WRONLY );
+		if( fd < 0 ){
+			sprintf( message,
+				" FAILED TO OPEN: %s\n",
+				 strerror(errno) );
+			report_error( message );
+			return 1;
+		}
+
+		if(check_lock_pid( file, pid )==0){
+			report_error(" It is mine\n" );
+		}
+		report_error( "\n" );
 		return 1;
 	}
+
 	sprintf( lockinfo, "%10d\n",(int) getpid() );
 	sprintf( message, "fhs_lock: creating lockfile: %s\n", lockinfo );
 	report( message );
@@ -5606,7 +5620,7 @@ int check_lock_pid( const char *file, int openpid )
 {
 	int fd, lockpid;
 	char pid_buffer[12];
-	char message[80];
+	char message[200];
 
 	fd=open( file, O_RDONLY );
 	if ( fd < 0 )
@@ -5629,6 +5643,9 @@ int check_lock_pid( const char *file, int openpid )
 		report( message );
 		return( 1 );
 	}
+	sprintf(message, "check_lock_pid() is mine: lock = %s pid = %i gpid=%i openpid=%i\n",
+		pid_buffer, (int) getpid(), (int) getppid(), openpid );
+	//report_warning( message );
 	return( 0 );
 }
 
@@ -5929,17 +5946,17 @@ int is_device_locked( const char *port_filename )
 		fd=open( file, O_RDONLY );
 		if( fd < 0 )
 		{
-//			sprintf( message,
-//					"RXTX is_device_locked() Error: opening lock file: %s: %s\n",
-//					file, strerror(errno) );
+			sprintf( message,
+				"RXTX is_device_locked() Error: opening lock file: %s: %s\n",
+					file, strerror(errno) );
 			report_warning( message );
 			return 1;
 		}
 		if ( ( read( fd, pid_buffer, 11 ) ) < 0 ) 
 		{
-//			sprintf( message,
-//					"RXTX is_device_locked() Error: reading lock file: %s: %s\n",
-//					file, strerror(errno) );
+			sprintf( message,
+					"RXTX is_device_locked() Error: reading lock file: %s: %s\n",
+					file, strerror(errno) );
 			report_warning( message );
 			close( fd );
 			return 1;
@@ -5950,9 +5967,9 @@ int is_device_locked( const char *port_filename )
 
 		if( kill( (pid_t) pid, 0 ) && errno==ESRCH )
 		{
-//			sprintf( message,
-//				"RXTX Warning:  Removing stale lock file. %s\n",
-//				file );
+			sprintf( message,
+				"RXTX Warning:  Removing stale lock file. %s\n",
+				file );
 			report_warning( message );
 			if( unlink( file ) != 0 )
 			{
