@@ -95,6 +95,7 @@
 #define PORT_RS485		 4
 #define PORT_RAW		 5
 
+
 /* glue for unsupported linux speeds see also win32termios.h */
 
 #if !defined(__APPLE__) && !defined(__FreeBSD__) /* dima */
