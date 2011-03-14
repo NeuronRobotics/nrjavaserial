@@ -50,7 +50,7 @@ public class NativeResource {
 		} catch (UnsatisfiedLinkError ex) {
 			if(OSUtil.isOSX()){
 				try{
-					//ex.printStackTrace();
+					ex.printStackTrace();
 					inJarLoad("libNRJavaSerial_legacy");
 					return;
 				}catch(UnsatisfiedLinkError errr){
@@ -126,7 +126,7 @@ public class NativeResource {
 	private void loadResource(File resource) {
 		if(!resource.canRead())
 			throw new RuntimeException("Cant open JNI file: "+resource.getAbsolutePath());
-		//System.out.println("Loading: "+resource.getAbsolutePath());
+		System.out.println("Loading: "+resource.getAbsolutePath());
 		System.load(resource.getAbsolutePath());
 	}
 
