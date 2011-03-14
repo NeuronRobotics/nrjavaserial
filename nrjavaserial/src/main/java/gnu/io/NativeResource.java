@@ -59,13 +59,13 @@ public class NativeResource {
 			}
 			try{
 				//check to see if the library is availible in standard locations
-				System.out.println("Trying to load: "+libName);
+				//System.out.println("Trying to load: "+libName);
 				System.loadLibrary(libName);
 				testNativeCode();
 				return;
 			}catch(UnsatisfiedLinkError e){
 				try{
-					System.out.println("Trying to load: "+name);
+					//System.out.println("Trying to load: "+name);
 					//load whole name
 					System.loadLibrary( name);	
 					testNativeCode();
@@ -73,7 +73,7 @@ public class NativeResource {
 				}catch(UnsatisfiedLinkError er){
 					try{
 						name = "rxtxSerial";
-						System.out.println("Trying to load: "+name);
+						//System.out.println("Trying to load: "+name);
 						//last ditch effort to load
 						System.loadLibrary( name);	
 						testNativeCode();
@@ -128,7 +128,7 @@ public class NativeResource {
 	private void loadResource(File resource) {
 		if(!resource.canRead())
 			throw new RuntimeException("Cant open JNI file: "+resource.getAbsolutePath());
-		System.out.println("Loading: "+resource.getAbsolutePath());
+		//System.out.println("Loading: "+resource.getAbsolutePath());
 		System.load(resource.getAbsolutePath());
 	}
 
