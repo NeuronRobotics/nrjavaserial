@@ -372,17 +372,17 @@ public class RXTXCommDriver implements CommDriver
 		osName=System.getProperty("os.name");
 		deviceDirectory=getDeviceDirectory();
 
-	/*
-	 First try to register ports specified in the properties
-	 file.  If that doesn't exist, then scan for ports.
-	*/
-		for (int PortType=CommPortIdentifier.PORT_SERIAL;PortType<=CommPortIdentifier.PORT_PARALLEL;PortType++) {
-			if (!registerSpecifiedPorts(PortType)) {
-				if (!registerKnownPorts(PortType)) {
-					registerScannedPorts(PortType);
-				}
+		/*
+		 First try to register ports specified in the properties
+		 file.  If that doesn't exist, then scan for ports.
+		*/
+		
+		if (!registerSpecifiedPorts(CommPortIdentifier.PORT_SERIAL)) {
+			if (!registerKnownPorts(CommPortIdentifier.PORT_SERIAL)) {
+				registerScannedPorts(CommPortIdentifier.PORT_SERIAL);
 			}
 		}
+		
 	}
 
 	private void addSpecifiedPorts(String names, int PortType)
