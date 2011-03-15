@@ -718,7 +718,7 @@ JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
 	report_time_start( );
 	pid = get_java_var( env, jobj,"pid","I" );
 
-	report(">nativeClose pid\n");
+	report_warning("nativeClose() Attempting Close pid\n");
 	/*
 	usleep(10000);
 	*/
@@ -726,7 +726,7 @@ JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
 		(*env)->ExceptionDescribe( env );
 		(*env)->ExceptionClear( env );
 		(*env)->DeleteLocalRef( env, jclazz );
-		report("nativeClose: Close not detecting thread pid");
+		report_warning("nativeClose(): Close not detecting thread pid");
 		return;
 	}
 	report("<nativeClose: pid\n");
@@ -745,12 +745,13 @@ JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
 		report("nativeClose: discarding remaining data (tcflush)\n");
 		/* discard any incoming+outgoing data not yet read/sent */
 		tcflush(fd, TCIOFLUSH);
-
  		do {
 			report("nativeClose:  calling close\n");
 			result=CLOSE (fd);
 		}  while ( result < 0 && errno == EINTR );
  		UNLOCK( filename, pid );
+	}else{
+		report_warning("nativeClose(): Close not detecting File Descriptor");
 	}
 	report("nativeClose: Delete jclazz\n");
 	(*env)->DeleteLocalRef( env, jclazz );
@@ -4261,7 +4262,7 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
 	jint port_type
 )
 {
-	const char *name = (*env)->GetStringUTFChars(env, tty_name, 0);
+	char *name =(char *) (*env)->GetStringUTFChars(env, tty_name, 0);
 	int ret = JNI_TRUE;
 #ifndef WIN32
 	struct termios ttyset;
@@ -4314,6 +4315,7 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
 	{
 		(*env)->ReleaseStringUTFChars(env, tty_name, name);
 		LEAVE( "RXTXPort:testRead no lock" );
+		report_error( "testRead() Lock file failed\n" );
 		return JNI_FALSE;
 	}
 
@@ -4321,12 +4323,19 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
            CLOCAL eliminates open blocking on modem status lines
            -- changed to O_NONBLOCK
 	*/
+	int i=0;
 	do {
 		fd=OPEN ( name, O_RDWR | O_NOCTTY | O_NONBLOCK );
-	}  while ( fd < 0 && errno==EINTR );
+		i++;
+	}  while ( (fd < 0) && (errno==EINTR) && (i<10) );
 
-	if( fd < 0 )
+	if( (fd < 0)  || i>=10)
 	{
+		if(i>=10){
+			report_error( "\ntestRead() open failed, tried more then 10 times: " );
+			report_error(name);
+			report_error( "\n" );
+		}
 		report_verbose( "testRead() open failed\n" );
 		ret = JNI_FALSE;
 		goto END;
@@ -4345,7 +4354,7 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
 		/* save, restore later */
 		if ( ( saved_flags = fcntl(fd, F_GETFL ) ) < 0 )
 		{
-			report( "testRead() fcntl(F_GETFL) failed\n" );
+			report_warning( "testRead() fcntl(F_GETFL) failed\n" );
 			ret = JNI_FALSE;
 			goto END;
 		}
@@ -5253,7 +5262,6 @@ int lib_lock_dev_unlock( const char *filename, int pid )
 int lib_lock_dev_lock( const char *filename, int pid )
 {
 	char message[80];
-//	printf("LOCKING %s\n", filename);
 	if ( dev_testlock( filename ) )
 	{
 		report( "fhs_lock() lockstatus fail\n" );
@@ -5261,9 +5269,9 @@ int lib_lock_dev_lock( const char *filename, int pid )
 	}
 	if ( dev_lock( filename ) )
 	{
-//		sprintf( message,
-//			"RXTX fhs_lock() Error: creating lock file for: %s: %s\n",
-//			filename, strerror(errno) );
+		sprintf( message,
+			"RXTX fhs_lock() Error: creating lock file for: %s: %s\n",
+			filename, strerror(errno) );
 		report_error( message );
 		return 1;
 	}
@@ -5325,7 +5333,7 @@ int fhs_lock( const char *filename, int pid )
 	if( fd < 0 )
 	{
 		sprintf( message,
-			"RXTX fhs_lock() Warning: opening lock file: %s: %s.",
+			"RXTX fhs_lock() Error: opening lock file: %s: %s.",
 			file, strerror(errno) );
 		report_error( message );
 		fd = open( file,  O_WRONLY );
