@@ -719,6 +719,7 @@ JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
 	pid = get_java_var( env, jobj,"pid","I" );
 
 	report_warning("nativeClose() Attempting Close pid\n");
+
 	/*
 	usleep(10000);
 	*/
@@ -753,6 +754,7 @@ JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
 	}else{
 		report_warning("nativeClose(): Close not detecting File Descriptor");
 	}
+	report_warning("nativeClose() Attempt OK\n");
 	report("nativeClose: Delete jclazz\n");
 	(*env)->DeleteLocalRef( env, jclazz );
 	report("nativeClose: release filename\n");
