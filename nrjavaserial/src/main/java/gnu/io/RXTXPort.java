@@ -1057,7 +1057,7 @@ final public class RXTXPort extends SerialPort
 	/**
 	*/
 	boolean closeLock = false;
-	public void close()
+	public synchronized void close()
 	{
 		synchronized (this) {
 			if (debug)
