@@ -135,8 +135,7 @@ final public class RXTXPort extends SerialPort
 			z.reportln( "RXTXPort:RXTXPort("+name+") returns with fd = " +
 				fd);
 	}
-	private native synchronized int open( String name )
-		throws PortInUseException;
+	private native synchronized int open( String name )throws PortInUseException;
 
 
 	/* dont close the file while accessing the fd */
@@ -397,6 +396,7 @@ final public class RXTXPort extends SerialPort
 	*/
 	public void enableReceiveTimeout( int time )
 	{
+		//System.out.println("Enabling receive timeout: "+time);
 		if (debug)
 			z.reportln( "RXTXPort:enableReceiveTimeout() called");
 		if( time >= 0 )
@@ -1057,7 +1057,7 @@ final public class RXTXPort extends SerialPort
 	/**
 	*/
 	boolean closeLock = false;
-	public synchronized void close()
+	public void close()
 	{
 		synchronized (this) {
 			if (debug)
@@ -1146,6 +1146,7 @@ final public class RXTXPort extends SerialPort
 				waitForTheNativeCodeSilly();
 				if ( fd == 0 )
 				{
+					System.err.println("File Descriptor for prot zero!!");
 					throw new IOException();
 				}
 				writeByte( b, monThreadisInterrupted );

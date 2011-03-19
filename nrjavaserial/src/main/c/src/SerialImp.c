@@ -190,7 +190,20 @@ int cfmakeraw ( struct termios *term )
 
 struct event_info_struct *master_index = NULL;
 
-
+int localOpen(const char * name,int flags){
+	int result=OPEN(name,flags);
+	return result;
+}
+int localClose(int fd){
+#if defined(__linux__)
+	if(!(fcntl(fd, F_GETFL) != -1 || errno != EBADF)){
+		report_error("\nlocalClose: File Descriptor error, not closing\n");
+		return -1;
+	}
+#endif
+	int result=CLOSE(fd);
+	return result;
+}
 /*----------------------------------------------------------
 RXTXPort.Initialize
 
@@ -639,31 +652,34 @@ JNIEXPORT jint JNICALL RXTXPort(open)(
 	*/
 
 	ENTER( "RXTXPort:open" );
+	//report_warning("\nopen() Attempting to lock: ");
 	if ( LOCK( filename, pid ) )
 	{
-//		sprintf( message, "open: locking has failed for %s\n",
-//			filename );
-		report( message );
+		sprintf( message, "open: locking has failed for %s\n",
+			filename );
+		report_error( message );
 		goto fail;
 	}
 	else
 	{
-//		sprintf( message, "open: locking worked for %s\n", filename );
-		report( message );
+		sprintf( message, "open: locking worked for %s\n", filename );
+		//report_warning( message );
 	}
 	/* This is used so DTR can remain low on 'open()' */
 	fd = find_preopened_ports( filename );
 	if( fd )
 	{
+		report_warning( "open: port is open already" );
 		set_java_vars( env, jobj, fd );
 		(*env)->ReleaseStringUTFChars( env, jstr, filename );
 		return (jint)fd;
 	}
-
+	//report_warning("\nopen() Attempting to open: ");
+	//report_warning(filename);
 	do {
-		fd=OPEN (filename, O_RDWR | O_NOCTTY | O_NONBLOCK );
+		fd=localOpen (filename, O_RDWR | O_NOCTTY | O_NONBLOCK );
 	}  while (fd < 0 && errno==EINTR);
-
+	//report_warning("\nopen() ...Opened! ");
 #ifdef OPEN_EXCL
        /*
        Note that open() follows POSIX semantics: multiple open() calls to
@@ -671,11 +687,25 @@ JNIEXPORT jint JNICALL RXTXPort(open)(
        This will prevent additional opens except by root-owned processes.
        See tty(4) ("man 4 tty") and ioctl(2) ("man 2 ioctl") for details.
        */
+#if defined(__linux__)
+			int cmd=FD_CLOEXEC|F_SETFL;
+			int ret;
+			//report_error("\nnative open(): Setting ownership flags");
+			ret= fcntl(fd,F_SETOWN,getpid());
+			//report_error( strerror(errno) );
 
+			//report_error("\nnativec(): Forcing unlock flags");
+			ret = fcntl(fd,F_UNLCK);
+			//report_error( strerror(errno) );
+
+			//report_error("\nnative open(): Setting read/write flags");
+			ret= fcntl(fd,cmd,O_RDWR|O_NONBLOCK);
+			//report_error( strerror(errno) );
+#endif
        if (fd >= 0 && (ioctl(fd, TIOCEXCL) == -1))
        {
-//               sprintf( message, "open: exclusive access denied for %s\n",
-//                       filename );
+               sprintf( message, "open: exclusive access denied for %s\n",
+                       filename );
                report( message );
                report_error( message );
 
@@ -686,7 +716,7 @@ JNIEXPORT jint JNICALL RXTXPort(open)(
 
 	if( configure_port( fd ) ) goto fail;
 	(*env)->ReleaseStringUTFChars( env, jstr, filename );
-//	sprintf( message, "open: fd returned is %i\n", fd );
+	sprintf( message, "open: fd returned is %i\n", fd );
 	report( message );
 	LEAVE( "RXTXPort:open" );
 	report_time_end( );
@@ -699,6 +729,7 @@ fail:
 		strerror( errno ) );
 	return -1;
 }
+
 
 /*----------------------------------------------------------
 RXTXPort.nativeClose
@@ -718,7 +749,7 @@ JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
 	report_time_start( );
 	pid = get_java_var( env, jobj,"pid","I" );
 
-	report_warning("nativeClose() Attempting Close pid\n");
+	//report_warning("nativeClose() Attempting Close pid\n");
 
 	/*
 	usleep(10000);
@@ -743,18 +774,31 @@ JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
 	ENTER( "RXTXPort:nativeClose" );
 	if (fd > 0)
 	{
+		//report_warning("nativeClose: discarding remaining data (tcflush)\n");
 		report("nativeClose: discarding remaining data (tcflush)\n");
 		/* discard any incoming+outgoing data not yet read/sent */
 		tcflush(fd, TCIOFLUSH);
+		int x=0;
  		do {
+
+ 			//report_warning("nativeClose: Attempting to close\n");
 			report("nativeClose:  calling close\n");
-			result=CLOSE (fd);
+			result=localClose(fd);
+			//report_warning("nativeClose: Close OK\n");
+			x++;
+			if(x>10){
+				report_error("\nnativeClose(): Close failed 10 times!");
+				report_error( strerror(errno) );
+				return;
+			}
 		}  while ( result < 0 && errno == EINTR );
+ 		//report_warning("nativeClose() Attempt to unlock\n");
  		UNLOCK( filename, pid );
+ 		//report_warning("nativeClose() Unlock OK\n");
 	}else{
 		report_warning("nativeClose(): Close not detecting File Descriptor");
 	}
-	report_warning("nativeClose() Attempt OK\n");
+	//report_warning("nativeClose() Attempt OK\n");
 	report("nativeClose: Delete jclazz\n");
 	(*env)->DeleteLocalRef( env, jclazz );
 	report("nativeClose: release filename\n");
@@ -1418,6 +1462,15 @@ int init_threads( struct event_info_struct *eis )
 	return( 1 );
 }
 
+int localWrite(int fd,unsigned char * bytes,int len){
+	int ret =WRITE (fd, bytes,len);
+	if(ret <0){
+		report_error("Write action failed! ");
+		report_error(strerror(errno));
+	}
+	return ret;
+}
+
 /*----------------------------------------------------------
 RXTXPort.writeByte
 
@@ -1446,7 +1499,7 @@ JNIEXPORT void JNICALL RXTXPort(writeByte)( JNIEnv *env,
 	do {
 		sprintf( msg, "writeByte %c>>\n", byte );
 		report( msg );
-		result=WRITE (fd, (void * ) &byte, sizeof(unsigned char));
+		result=localWrite(fd, (void * ) &byte, sizeof(unsigned char));
 	}  while (result < 0 && errno==EINTR);
 	if( result < 0 )
 	{
@@ -1535,7 +1588,7 @@ JNIEXPORT void JNICALL RXTXPort(writeArray)( JNIEnv *env,
 	*/
 
 	do {
-		result=WRITE (fd, (void * ) ((char *) body + total + offset), count - total); /* dima */
+		result=localWrite(fd, (void * ) ((char *) body + total + offset), count - total); /* dima */
 		if(result >0){
 			total += result;
 		}
@@ -2224,7 +2277,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticSetDSR) (JNIEnv *env,
 	if( !fd )
 	{
 		do {
-			fd = OPEN (filename, O_RDWR | O_NOCTTY | O_NONBLOCK );
+			fd = localOpen (filename, O_RDWR | O_NOCTTY | O_NONBLOCK );
 		}  while (fd < 0 && errno==EINTR);
 		if ( configure_port( fd ) ) goto fail;
 	}
@@ -2290,7 +2343,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticSetRTS) (JNIEnv *env,
 	if( !fd )
 	{
 		do {
-			fd = OPEN (filename, O_RDWR | O_NOCTTY | O_NONBLOCK );
+			fd = localOpen (filename, O_RDWR | O_NOCTTY | O_NONBLOCK );
 		}  while (fd < 0 && errno==EINTR);
 		if ( configure_port( fd ) ) goto fail;
 	}
@@ -2356,7 +2409,7 @@ JNIEXPORT void JNICALL RXTXPort(nativeStaticSetSerialPortParams) (JNIEnv *env,
 	if( !fd )
 	{
 		do {
-			fd = OPEN (filename, O_RDWR | O_NOCTTY | O_NONBLOCK );
+			fd = localOpen (filename, O_RDWR | O_NOCTTY | O_NONBLOCK );
 		}  while (fd < 0 && errno==EINTR);
 		if ( configure_port( fd ) ) goto fail;
 	}
@@ -2440,7 +2493,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticSetDTR) (JNIEnv *env,
 	if( !fd )
 	{
 		do {
-			fd = OPEN (filename, O_RDWR | O_NOCTTY | O_NONBLOCK );
+			fd = localOpen (filename, O_RDWR | O_NOCTTY | O_NONBLOCK );
 		}  while (fd < 0 && errno==EINTR);
 		if ( configure_port( fd ) ) goto fail;
 	}
@@ -4312,12 +4365,15 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
 			fhs_lock		Linux
 			system_does_not_lock	Win32
 	*/
-
+	//report_warning("\ntestRead(): Attempting to lock: ");
+	//report_warning(name);
+	////report_warning("\n");
 	if ( LOCK( name, pid ) )
 	{
 		(*env)->ReleaseStringUTFChars(env, tty_name, name);
-		LEAVE( "RXTXPort:testRead no lock" );
-		report_error( "testRead() Lock file failed\n" );
+		LEAVE( "\nRXTXPort:testRead no lock" );
+		report_error(name);
+		report_error( " testRead() Lock file failed\n" );
 		return JNI_FALSE;
 	}
 
@@ -4327,21 +4383,41 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
 	*/
 	int i=0;
 	do {
-		fd=OPEN ( name, O_RDWR | O_NOCTTY | O_NONBLOCK );
+
+#if defined(__linux__)
+		//report_warning("\ntestRead(): Attempting to open: ");
+		//report_warning(name);
+		fd=localOpen ( name, O_RDONLY | O_NONBLOCK |O_NOCTTY);
+		int cmd=FD_CLOEXEC|F_SETFL;
+		//report_error("\ntestRead(): Setting ownership flags");
+		ret= fcntl(fd,F_SETOWN,getpid());
+		//report_error( strerror(errno) );
+
+		//report_error("\ntestRead(): Forcing unlock flags");
+		ret = fcntl(fd,F_UNLCK);
+		//report_error( strerror(errno) );
+
+		//report_error("\ntestRead(): Setting read/write flags");
+		ret= fcntl(fd,cmd,O_RDWR | O_NOCTTY | O_NONBLOCK);
+		//report_error( strerror(errno) );
+#else
+		fd=localOpen ( name, O_RDWR | O_NOCTTY | O_NONBLOCK );
+#endif
 		i++;
 	}  while ( (fd < 0) && (errno==EINTR) && (i<10) );
 
 	if( (fd < 0)  || i>=10)
 	{
-		if(i>=10){
-			report_error( "\ntestRead() open failed, tried more then 10 times: " );
-			report_error(name);
-			report_error( "\n" );
-		}
+
+		report_error( "\ntestRead() open failed: " );
+		report_error(name);
+		report_error( "\n" );
+
 		report_verbose( "testRead() open failed\n" );
 		ret = JNI_FALSE;
 		goto END;
 	}
+	//report_warning("testRead(): Open OK");
 
 	if ( port_type == PORT_SERIAL )
 	{
@@ -4483,7 +4559,7 @@ EAGAIN, continues to be a portability difference that we must deal with."
 END:
 	UNLOCK(name, pid );
 	(*env)->ReleaseStringUTFChars( env, tty_name, name );
-	CLOSE( fd );
+	localClose( fd );
 	LEAVE( "RXTXPort:testRead" );
 	return ret;
 #endif /* ! WIN32 */
@@ -4689,9 +4765,9 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(isPortPrefixValid)(JNIEnv *env,
 /* XXX the following hoses freebsd when it tries to open the port later on */
 #ifndef __FreeBSD__
 		if(S_ISCHR(mystat.st_mode)){
-			fd=OPEN(teststring,O_RDONLY|O_NONBLOCK);
+			fd=localOpen(teststring,O_RDONLY|O_NONBLOCK);
 			if (fd>0){
-				CLOSE(fd);
+				localClose(fd);
 				result=JNI_TRUE;
 				break;
 			}
@@ -4711,9 +4787,9 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(isPortPrefixValid)(JNIEnv *env,
 #endif /* _GNU_SOURCE */
 	stat(teststring,&mystat);
 	if(S_ISCHR(mystat.st_mode)){
-		fd=OPEN(teststring,O_RDONLY|O_NONBLOCK);
+		fd=localOpen(teststring,O_RDONLY|O_NONBLOCK);
 		if (fd>0){
-			CLOSE(fd);
+			localClose(fd);
 			result=JNI_TRUE;
 		}
 	}
@@ -5328,7 +5404,7 @@ int fhs_lock( const char *filename, int pid )
 	sprintf( file, "%s/LCK..%s", LOCKDIR, p );
 	if ( check_lock_status( filename ) )
 	{
-		report( "fhs_lock() lockstatus fail\n" );
+		report_warning( "fhs_lock() lockstatus fail\n" );
 		return 1;
 	}
 	fd = open( file, O_CREAT | O_WRONLY | O_EXCL, 0666 );

@@ -79,7 +79,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 	private String PortName;
 	private boolean Available = true;    
 	private String Owner;    
-	private CommPort commport;
+	private RXTXPort commport;
 	private CommDriver RXTXDriver;
  	static CommPortIdentifier   CommPortIndex;
 	CommPortIdentifier next;
@@ -125,7 +125,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 		//System.loadLibrary( "rxtxSerial" );
 		SerialManager.getInstance();
 	}
-	CommPortIdentifier ( String pn, CommPort cp, int pt, CommDriver driver) 
+	CommPortIdentifier ( String pn, RXTXPort cp, int pt, CommDriver driver) 
 	{
 		PortName        = pn;
 		commport        = cp;
@@ -415,7 +415,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 	@SuppressWarnings("unused")
 	private boolean HideOwnerEvents;
 
-	public CommPort open(String TheOwner, int i) 
+	public RXTXPort open(String TheOwner, int i) 
 		throws gnu.io.PortInUseException 
 	{ 
 		if(debug) System.out.println("CommPortIdentifier:open("+TheOwner + ", " +i+")");
@@ -462,7 +462,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 		try {
 			if(commport == null)
 			{
-				commport = RXTXDriver.getCommPort(PortName,PortType);
+				commport = (RXTXPort) RXTXDriver.getCommPort(PortName,PortType);
 			}
 			if(commport != null)
 			{
