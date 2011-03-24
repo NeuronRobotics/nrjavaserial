@@ -72,7 +72,7 @@ import java.util.StringTokenizer;
 */
 public class RXTXCommDriver implements CommDriver
 {
-	static ArrayList<String> ports =new ArrayList<String>();
+	private static Set<String> ports =new HashSet<String>();
 	
 	private final static boolean debug = false;
 	private final static boolean devel = false;
@@ -81,7 +81,7 @@ public class RXTXCommDriver implements CommDriver
 	static
 	{
 		if(ports==null)
-			ports =new ArrayList<String>();
+			ports =new HashSet<String>();
 		if(debug ) System.out.println("RXTXCommDriver {}");
 		//System.loadLibrary( "rxtxSerial" );
 		SerialManager.getInstance();
@@ -138,8 +138,8 @@ public class RXTXCommDriver implements CommDriver
 	public static String nativeGetVersionWrapper() throws UnsatisfiedLinkError {
 		return nativeGetVersion();
 	}
-	public ArrayList<String> getPortIdentifierList() {
-		ports =new ArrayList<String>();
+	public Set<String> getPortIdentifiers() {
+		ports =new HashSet<String>();
 		registerScannedPorts(CommPortIdentifier.PORT_SERIAL);
         Enumeration<CommPortIdentifier> pe;
         try{
