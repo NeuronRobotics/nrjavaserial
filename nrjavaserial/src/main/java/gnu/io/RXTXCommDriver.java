@@ -138,6 +138,7 @@ public class RXTXCommDriver implements CommDriver
 	public static String nativeGetVersionWrapper() throws UnsatisfiedLinkError {
 		return nativeGetVersion();
 	}
+	@SuppressWarnings("unchecked")
 	public ArrayList<String> getPortIdentifierList() {
 		ports =new ArrayList<String>();
 		registerScannedPorts(CommPortIdentifier.PORT_SERIAL);
