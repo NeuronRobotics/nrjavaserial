@@ -2,8 +2,6 @@ package gnu.io;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 public class NRSerialPort {
@@ -36,7 +34,6 @@ public class NRSerialPort {
 					System.setProperty("gnu.io.rxtx.SerialPorts", port);
 				}
 			}
-			
 			ident = CommPortIdentifier.getPortIdentifier(port);
 
 			try{
