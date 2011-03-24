@@ -11,7 +11,7 @@ public class NRSerialPort {
 	private boolean connected=false;
 	private int baud = 115200;
 	/**
-	 * Class Constructor for a SerialConnection with a given port and baudrate.
+	 * Class Constructor for a NRSerialPort with a given port and baudrate.
 	 * 
 	 * @param port the port to connect to (i.e. COM6 or /dev/ttyUSB0)
 	 * @param baud the baudrate to use (i.e. 9600 or 115200)
@@ -53,8 +53,8 @@ public class NRSerialPort {
 			serial.enableReceiveTimeout(100);
 			serial.setSerialPortParams(getBaud(), SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);				
 			setConnected(true);
-		}catch(UnsatisfiedLinkError e){
-			throw new RuntimeException(e.getMessage());
+		}catch(NativeResourceException e){
+			throw new NativeResourceException(e.getMessage());
         }catch (Exception e) {
 			System.err.println("Failed to connect on port: "+port+" exception: ");
 			e.printStackTrace();
@@ -97,7 +97,7 @@ public class NRSerialPort {
 			serial = null;
 			setConnected(false);
 		} catch(UnsatisfiedLinkError e) {
-			throw new RuntimeException(e.getMessage());
+			throw new NativeResourceException(e.getMessage());
         }
 	}
 	public static List<String> getAvailableSerialPorts() {
@@ -107,7 +107,7 @@ public class NRSerialPort {
         	available=d.getPortIdentifierList();
         }catch( UnsatisfiedLinkError e){
         	e.printStackTrace();
-        	throw new RuntimeException(e.getMessage());
+        	throw new NativeResourceException(e.getMessage());
         }  
         return available;
     }
