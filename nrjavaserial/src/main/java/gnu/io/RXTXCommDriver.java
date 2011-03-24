@@ -141,6 +141,36 @@ public class RXTXCommDriver implements CommDriver
 	public ArrayList<String> getPortIdentifierList() {
 		ports =new ArrayList<String>();
 		registerScannedPorts(CommPortIdentifier.PORT_SERIAL);
+        Enumeration<CommPortIdentifier> pe;
+        try{
+        	pe = CommPortIdentifier.getPortIdentifiers();
+        }catch( UnsatisfiedLinkError e){
+        	e.printStackTrace();
+        	return null;
+        }
+        if(pe != null){
+	        while (pe.hasMoreElements()) {
+	            CommPortIdentifier com = (CommPortIdentifier) pe.nextElement();
+	            switch (com.getPortType()) {
+	            case CommPortIdentifier.PORT_SERIAL:
+	            	if(com.getName().matches("^/.+/cu\\..+$")) {
+	            		continue;
+	            	}
+	            	if(com.getName().matches("^/.+/tty\\.Bluetooth.+$")) {
+	            		continue;
+	            	}
+	            	boolean inList=false;
+	            	for(String s:ports){
+	            		if(com.getName().contains(s)){
+	            			inList=true;
+	            		}
+	            	}
+	            	if(!inList){
+	            		ports.add(com.getName());
+	            	}
+	            }
+	        } 
+        }
 		return ports;
 	}
 	private final String[] getValidPortPrefixes(String CandidatePortPrefixes[])
