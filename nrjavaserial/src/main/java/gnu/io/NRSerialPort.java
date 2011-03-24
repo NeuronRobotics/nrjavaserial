@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class NRSerialPort {
 	private RXTXPort serial;
@@ -100,11 +101,11 @@ public class NRSerialPort {
 			throw new NativeResourceException(e.getMessage());
         }
 	}
-	public static List<String> getAvailableSerialPorts() {
-        ArrayList<String> available = new ArrayList<String>();
+	public static Set<String> getAvailableSerialPorts() {
+       Set<String> available;
         try{
         	RXTXCommDriver d = new RXTXCommDriver();
-        	available=d.getPortIdentifierList();
+        	available=d.getPortIdentifiers();
         }catch( UnsatisfiedLinkError e){
         	e.printStackTrace();
         	throw new NativeResourceException(e.getMessage());
