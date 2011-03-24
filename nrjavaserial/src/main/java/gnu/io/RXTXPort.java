@@ -67,7 +67,7 @@ import java.lang.Math;
 * @see gnu.io.SerialPort
 */
 
-final public class RXTXPort extends SerialPort
+public class RXTXPort extends SerialPort
 {
 	/* I had a report that some JRE's complain when MonitorThread
 	   tries to access private variables
@@ -92,6 +92,7 @@ final public class RXTXPort extends SerialPort
 			z.reportln( "RXTXPort {}");
 		//System.loadLibrary( "rxtxSerial" );
 		SerialManager.getInstance();
+	
 		Initialize();
 	}
 

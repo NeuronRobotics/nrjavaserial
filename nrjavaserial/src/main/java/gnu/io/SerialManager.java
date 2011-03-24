@@ -4,21 +4,14 @@ public class SerialManager {
 	
 	private static SerialManager instance;
 	private static boolean loaded = false;
-	private SerialManager() {
+	private SerialManager() throws NativeResourceException {
 		if(!loaded) {
 			loaded = true;
-			
-			try {
-				NativeResource nr = new NativeResource();
-				nr.load("libNRJavaSerial");
-			} catch(Exception e) {
-				e.printStackTrace();
-				System.err.println("Exception caught while trying to load NativeResource: " + e);
-			}
+			new NativeResource().load("libNRJavaSerial");	
 		}
 	}
 	
-	public static SerialManager getInstance() {
+	public static SerialManager getInstance() throws NativeResourceException {
 		if(instance == null) {
 			instance = new SerialManager();
 		}		
