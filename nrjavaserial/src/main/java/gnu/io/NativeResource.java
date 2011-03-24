@@ -8,7 +8,7 @@ import java.io.InputStream;
 public class NativeResource {
 	
 	private boolean loaded = false;
-	public synchronized void load(String libraryName) {	
+	public synchronized void load(String libraryName) throws NativeResourceException {	
 		if(loaded)
 			return;
 		loaded = true;
@@ -28,7 +28,7 @@ public class NativeResource {
 		loadLib(libraryName);	
 	}
 	
-	private void inJarLoad(String name)throws UnsatisfiedLinkError{
+	private void inJarLoad(String name)throws UnsatisfiedLinkError, NativeResourceException{
 		//start by assuming the library can be loaded from the jar
 		InputStream resourceSource = locateResource(name);
 		File resourceLocation = prepResourceLocation(name);
@@ -41,7 +41,7 @@ public class NativeResource {
 		testNativeCode();
 	}
 
-	private void loadLib(String name) {
+	private void loadLib(String name) throws NativeResourceException {
 
 		String libName = name.substring(name.indexOf("lib")+3);
 		try {
@@ -145,7 +145,7 @@ public class NativeResource {
 		io.close();
 	}
 
-	private File prepResourceLocation(String fileName) {		
+	private File prepResourceLocation(String fileName) throws NativeResourceException {		
 		String tmpDir = System.getProperty("java.io.tmpdir");
 		//String tmpDir = "M:\\";
 		if ((tmpDir == null) || (tmpDir.length() == 0)) {
