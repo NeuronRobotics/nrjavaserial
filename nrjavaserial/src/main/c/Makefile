@@ -18,11 +18,11 @@ LINKLIN64=g++ -m64 -shared
 CCLINARM=/usr/arm-linux/bin/gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MMD -MP
 LINKLINARM=/usr/arm-linux/bin/g++ -shared
 
-CCLINA8=~/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-linux-gnueabi-gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MMD -MP
-LINKLINA8=~/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-linux-gnueabi-g++ -shared
+CCLINA8=/home/opt/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-linux-gnueabi-gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MMD -MP
+LINKLINA8=/home/opt/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-linux-gnueabi-g++ -shared
 
-CCLINANDROID=~/Desktop/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/arm-linux-androideabi/bin/gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MMD -MP
-LINKLINANDROID=~/Desktop/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/arm-linux-androideabi/bin/g++ -shared
+CCLINANDROID=/home/opt/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/arm-linux-androideabi/bin/gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MMD -MP
+LINKLINANDROID=/home/opt/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/arm-linux-androideabi/bin/g++ -shared
 
 #Wine Windows
 WINLINKOPT = -shared -Wl,--add-stdcall-alias -DBUILD_DLL
@@ -98,19 +98,19 @@ windows:dirs
 	#$(LINKWIN64) -o"resources/native/windows/x86_64/libNRJavaSerial.dll" build/SerialImp.o build/fuserImp.o build/fixup.o build/termios.o build/init.o
 	#rm build/*
 	rm -rf build
-linux:dirs
+linux:dirs armA8
 
 	$(CCLIN32) src/fixup.c -o build/fixup.o
 	$(CCLIN32) src/fuserImp.c -o build/fuserImp.o
 	$(CCLIN32) src/SerialImp.c -o build/SerialImp.o
-	rm "resources/native/linux/x86_32/libNRJavaSerial.so"
+	#rm "resources/native/linux/x86_32/libNRJavaSerial.so"
 	$(LINKLIN32) -o"resources/native/linux/x86_32/libNRJavaSerial.so" $(LINOBJ)
 	rm build/*
 	
 	$(CCLIN64) src/fixup.c -o build/fixup.o
 	$(CCLIN64) src/fuserImp.c -o build/fuserImp.o
 	$(CCLIN64) src/SerialImp.c -o build/SerialImp.o
-	rm "resources/native/linux/x86_64/libNRJavaSerial.so"
+	#rm "resources/native/linux/x86_64/libNRJavaSerial.so"
 	$(LINKLIN64) -o"resources/native/linux/x86_64/libNRJavaSerial.so" $(LINOBJ)
 	rm -rf build
 armChumby:	dirs
@@ -124,7 +124,7 @@ armA8:dirs
 	$(CCLINA8) src/fuserImp.c -o build/fuserImp.o
 	$(CCLINA8) src/SerialImp.c -o build/SerialImp.o
 	$(LINKLINA8) -o"resources/native/linux/ARM_A8/libNRJavaSerial.so" $(LINOBJ)
-	rm -rf build
+	rm  build/*
 	
 armAndroid:dirs
 	$(CCLINANDROID) src/fixup.c -o build/fixup.o
