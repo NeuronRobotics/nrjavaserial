@@ -51,6 +51,7 @@ public class NativeResource {
 			if(OSUtil.isOSX() || OSUtil.isLinux()){
 				try{
 					inJarLoad("libNRJavaSerial_legacy");
+					System.err.println("Normal lib failed, using legacy");
 					return;
 				}catch(UnsatisfiedLinkError errr){
 					ex.printStackTrace();
