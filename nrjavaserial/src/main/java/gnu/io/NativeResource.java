@@ -51,9 +51,11 @@ public class NativeResource {
 			if(OSUtil.isOSX() || OSUtil.isLinux()){
 				try{
 					inJarLoad("libNRJavaSerial_legacy");
-					System.err.println("Normal lib failed, using legacy");
+					ex.printStackTrace();
+					System.err.println("Normal lib failed, using legacy..OK!");
 					return;
 				}catch(UnsatisfiedLinkError errr){
+					System.err.println("Both normal lib and legacy failed");
 					ex.printStackTrace();
 					errr.printStackTrace();
 				}
@@ -67,23 +69,17 @@ public class NativeResource {
 				return;
 			}catch(UnsatisfiedLinkError e){
 				try{
-					//load whole name
+					name = "rxtxSerial";
+					//last ditch effort to load
 					System.loadLibrary( name);	
 					testNativeCode();
 					return;
-				}catch(UnsatisfiedLinkError er){
-					try{
-						name = "rxtxSerial";
-						//last ditch effort to load
-						System.loadLibrary( name);	
-						testNativeCode();
-						return;
-					}catch(UnsatisfiedLinkError err){
-						System.err.println("Failed to load all possible JNI local and from: \n"+System.getProperty("java.library.path"));
-						throw new NativeResourceException("Unable to load deployed native resource");
-					}
+				}catch(UnsatisfiedLinkError err){
+					System.err.println("Failed to load all possible JNI local and from: \n"+System.getProperty("java.library.path"));
+					throw new NativeResourceException("Unable to load deployed native resource");
 				}
 			}
+			
 		}
 	}
 	
