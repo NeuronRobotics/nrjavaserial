@@ -48,14 +48,16 @@ public class NativeResource {
 			inJarLoad(name);
 			return;
 		} catch (UnsatisfiedLinkError ex) {
-			ex.printStackTrace();
 			if(OSUtil.isOSX() || OSUtil.isLinux()){
 				try{
 					inJarLoad("libNRJavaSerial_legacy");
 					return;
 				}catch(UnsatisfiedLinkError errr){
-					//continue on
+					ex.printStackTrace();
+					errr.printStackTrace();
 				}
+			}else{
+				ex.printStackTrace();
 			}
 			try{
 				//check to see if the library is availible in standard locations
