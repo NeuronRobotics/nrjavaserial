@@ -8,8 +8,11 @@ windows:
 wine:
 	make -C src/main/c windows
 	ant
-linux:
-	make -C src/main/c linux
+linux32:
+	make -C src/main/c linux32
+	ant
+linux64:
+	make -C src/main/c linux64
 	ant
 armChumby:
 	make -C src/main/c armChumby

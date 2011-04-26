@@ -98,15 +98,16 @@ windows:dirs
 	#$(LINKWIN64) -o"resources/native/windows/x86_64/libNRJavaSerial.dll" build/SerialImp.o build/fuserImp.o build/fixup.o build/termios.o build/init.o
 	#rm build/*
 	rm -rf build
-linux:dirs armA8
-
+linux:linux32 linux64 armA8
+	echo all Linux ok!
+linux32:dirs
 	$(CCLIN32) src/fixup.c -o build/fixup.o
 	$(CCLIN32) src/fuserImp.c -o build/fuserImp.o
 	$(CCLIN32) src/SerialImp.c -o build/SerialImp.o
 	#rm "resources/native/linux/x86_32/libNRJavaSerial.so"
 	$(LINKLIN32) -o"resources/native/linux/x86_32/libNRJavaSerial.so" $(LINOBJ)
 	rm build/*
-	
+linux64:dirs	
 	$(CCLIN64) src/fixup.c -o build/fixup.o
 	$(CCLIN64) src/fuserImp.c -o build/fuserImp.o
 	$(CCLIN64) src/SerialImp.c -o build/SerialImp.o
