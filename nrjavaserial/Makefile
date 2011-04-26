@@ -8,6 +8,9 @@ windows:
 wine:
 	make -C src/main/c windows
 	ant
+linux:
+	make -C src/main/c linux
+	ant
 linux32:
 	make -C src/main/c linux32
 	ant
