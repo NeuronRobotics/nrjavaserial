@@ -1,6 +1,6 @@
 <project name="Neuron Robotics Java Serial" default="deploy" basedir=".">
 
-  <property file="build.properties"/>
+<property file="../NRSDK/src/com/neuronrobotics/sdk/config/build.properties"/>
  
   <property name="app.path"      value="/${app.name}"/>
   <property name="build.home"    value="${basedir}/build"/>
