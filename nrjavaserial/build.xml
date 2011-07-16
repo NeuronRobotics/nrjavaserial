@@ -1,4 +1,4 @@
-<project name="Neuron Robotics Java Serial" default="deploy" basedir=".">
+<project name="Neuron Robotics Java Serial" default="deploy" basedir="." xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
 <property file="../NRSDK/src/com/neuronrobotics/sdk/config/build.properties"/>
  
@@ -19,7 +19,21 @@
   <property name="compile.optimize"    value="true"/>
 	
   <property name="jar.module" value="${app.name}-${app.version}.jar"/>
-	
+
+<!-- maven stuff -->
+<property name="groupId" value="com.neuronrobotics" />
+<property name="artifactId" value="nrjavaserial" />
+<property name="version" value="3.7.5" />
+
+<property name="maven-jar" value="${dist.home}/maven/${artifactId}-${version}.jar" />
+<property name="maven-javadoc-jar" value="${dist.home}/maven/${artifactId}-${version}-javadoc.jar" />
+<property name="maven-sources-jar" value="${dist.home}/maven/${artifactId}-${version}-sources.jar" />
+
+<property name="maven-snapshots-repository-id" value="sonatype-nexus-snapshots" />
+<property name="maven-snapshots-repository-url" value="https://oss.sonatype.org/content/repositories/snapshots/" />
+<property name="maven-staging-repository-id" value="sonatype-nexus-staging" />
+<property name="maven-staging-repository-url" value="https://oss.sonatype.org/service/local/staging/deploy/maven2/" />
+
   <target name="clean"
    description="Delete old build and dist directories">
     <delete dir="${build.home}"/>
@@ -75,6 +89,23 @@
     </jar>
   	
   </target>	
+
+  <target name="maven-dist" depends="compile" description="generate the distribution">
+
+    <!-- build the main artifact -->
+    <jar jarfile="${maven-jar}" basedir="${build.home}" />
+
+    <!-- build the javadoc artifact -->
+    <javadoc sourcepath="${src.home}" destdir="${dist.home}/javadoc" />
+    <jar jarfile="${maven-javadoc-jar}">
+      <fileset dir="${dist.home}/javadoc" />
+    </jar>
+
+    <!-- build the sources artifact -->
+    <jar jarfile="${maven-sources-jar}">
+      <fileset dir="${src.home}" />
+    </jar>
+  </target>
 	
   <target name="javadoc" depends="compile"
    description="Create Javadoc API documentation">
@@ -88,4 +119,38 @@
 
   <target name="deploy" depends="clean, prepare, compile, dist, javadoc"
    description="Builds the full deployment" />
+
+  <target name="stage" depends="maven-dist" description="deploy release version to Maven staging repository">
+  <!-- sign and deploy the main artifact -->
+    <artifact:mvn>
+      <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
+      <arg value="-Durl=${maven-staging-repository-url}" />
+      <arg value="-DrepositoryId=${maven-staging-repository-id}" />
+      <arg value="-DpomFile=pom.xml" />
+      <arg value="-Dfile=${maven-jar}" />
+      <arg value="-Pgpg" />
+    </artifact:mvn>
+
+    <!-- sign and deploy the sources artifact -->
+    <artifact:mvn>
+      <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
+      <arg value="-Durl=${maven-staging-repository-url}" />
+      <arg value="-DrepositoryId=${maven-staging-repository-id}" />
+      <arg value="-DpomFile=pom.xml" />
+      <arg value="-Dfile=${maven-sources-jar}" />
+      <arg value="-Dclassifier=sources" />
+      <arg value="-Pgpg" />
+    </artifact:mvn>
+
+    <!-- sign and deploy the javadoc artifact -->
+    <artifact:mvn>
+      <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
+      <arg value="-Durl=${maven-staging-repository-url}" />
+      <arg value="-DrepositoryId=${maven-staging-repository-id}" />
+      <arg value="-DpomFile=pom.xml" />
+      <arg value="-Dfile=${maven-javadoc-jar}" />
+      <arg value="-Dclassifier=javadoc" />
+      <arg value="-Pgpg" />
+    </artifact:mvn>
+  </target>
 </project>
