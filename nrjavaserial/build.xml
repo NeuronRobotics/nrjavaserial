@@ -23,7 +23,7 @@
 <!-- maven stuff -->
 <property name="groupId" value="com.neuronrobotics" />
 <property name="artifactId" value="nrjavaserial" />
-<property name="version" value="3.7.5" />
+<property name="version" value="3.7.7" />
 
 <property name="maven-jar" value="${dist.home}/maven/${artifactId}-${version}.jar" />
 <property name="maven-javadoc-jar" value="${dist.home}/maven/${artifactId}-${version}-javadoc.jar" />
@@ -76,7 +76,7 @@
    description="Create binary distribution">
   	<mkdir dir="${dist.home}/docs/api"/>
   	
-    <jar jarfile="${dist.home}/${app.name}-${app.version}.jar">
+    <jar jarfile="${dist.home}/nrjavaserial-${app.version}.jar">
       <manifest>
         <attribute name="Sealed" value="true"/>
       </manifest>
