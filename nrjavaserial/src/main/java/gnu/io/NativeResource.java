@@ -55,9 +55,9 @@ public class NativeResource {
 					System.err.println("Normal lib failed, using legacy..OK!");
 					return;
 				}catch(UnsatisfiedLinkError errr){
-					System.err.println("Both normal lib and legacy failed");
 					ex.printStackTrace();
 					errr.printStackTrace();
+					System.err.println("Both normal lib and legacy failed");
 				}
 			}else{
 				ex.printStackTrace();
@@ -76,6 +76,7 @@ public class NativeResource {
 					return;
 				}catch(UnsatisfiedLinkError err){
 					System.err.println("Failed to load all possible JNI local and from: \n"+System.getProperty("java.library.path"));
+					ex.printStackTrace();
 					throw new NativeResourceException("Unable to load deployed native resource");
 				}
 			}
