@@ -2,6 +2,8 @@ package gnu.io;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 
 public class NRSerialPort {
@@ -99,14 +101,22 @@ public class NRSerialPort {
         }
 	}
 	public static Set<String> getAvailableSerialPorts() {
-       Set<String> available;
+       Set<String> available=new HashSet<String>();
         try{
         	RXTXCommDriver d = new RXTXCommDriver();
-        	available=d.getPortIdentifiers();
+        	Set<String> av=d.getPortIdentifiers();
+        	ArrayList<String> strs = new ArrayList<String>();
+        	for(String s:av) {
+        		strs.add(0, s);
+        	}
+        	for(String s:strs) {
+        		available.add(s);
+        	}
         }catch( UnsatisfiedLinkError e){
         	e.printStackTrace();
         	throw new NativeResourceException(e.getMessage());
         }  
+        
         return available;
     }
 	
