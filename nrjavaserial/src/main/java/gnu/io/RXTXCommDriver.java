@@ -632,7 +632,8 @@ public class RXTXCommDriver implements CommDriver
 						"ttyUSB", // for USB frobs
 						"rfcomm",       // bluetooth serial device
 						"ttyircomm", // linux IrCommdevices (IrDA serial emu)
-						"ttyACM"// linux CDC ACM devices
+						"ttyACM",// linux CDC ACM devices
+						"dyio"// linux CDC ACM devices
 						};
 						CandidatePortPrefixes=Temp;
 					}
@@ -650,6 +651,7 @@ public class RXTXCommDriver implements CommDriver
 						"ttycosa0c", // linux COSA/SRP synchronous serial card
 						"ttycosa1c", // linux COSA/SRP synchronous serial card
 						"ttyACM",// linux CDC ACM devices
+						"dyio",// linux CDC ACM devices
 						"ttyC", // linux cyclades cards
 						"ttyCH",// linux Chase Research AT/PCI-Fast serial card
 						"ttyD", // linux Digiboard serial card
