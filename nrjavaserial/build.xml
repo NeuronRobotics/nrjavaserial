@@ -93,7 +93,17 @@
   <target name="maven-dist" depends="compile" description="generate the distribution">
 
     <!-- build the main artifact -->
-    <jar jarfile="${maven-jar}" basedir="${build.home}" />
+    <jar jarfile="${maven-jar}" >
+       <manifest>
+        <attribute name="Sealed" value="true"/>
+      </manifest>
+      <fileset dir="build">
+        <include name="**/*.class"/>
+        <include name="**/*.png"/>
+        <exclude name="test/*.class"/>
+      </fileset>
+      <fileset dir="${build.home}/lib" includes="**/*" />
+    </jar>
 
     <!-- build the javadoc artifact -->
     <javadoc sourcepath="${src.home}" destdir="${dist.home}/javadoc" />
