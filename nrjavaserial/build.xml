@@ -78,7 +78,7 @@
   	
     <jar jarfile="${dist.home}/nrjavaserial-${app.version}.jar">
       <manifest>
-        <attribute name="Sealed" value="true"/>
+        <attribute name="Sealed" value="false"/>
       </manifest>
       <fileset dir="build">
         <include name="**/*.class"/>
@@ -95,7 +95,7 @@
     <!-- build the main artifact -->
     <jar jarfile="${maven-jar}" >
        <manifest>
-        <attribute name="Sealed" value="true"/>
+        <attribute name="Sealed" value="false"/>
       </manifest>
       <fileset dir="build">
         <include name="**/*.class"/>
