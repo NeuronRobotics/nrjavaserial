@@ -109,7 +109,7 @@
 
 struct preopened
 {
-	char filename[40];
+	char filename[1024];
 	int fd;
 	struct preopened *next;
 	struct preopened *prev;
