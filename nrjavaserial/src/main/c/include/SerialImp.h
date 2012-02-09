@@ -109,7 +109,11 @@
 
 struct preopened
 {
+#if defined(_POSIX_PATH_MAX)
+	char filename[_POSIX_PATH_MAX];
+#else
 	char filename[1024];
+#endif
 	int fd;
 	struct preopened *next;
 	struct preopened *prev;
