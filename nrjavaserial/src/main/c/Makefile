@@ -1,5 +1,10 @@
-OSXJAVAINCLUDEDIR = /System/Library/Frameworks/JavaVM.framework/Headers
-OSXJAVAINCLUDE = -I $(OSXJAVAINCLUDEDIR)
+
+OSXJAVAINCLUDE1 = -I/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Headers 
+OSXJAVAINCLUDE2 = -I/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers 
+OSXJAVAINCLUDE4 = -I/Developer/SDKs/MacOSX10.6.sdk/usr/include 
+OSXJAVAINCLUDE5 = -I./include/OSX/
+
+OSXJAVAINCLUDE = $(OSXJAVAINCLUDE1) $(OSXJAVAINCLUDE2) $(OSXJAVAINCLUDE3) $(OSXJAVAINCLUDE4) $(OSXJAVAINCLUDE5)		
 OSXINCLUDE=-I"./include" -I"./include/target"  $(OSXJAVAINCLUDE)
 CCOSX=cc $(OSXINCLUDE)  -g -O2 -D_BSD_SOURCE -c
 LINKOSX=cc  -dynamiclib -framework JavaVM -framework IOKit -framework CoreFoundation
@@ -135,6 +140,38 @@ armAndroid:dirs
 	rm -rf build	
 	
 osx:dirs
+	if (test -d include/OSX/CoreFoundation/);\
+	then\
+		echo Dirs OK!;\
+	else\
+		rm include/OSX/CoreFoundation;\
+		sudo ln -s /Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/CoreFoundation.framework/Headers/ include/OSX/CoreFoundation; \
+	fi
+	
+	if (test -d include/OSX/CoreServices/);\
+	then\
+		echo Dirs OK!;\
+	else\
+		rm include/OSX/CoreServices;\
+		sudo ln -s /Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/CoreServices.framework/Headers/ include/OSX/CoreServices; \
+	fi
+	
+	if (test -d include/OSX/CarbonCore/);\
+	then\
+		echo Dirs OK!;\
+	else\
+		rm include/OSX/CarbonCore;\
+		sudo ln -s /Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/Headers include/OSX/CarbonCore; \
+	fi
+	
+	if (test -d include/OSX/IOKit/);\
+	then\
+		echo Dirs OK!;\
+	else\
+		rm include/OSX/CarbonCore;\
+		sudo ln -s /Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/IOKit.framework/Headers include/OSX/IOKit; \
+	fi
+	
 	$(CCOSX) src/fuserImp.c -o build/fuserImp.o
 	$(CCOSX) src/SerialImp.c -o build/SerialImp.o
 	$(LINKOSX) -o "./resources/native/osx/libNRJavaSerial.jnilib" build/SerialImp.o build/fuserImp.o
