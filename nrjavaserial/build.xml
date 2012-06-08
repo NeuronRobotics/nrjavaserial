@@ -63,8 +63,8 @@
 			destdir="${build.home}"
 			debug="${compile.debug}"
 			deprecation="${compile.deprecation}"
+    		target="${app.javac.version}"
 			optimize="${compile.optimize}">
-	    	target="${app.javac.version}">
         <classpath refid="compile.classpath"/>
     </javac>
   	
