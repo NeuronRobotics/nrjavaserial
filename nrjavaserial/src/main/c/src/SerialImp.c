@@ -197,7 +197,7 @@ int localOpen(const char * name,int flags){
 int localClose(int fd){
 #if defined(__linux__)
 	if(!(fcntl(fd, F_GETFL) != -1 || errno != EBADF)){
-		report_error("\nlocalClose: File Descriptor error, not closing\n");
+		//report_error("\nlocalClose: File Descriptor error, not closing\n");
 		return -1;
 	}
 #endif
@@ -796,7 +796,7 @@ JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
  		UNLOCK( filename, pid );
  		//report_warning("nativeClose() Unlock OK\n");
 	}else{
-		report_warning("nativeClose(): Close not detecting File Descriptor");
+		//report_warning("nativeClose(): Close not detecting File Descriptor");
 	}
 	//report_warning("nativeClose() Attempt OK\n");
 	report("nativeClose: Delete jclazz\n");
@@ -4409,11 +4409,11 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
 	if( (fd < 0)  || i>=10)
 	{
 
-		report_error( "\ntestRead() open failed: " );
-		report_error(name);
-		report_error( "\n" );
+		//report_error( "\ntestRead() open failed: " );
+		//report_error(name);
+		//report_error( "\n" );
 
-		report_verbose( "testRead() open failed\n" );
+		//report_verbose( "testRead() open failed\n" );
 		ret = JNI_FALSE;
 		goto END;
 	}
