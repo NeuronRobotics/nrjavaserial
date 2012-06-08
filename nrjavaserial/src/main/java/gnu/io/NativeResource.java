@@ -40,33 +40,33 @@ public class NativeResource {
 		loadResource(resourceLocation);
 		testNativeCode();
 	}
-	private String[] armLibs = {"libNRJavaSerial_HF.so","libNRJavaSerialv6.so","libNRJavaSerialv6_HF.so" };
+	private String[] armLibs = {"libNRJavaSerialv6_HF.so","libNRJavaSerialv6.so","libNRJavaSerial_HF.so","libNRJavaSerial","libNRJavaSerial_legacy"};
 	private void loadLib(String name) throws NativeResourceException {
 
 		String libName = name.substring(name.indexOf("lib")+3);
 		try {
-			inJarLoad(name);
+			if(OSUtil.isARM()) {
+				System.err.println("Attempting arm variants");
+				for(int i=0;i<armLibs.length;i++) {
+					try {
+						inJarLoad(armLibs[i]);
+						System.err.println("Arm lib success! "+armLibs[i]);
+						return;
+					}catch(UnsatisfiedLinkError e) {
+						System.err.println("Is not "+armLibs[i]);
+					}
+				}
+			}else {
+				inJarLoad(name);
+			}
 			return;
 		} catch (UnsatisfiedLinkError ex) {
 			if(OSUtil.isOSX() || OSUtil.isLinux()){
 				try{
 					inJarLoad("libNRJavaSerial_legacy");
-					//ex.printStackTrace();
 					System.err.println("Normal lib failed, using legacy..OK!");
 					return;
 				}catch(UnsatisfiedLinkError er){
-					if(OSUtil.isARM()) {
-						System.err.println("Attempting arm variants");
-						for(int i=0;i<armLibs.length;i++) {
-							try {
-								inJarLoad(armLibs[i]);
-								System.err.println("Arm lib success! "+armLibs[i]);
-								return;
-							}catch(UnsatisfiedLinkError e) {
-								System.err.println("Is not "+armLibs[i]);
-							}
-						}
-					}
 					ex.printStackTrace();
 				}
 			}else{
