@@ -19,11 +19,10 @@ linux64:
 	ant
 arm:
 	sudo apt-get install g++-arm-linux-gnueabihf g++-arm-linux-gnueabi
-	make -C src/main/c arm
-	make -C src/main/c armHF
-	ant
-armAndroid:
-	make -C src/main/c	armAndroid
+	make -C src/main/c arm6
+	make -C src/main/c arm6HF
+	make -C src/main/c arm7
+	make -C src/main/c arm7HF
 	ant
 osx:
 	make -C src/main/c osx
