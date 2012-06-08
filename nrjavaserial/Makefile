@@ -19,8 +19,6 @@ linux64:
 	ant
 arm:
 	sudo apt-get install g++-arm-linux-gnueabihf g++-arm-linux-gnueabi
-	make -C src/main/c arm6
-	make -C src/main/c arm6HF
 	make -C src/main/c arm7
 	make -C src/main/c arm7HF
 	ant
