@@ -55,9 +55,16 @@ public class NativeResource {
 					System.err.println("Normal lib failed, using legacy..OK!");
 					return;
 				}catch(UnsatisfiedLinkError errr){
-					ex.printStackTrace();
-					errr.printStackTrace();
-					System.err.println("Both normal lib and legacy failed");
+					try {
+						inJarLoad("libNRJavaSerial_HF");
+						System.err.println("Legacy lib failed, using ARM HF..OK!");
+					}catch(UnsatisfiedLinkError e3){
+						ex.printStackTrace();
+						errr.printStackTrace();
+						e3.printStackTrace();
+						System.err.println("Both normal lib and legacy failed");
+					}
+					
 				}
 			}else{
 				ex.printStackTrace();
@@ -101,10 +108,7 @@ public class NativeResource {
 			}
 		}else if(OSUtil.isLinux()) {
 			if(OSUtil.isARM()) {
-				if(OSUtil.isCortexA8())
-					file = "/native/linux/ARM_A8/" + name;
-				else
-					file = "/native/linux/ARM/" + name;
+				file = "/native/linux/ARM/" + name;
 			}else {
 				if(OSUtil.is64Bit()) {
 					file="/native/linux/x86_64/" + name;
