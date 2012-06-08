@@ -11,7 +11,7 @@ LINKOSX=cc  -dynamiclib -framework JavaVM -framework IOKit -framework CoreFounda
 
 
 LINOBJ=build/fixup.o build/fuserImp.o build/SerialImp.o
-LININCLUDE=-I"./include" -I"./include/target" -I/usr/src/linux-headers-2.6.32-26-generic/include/ -I/usr/lib/jvm/java-6-openjdk/include/
+LININCLUDE=-I"./include" -I"./include/target" -I/usr/src/linux-headers-2.6.32-26-generic/include/ -I/usr/lib/jvm/java-6-openjdk-amd64/include/
 
 CCLIN32=gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -m32 -MMD
 LINKLIN32=g++ -m32 -shared 
@@ -20,11 +20,11 @@ LINKLIN32=g++ -m32 -shared
 CCLIN64=gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -m64 -MMD
 LINKLIN64=g++ -m64 -shared 
 
-CCLINARM=/usr/arm-linux/bin/gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MMD -MP
-LINKLINARM=/usr/arm-linux/bin/g++ -shared
+CCLINARM=arm-linux-gnueabi-gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MMD -MP
+LINKLINARM=arm-linux-gnueabi-g++ -shared
 
-CCLINA8=/home/opt/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-linux-gnueabi-gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MMD -MP
-LINKLINA8=/home/opt/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-linux-gnueabi-g++ -shared
+CCLINARM_HF=arm-linux-gnueabihf-gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MMD -MP
+LINKLINARM_HF=arm-linux-gnueabihf-g++ -shared
 
 CCLINANDROID=/home/opt/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/arm-linux-androideabi/bin/gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MMD -MP
 LINKLINANDROID=/home/opt/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/arm-linux-androideabi/bin/g++ -shared
@@ -103,7 +103,7 @@ windows:dirs
 	#$(LINKWIN64) -o"resources/native/windows/x86_64/libNRJavaSerial.dll" build/SerialImp.o build/fuserImp.o build/fixup.o build/termios.o build/init.o
 	#rm build/*
 	rm -rf build
-linux:linux32 linux64 armA8
+linux:linux32 linux64 arm armHF
 	echo all Linux ok!
 linux32:dirs
 	$(CCLIN32) src/fixup.c -o build/fixup.o
@@ -119,25 +119,25 @@ linux64:dirs
 	#rm "resources/native/linux/x86_64/libNRJavaSerial.so"
 	$(LINKLIN64) -o"resources/native/linux/x86_64/libNRJavaSerial.so" $(LINOBJ)
 	rm -rf build
-armChumby:	dirs
+arm:	dirs
 	$(CCLINARM) src/fixup.c -o build/fixup.o
 	$(CCLINARM) src/fuserImp.c -o build/fuserImp.o
 	$(CCLINARM) src/SerialImp.c -o build/SerialImp.o
 	$(LINKLINARM) -o"resources/native/linux/ARM/libNRJavaSerial.so" $(LINOBJ)
 	rm -rf build
-armA8:dirs
-	$(CCLINA8) src/fixup.c -o build/fixup.o
-	$(CCLINA8) src/fuserImp.c -o build/fuserImp.o
-	$(CCLINA8) src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINA8) -o"resources/native/linux/ARM_A8/libNRJavaSerial.so" $(LINOBJ)
-	rm  build/*
-	
+armHF:dirs
+	$(CCLINARM_HF) src/fixup.c -o build/fixup.o
+	$(CCLINARM_HF) src/fuserImp.c -o build/fuserImp.o
+	$(CCLINARM_HF) src/SerialImp.c -o build/SerialImp.o
+	$(LINKLINARM_HF) -o"resources/native/linux/ARM/libNRJavaSerial_HF.so" $(LINOBJ)
+	rm  build/*	
 armAndroid:dirs
-	$(CCLINANDROID) src/fixup.c -o build/fixup.o
+	$(CCLINARMNATIVE) src/fixup.c -o build/fixup.o
 	$(CCLINANDROID) src/fuserImp.c -o build/fuserImp.o
 	$(CCLINANDROID) src/SerialImp.c -o build/SerialImp.o
 	$(LINKLINANDROID) -o"resources/native/linux/ARM_ANDROID/libNRJavaSerial.so" $(LINOBJ)
 	rm -rf build	
+
 	
 osx:dirs
 	if (test -d include/OSX/CoreFoundation/);\

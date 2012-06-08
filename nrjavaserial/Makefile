@@ -17,11 +17,10 @@ linux32:
 linux64:
 	make -C src/main/c linux64
 	ant
-armChumby:
-	make -C src/main/c armChumby
-	ant
-armA8:
-	make -C src/main/c armA8
+arm:
+	sudo apt-get install g++-arm-linux-gnueabihf g++-arm-linux-gnueabi
+	make -C src/main/c arm
+	make -C src/main/c armHF
 	ant
 armAndroid:
 	make -C src/main/c	armAndroid
