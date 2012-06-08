@@ -139,10 +139,10 @@ arm6:	dirs
 	$(LINKLINARM) --with-arch=armv6  -o"resources/native/linux/ARM/libNRJavaSerialv6.so" $(LINOBJ)
 	rm -rf build
 arm6HF:dirs
-	$(CCLINARM_HF) --with-arch=armv6  src/fixup.c -o build/fixup.o
-	$(CCLINARM_HF) --with-arch=armv6  src/fuserImp.c -o build/fuserImp.o
-	$(CCLINARM_HF) --with-arch=armv6  src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM_HF) --with-arch=armv6 -o"resources/native/linux/ARM/libNRJavaSerialv6_HF.so" $(LINOBJ)
+	$(CCLINARM_HF)  src/fixup.c -o build/fixup.o
+	$(CCLINARM_HF)  src/fuserImp.c -o build/fuserImp.o
+	$(CCLINARM_HF)  src/SerialImp.c -o build/SerialImp.o
+	$(LINKLINARM_HF)  -o"resources/native/linux/ARM/libNRJavaSerialv6_HF.so" $(LINOBJ)
 	rm  build/*	
 
 	
