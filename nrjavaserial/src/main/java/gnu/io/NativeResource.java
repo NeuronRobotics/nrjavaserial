@@ -40,7 +40,7 @@ public class NativeResource {
 		loadResource(resourceLocation);
 		testNativeCode();
 	}
-	private String[] armLibs = {"libNRJavaSerialv6_HF.so","libNRJavaSerialv6.so","libNRJavaSerial_HF.so","libNRJavaSerial","libNRJavaSerial_legacy"};
+	private String[] armLibs = {"libNRJavaSerialv6_HF","libNRJavaSerialv6","libNRJavaSerial_HF","libNRJavaSerial","libNRJavaSerial_legacy"};
 	private void loadLib(String name) throws NativeResourceException {
 
 		String libName = name.substring(name.indexOf("lib")+3);
