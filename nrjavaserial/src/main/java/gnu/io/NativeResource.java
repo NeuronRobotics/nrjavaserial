@@ -40,7 +40,7 @@ public class NativeResource {
 		loadResource(resourceLocation);
 		testNativeCode();
 	}
-
+	private String[] armLibs = {"libNRJavaSerial_HF.so","libNRJavaSerialv6.so","libNRJavaSerialv6_HF.so" };
 	private void loadLib(String name) throws NativeResourceException {
 
 		String libName = name.substring(name.indexOf("lib")+3);
@@ -54,17 +54,20 @@ public class NativeResource {
 					//ex.printStackTrace();
 					System.err.println("Normal lib failed, using legacy..OK!");
 					return;
-				}catch(UnsatisfiedLinkError errr){
-					try {
-						inJarLoad("libNRJavaSerial_HF");
-						System.err.println("Legacy lib failed, using ARM HF..OK!");
-					}catch(UnsatisfiedLinkError e3){
-						ex.printStackTrace();
-						errr.printStackTrace();
-						e3.printStackTrace();
-						System.err.println("Both normal lib and legacy failed");
+				}catch(UnsatisfiedLinkError er){
+					if(OSUtil.isARM()) {
+						System.err.println("Attempting arm variants");
+						for(int i=0;i<armLibs.length;i++) {
+							try {
+								inJarLoad(armLibs[i]);
+								System.err.println("Arm lib success! "+armLibs[i]);
+								return;
+							}catch(UnsatisfiedLinkError e) {
+								System.err.println("Is not "+armLibs[i]);
+							}
+						}
 					}
-					
+					ex.printStackTrace();
 				}
 			}else{
 				ex.printStackTrace();
