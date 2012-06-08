@@ -1,6 +1,6 @@
 <project name="Neuron Robotics Java Serial" default="deploy" basedir="." xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
-<property file="../NRSDK/src/com/neuronrobotics/sdk/config/build.properties"/>
+	<property file="../NRSDK/src/com/neuronrobotics/sdk/config/build.properties"/>
  
   <property name="app.path"      value="/${app.name}"/>
   <property name="build.home"    value="${basedir}/build"/>
@@ -60,10 +60,11 @@
    description="Compile Java sources">
     <mkdir    dir="${build.home}"/>
     <javac srcdir="${src.home}"
-          destdir="${build.home}"
-            debug="${compile.debug}"
-      deprecation="${compile.deprecation}"
-         optimize="${compile.optimize}">
+			destdir="${build.home}"
+			debug="${compile.debug}"
+			deprecation="${compile.deprecation}"
+			optimize="${compile.optimize}">
+	    	target="${app.javac.version}">
         <classpath refid="compile.classpath"/>
     </javac>
   	
