@@ -123,14 +123,14 @@ public class NativeResource {
 			System.err.println("Can't load native file: "+name+" for os arch: "+OSUtil.getOsArch());
 			return null;
 		}
-		//System.out.println("Loading "+file);
+		System.out.println("Loading "+file);
 		return getClass().getResourceAsStream(file);
 	}
 	
 	private void loadResource(File resource) {
 		if(!resource.canRead())
 			throw new RuntimeException("Cant open JNI file: "+resource.getAbsolutePath());
-		//System.out.println("Loading: "+resource.getAbsolutePath());
+		System.out.println("Loading: "+resource.getAbsolutePath());
 		System.load(resource.getAbsolutePath());
 	}
 
@@ -211,7 +211,7 @@ public class NativeResource {
 		if(fd == null || !fd.canRead()) {
 			throw new NativeResourceException("Unable to deploy native resource");
 		}
-		//System.out.println("Local file: "+fd.getAbsolutePath());
+		System.out.println("Local file: "+fd.getAbsolutePath());
 		return fd;
 	}
 	
