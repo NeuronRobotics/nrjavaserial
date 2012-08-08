@@ -633,8 +633,10 @@ public class RXTXCommDriver implements CommDriver
 						"rfcomm",       // bluetooth serial device
 						"ttyircomm", // linux IrCommdevices (IrDA serial emu)
 						"ttyACM",// linux CDC ACM devices
-						"DyIO",// linux CDC ACM devices
-						"Bootloader",// linux CDC ACM devices
+						"DyIO",// NRDyIO
+						"Bootloader",// NRDyIO bootloader
+						"BowlerDevice",// Generic Bowler Device
+						"DeltaDoodle",// DeltaDoodle Printer
 						"dyio"// linux CDC ACM devices
 						};
 						CandidatePortPrefixes=Temp;
@@ -655,6 +657,8 @@ public class RXTXCommDriver implements CommDriver
 						"ttyACM",// linux CDC ACM devices
 						"DyIO",// linux CDC ACM devices
 						"Bootloader",// linux CDC ACM devices
+						"BowlerDevice",// Generic Bowler Device
+						"DeltaDoodle",// DeltaDoodle Printer
 						"dyio",// linux CDC ACM devices
 						"ttyC", // linux cyclades cards
 						"ttyCH",// linux Chase Research AT/PCI-Fast serial card
