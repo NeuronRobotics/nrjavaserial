@@ -1,4 +1,6 @@
-<project>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -25,21 +27,93 @@
     <url>http://nrjavaserial.googlecode.com/svn/trunk/</url>
     <connection>scm:svn:http://nrjavaserial.googlecode.com/svn/trunk/</connection>
   </scm>
+
+  <properties>
+    <developer.email>kharrington@neuronrobotics.com</developer.email>
+  </properties>
+
   <developers>
     <developer>
       <name>Kevin Harrington</name>
-      <email>kharrington@neuronrobotics.com</email>
+      <email>${developer.email}</email>
     </developer>
   </developers>
+
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/c/resources/</directory>
+        <excludes>
+        	<exclude>**/.svn/</exclude>
+        </excludes>
+      </resource>
+    </resources>
+
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.0</version>
         <configuration>
           <source>1.5</source>
           <target>1.5</target>
         </configuration>
+      </plugin>
+
+      <plugin>
+      	<groupId>org.apache.felix</groupId>
+      	<artifactId>maven-bundle-plugin</artifactId>
+      	<version>2.3.7</version>
+      	<extensions>true</extensions>
+      	<configuration>
+      		<archive>
+      			<addMavenDescriptor>true</addMavenDescriptor>
+      		</archive>
+      		<supportedProjectTypes>
+      			<supportedProjectType>jar</supportedProjectType>
+      		</supportedProjectTypes>
+      		<instructions>
+      			<Bundle-ContactAddress>${developer.email}</Bundle-ContactAddress>
+      			<Bundle-Description>${project.description}</Bundle-Description>
+      			<Bundle-DocURL>${project.url}</Bundle-DocURL>
+      			<Bundle-SymbolicName>${project.name}</Bundle-SymbolicName>
+      			<Bundle-Version>${project.version}</Bundle-Version>
+      			<Export-Package>*</Export-Package>
+      			<Bundle-NativeCode>
+      				native/windows/x86_32/libNRJavaSerial.dll;osname=Win32;processor=x86,
+      				native/windows/x86_64/libNRJavaSerial.dll;osname=Win64;processor=x86_64,
+      				native/linux/x86_32/libNRJavaSerial.so;osname=linux;processor=x86,
+      				native/linux/x86_32/libNRJavaSerial_legacy.so;osname=linux;processor=x86,
+      				native/linux/x86_64/libNRJavaSerial.so;osname=linux;processor=x86_64,
+      				native/linux/x86_64/libNRJavaSerial_legacy.so;osname=linux;processor=x86_64,
+      				native/osx/libNRJavaSerial_10.7.jnilib;osname="mac os x";processor=x86,
+      				native/osx/libNRJavaSerial_10.6.jnilib;osname="mac os x";processor=x86,
+      				native/osx/libNRJavaSerial_10.5.jnilib;osname="mac os x";processor=x86,
+      				native/osx/libNRJavaSerial.jnilib;osname="mac os x";processor=x86,
+      				native/osx/libNRJavaSerial_legacy.jnilib;osname="mac os x";processor=x86
+      			</Bundle-NativeCode>
+      		</instructions>
+      	</configuration>
+      	<executions>
+      		<execution>
+      		  <id>bundle</id>
+      		  <goals>
+                <goal>manifest</goal>
+              </goals>
+              <phase>prepare-package</phase>
+            </execution>
+      	</executions>
+      </plugin>
+
+      <plugin>
+      	<groupId>org.apache.maven.plugins</groupId>
+      	<artifactId>maven-jar-plugin</artifactId>
+      	<version>2.3.2</version>
+      	<configuration>
+      		<archive>
+      			<manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+      		</archive>
+      	</configuration>
       </plugin>
     </plugins>
   </build>   
