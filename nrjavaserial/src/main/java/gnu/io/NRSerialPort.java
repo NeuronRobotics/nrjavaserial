@@ -32,18 +32,18 @@ public class NRSerialPort {
 			RXTXPort comm = null;
 			CommPortIdentifier ident = null;
 			if((System.getProperty("os.name").toLowerCase().indexOf("linux")!=-1)){
-				if (	port.toLowerCase().contains("rfcomm".toLowerCase())||
-						port.toLowerCase().contains("ttyUSB".toLowerCase()) ||
-						port.toLowerCase().contains("ttyS".toLowerCase())|| 
-						port.toLowerCase().contains("ACM".toLowerCase()) || 
-						port.toLowerCase().contains("Neuron_Robotics".toLowerCase())||
-						port.toLowerCase().contains("DyIO".toLowerCase())||
-						port.toLowerCase().contains("NR".toLowerCase())||
-						port.toLowerCase().contains("FTDI".toLowerCase())||
-						port.toLowerCase().contains("ftdi".toLowerCase())
-						){
+//				if (	port.toLowerCase().contains("rfcomm".toLowerCase())||
+//						port.toLowerCase().contains("ttyUSB".toLowerCase()) ||
+//						port.toLowerCase().contains("ttyS".toLowerCase())|| 
+//						port.toLowerCase().contains("ACM".toLowerCase()) || 
+//						port.toLowerCase().contains("Neuron_Robotics".toLowerCase())||
+//						port.toLowerCase().contains("DyIO".toLowerCase())||
+//						port.toLowerCase().contains("NR".toLowerCase())||
+//						port.toLowerCase().contains("FTDI".toLowerCase())||
+//						port.toLowerCase().contains("ftdi".toLowerCase())
+//						){
 					System.setProperty("gnu.io.rxtx.SerialPorts", port);
-				}
+//				}
 			}
 			ident = CommPortIdentifier.getPortIdentifier(port);
 
