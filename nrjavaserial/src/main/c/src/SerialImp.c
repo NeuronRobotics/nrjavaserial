@@ -872,19 +872,6 @@ int set_port_params( JNIEnv *env, int fd, int cspeed, int dataBits,
 		result &= ~TIOCM_DTR;
 		ioctl( fd, TIOCMSET, &result );
 	}
-	/*
-	   B38400 is a special case in Linux for custom baud rates.
-
-	   We just treat this as a custom speed for now.  If you take this ifdef
-	   out and select baud rates 38400 then 28800 then 38400, you will get
-	   a final baud rate of 28800 because you did not update the divisor.
-
-	   See the next ifdef below for the divisor.
-	*/
-#if defined(TIOCGSERIAL)
-	if ( cspeed == B38400 )
-		cspeed = 38400;
-#endif /* TIOCGSERIAL */
 	if(     cfsetispeed( &ttyset, cspeed ) < 0 ||
 		cfsetospeed( &ttyset, cspeed ) < 0 )
 	{
@@ -906,11 +893,6 @@ int set_port_params( JNIEnv *env, int fd, int cspeed, int dataBits,
 		*/
 
 #if defined(TIOCGSERIAL)
-		if ( ioctl( fd, TIOCGSERIAL, &sstruct ) < 0 )
-		{
-			report( "set_port_params: Cannot Get Serial Port Settings\n" );
-			return(1);
-		}
 		sstruct.custom_divisor = ( sstruct.baud_base/cspeed );
 		cspeed = B38400;
 #endif /* TIOCGSERIAL */
