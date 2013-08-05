@@ -4143,11 +4143,15 @@ int initialise_event_info_struct( struct event_info_struct *eis )
 		goto fail;
 end:
 	FD_ZERO( &eis->rfds );
-	FD_SET( eis->fd, &eis->rfds );
-	eis->tv_sleep.tv_sec = 0;
-	eis->tv_sleep.tv_usec = 1000;
-	eis->initialised = 1;
-	return( 1 );
+	if (eis->fd < FD_SETSIZE && eis->fd > 0) {
+		FD_SET( eis->fd, &eis->rfds );
+		eis->tv_sleep.tv_sec = 0;
+		eis->tv_sleep.tv_usec = 1000;
+		eis->initialised = 1;
+		return( 1 );
+	} else {
+		// you can reduce this limitation only with migration to epool or something like that.
+	}
 fail:
 	report_error("initialise_event_info_struct: initialise failed!\n");
 	finalize_event_info_struct( eis );
@@ -4255,7 +4259,7 @@ JNIEXPORT void JNICALL RXTXPort(eventLoop)( JNIEnv *env, jobject jobj )
 		{
 			report_serial_events( &eis );
 		}
-		initialise_event_info_struct( &eis );
+		if ( !initialise_event_info_struct( &eis ) ) goto end;
 	} while( 1 );
 end:
 	LEAVE( "eventLoop:  Bailing!\n" );
@@ -5409,6 +5413,7 @@ int fhs_lock( const char *filename, int pid )
 			report_error(" It is mine\n" );
 		}
 		report_error( "\n" );
+		close( fd );
 		return 1;
 	}
 
