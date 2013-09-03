@@ -180,7 +180,7 @@ extern void show_user(const char tstring[],char *rs)
     char tmp[10],path[PATH_MAX+1],comm[COMM_LEN+1];
     int dummy,ret;
     int keeper;
-    pid_t self;
+
     const char *name;
     int uid;
     char temp[80];
@@ -191,7 +191,7 @@ extern void show_user(const char tstring[],char *rs)
 	sprintf(rs, "%s", "Unknown Linux Application");
 	return; 
     }
-    self = getpid();
+    getpid();
     if (!files->name || !(files->items || all))
     {
 	 sprintf(rs, "%s", "Unknown Linux Application");
@@ -277,16 +277,16 @@ static void enter_item(const char *name,int flags,int sig_number,dev_t dev, ino_
  void parse_args(const char *argv)
 {
     SPACE_DSC *name_space;
-    int flags,sig_number,no_files;
+    int flags,sig_number;
     SPACE_DSC *this_name_space;
     struct stat st;
 
     flags = 0;
     sig_number = SIGKILL;
     name_space = name_spaces;
-    no_files = 1;
+
     flags |= FLAG_UID;
-    no_files = 0;
+
     last_named = NULL;
     this_name_space = name_space;
     if (this_name_space == name_spaces) {
