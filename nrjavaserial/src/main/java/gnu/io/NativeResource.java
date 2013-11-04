@@ -112,6 +112,8 @@ public class NativeResource {
 		}else if(OSUtil.isLinux()) {
 			if(OSUtil.isARM()) {
 				file = "/native/linux/ARM/" + name;
+			}if(OSUtil.isPPC()) {
+				file = "/native/linux/PPC/" + name;
 			}else {
 				if(OSUtil.is64Bit()) {
 					file="/native/linux/x86_64/" + name;
@@ -222,6 +224,9 @@ public class NativeResource {
 		}
 		public static boolean isARM() {
 			return getOsArch().startsWith("arm");
+		}
+		public static boolean isPPC() {
+			return getOsArch().toLowerCase().contains("ppc");
 		}
 		public static boolean isCortexA8(){
 			if(isARM()){
