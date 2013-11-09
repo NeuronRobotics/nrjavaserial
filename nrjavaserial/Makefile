@@ -22,6 +22,9 @@ arm:
 	make -C src/main/c arm7
 	make -C src/main/c arm7HF
 	ant
+ppc:
+	make -C src/main/c ppc
+	ant
 osx:
 	make -C src/main/c osx
 	ant
