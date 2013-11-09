@@ -29,6 +29,10 @@ LINKLINARM_HF=arm-linux-gnueabihf-g++ -shared
 CCLINANDROID=/home/opt/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/arm-linux-androideabi/bin/gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MMD -MP
 LINKLINANDROID=/home/opt/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/arm-linux-androideabi/bin/g++ -shared
 
+#powerpc
+CCLINPPC=/usr/local/powerpc-none-linux-gnuspe/bin/powerpc-none-linux-gnuspe-gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MMD -MP
+LINKLINPPC=/usr/local/powerpc-none-linux-gnuspe/bin/powerpc-none-linux-gnuspe-g++ -shared
+
 #Wine Windows
 WINLINKOPT = -shared -Wl,--add-stdcall-alias -DBUILD_DLL
 WINCCOPT = -O3 -Wall -DBUILD_DLL
@@ -63,6 +67,7 @@ dirs:
 	 mkdir -p resources/native/linux/ARM/; \
 	 mkdir -p resources/native/linux/ARM_A8/; \
 	 mkdir -p resources/native/linux/ARM_ANDROID/; \
+	 mkdir -p resources/native/linux/PPC/; \
 	 mkdir -p resources/native/windows/x86_32/; \
 	 mkdir -p resources/native/windows/x86_64/; \
 	 mkdir -p resources/native/osx/; \
@@ -103,7 +108,7 @@ windows:dirs
 	#$(LINKWIN64) -o"resources/native/windows/x86_64/libNRJavaSerial.dll" build/SerialImp.o build/fuserImp.o build/fixup.o build/termios.o build/init.o
 	#rm build/*
 	rm -rf build
-linux:linux32 linux64 arm armHF
+linux:linux32 linux64 arm armHF ppc
 	echo all Linux ok!
 linux32:dirs
 	$(CCLIN32) src/fixup.c -o build/fixup.o
@@ -145,6 +150,12 @@ arm6HF:dirs
 	$(LINKLINARM_HF)  -o"resources/native/linux/ARM/libNRJavaSerialv6_HF.so" $(LINOBJ)
 	rm  build/*	
 
+ppc:   dirs
+	$(CCLINPPC) src/fixup.c -o build/fixup.o
+	$(CCLINPPC) src/fuserImp.c -o build/fuserImp.o
+	$(CCLINPPC) src/SerialImp.c -o build/SerialImp.o
+	$(LINKLINPPC) -o"resources/native/linux/PPC/libNRJavaSerial.so" $(LINOBJ)
+	rm -rf build
 	
 osx:dirs
 	if (test -d include/OSX/CoreFoundation/);\
