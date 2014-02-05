@@ -1,7 +1,7 @@
 nrjavaserial
 ============
 
-# About # 
+#About
 
 This is a fork of the RXTX library with a focus on ease of use and the ability to embed in other libraries. 
 
@@ -33,7 +33,7 @@ Fixed the windows serial port zombie bind that prevents re-accessing serial port
 
 Fixed erroneous printouts of native library mis-match
 
-# Building Jar #
+# Building Jar
 
 Checkout the repository.
 
@@ -43,7 +43,7 @@ $ant
 
 The ready to deploy .jar file will be found in the target/ directory. 
 
-# Building Native Code # 
+#Building Native Code
 
 Native code is built using the Makefile found in nrjavaserial/nrjavaserial . After the native code is built, the .jar is rebuilt. 
 
