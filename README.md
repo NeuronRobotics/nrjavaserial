@@ -2,7 +2,8 @@ nrjavaserial
 ============
 
 = About = 
-This is a fork of the RXTX library with a focus on ease of use and the ability to embed in other libraries. We have also ported this code to the Android platform.
+
+This is a fork of the RXTX library with a focus on ease of use and the ability to embed in other libraries. 
 
 Some of the features we have added:
 
