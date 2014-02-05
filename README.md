@@ -1,11 +1,11 @@
 nrjavaserial
 ============
 
-= About = 
+# About # 
 
 This is a fork of the RXTX library with a focus on ease of use and the ability to embed in other libraries. 
 
-Some of the features we have added:
+##Some of the features we have added##
 
 A simplified serial port object called NRSerialPort, see the Wiki for an example...
 
@@ -25,7 +25,7 @@ Removal of partially implemented code to streamline the lib for just serial port
 
 Full Eclipse integration, for testing application code against sources.
 
-And a bunch of bug fixes:
+##And a bunch of bug fixes##
 
 Fixed the memory access error that causes OSX to crash the JVM when serial.close() is called
 
@@ -33,7 +33,7 @@ Fixed the windows serial port zombie bind that prevents re-accessing serial port
 
 Fixed erroneous printouts of native library mis-match
 
-= Building Jar =
+# Building Jar #
 
 Checkout the repository.
 
@@ -43,7 +43,7 @@ $ant
 
 The ready to deploy .jar file will be found in the target/ directory. 
 
-= Building Native Code = 
+# Building Native Code # 
 
 Native code is built using the Makefile found in nrjavaserial/nrjavaserial . After the native code is built, the .jar is rebuilt. 
 
