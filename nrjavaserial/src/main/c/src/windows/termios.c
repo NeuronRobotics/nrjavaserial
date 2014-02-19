@@ -807,6 +807,8 @@ BOOL init_termios(struct termios *ttyset )
 	ttyset->c_cc[VTIME] = 0;	/* 5: read timeout */
 	ttyset->c_cc[VMIN] = 1;		/* 6: read returns after this
 						many bytes */
+	ttyset->c_cc[VSTART] = 0x11; /* 8: DC1/XON /
+	ttyset->c_cc[VSTOP] = 0x13; / 9: DC3/XOFF */
 	ttyset->c_cc[VSUSP] = 0x1a;	/* 10: C-z */
 	ttyset->c_cc[VEOL] = '\r';	/* 11: */
 	ttyset->c_cc[VREPRINT] = 0x12;	/* 12: C-r */
