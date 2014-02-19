@@ -5550,7 +5550,7 @@ int uucp_lock( const char *filename, int pid )
 ----------------------------------------------------------*/
 int check_lock_status( const char *filename )
 {
-	char message[80];
+	char message[1024];
 #if defined(__linux__)
 	//return 0;
 #endif
@@ -5905,7 +5905,7 @@ int is_device_locked( const char *port_filename )
 		LOCKDIR, NULL
 	};
 	const char *lockprefixes[] = { "LCK..", "lk..", "LK.", NULL };
-	char *p, file[80], pid_buffer[20], message[80];
+	char *p, file[1024], pid_buffer[1024], message[1024];
 	int i = 0, j, k, fd , pid;
 	struct stat buf, buf2, lockbuf;
 
