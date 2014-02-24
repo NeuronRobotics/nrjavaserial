@@ -15,8 +15,6 @@ Arm Cortex support (Gumstix)
 
 Android Support (requires a rooted phone to access the serial hardware)
 
-Google Code (SVN) repository for easy code and jar access
-
 Single makefile compile (simplifies the compilation of project binaries)
 
 Ant build script for jar creation
