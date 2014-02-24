@@ -25,7 +25,7 @@
 <!-- maven stuff -->
 <property name="groupId" value="com.neuronrobotics" />
 <property name="artifactId" value="nrjavaserial" />
-<property name="version" value="3.7.7" />
+<property name="version" value="3.9.0" />
 
 <property name="maven-jar" value="${dist.home}/maven/${artifactId}-${version}.jar" />
 <property name="maven-javadoc-jar" value="${dist.home}/maven/${artifactId}-${version}-javadoc.jar" />
