@@ -112,7 +112,7 @@ public class NativeResource {
 		}else if(OSUtil.isLinux()) {
 			if(OSUtil.isARM()) {
 				file = "/native/linux/ARM/" + name;
-			}if(OSUtil.isPPC()) {
+			}else if(OSUtil.isPPC()) {
 				file = "/native/linux/PPC/" + name;
 			}else {
 				if(OSUtil.is64Bit()) {

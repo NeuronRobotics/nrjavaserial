@@ -61,6 +61,7 @@ import java.io.OutputStream;
 import java.io.IOException;
 import java.util.TooManyListenersException;
 import java.lang.Math;
+import java.util.concurrent.*;
 
 /**
 * An extension of gnu.io.SerialPort
@@ -140,8 +141,7 @@ public class RXTXPort extends SerialPort
 
 
 	/* dont close the file while accessing the fd */
-	int IOLocked = 0;
-	Object IOLockedMutex = new Object();
+	private final java.util.concurrent.locks.ReentrantReadWriteLock IOLockedMutex = new java.util.concurrent.locks.ReentrantReadWriteLock(true);
 
 	/** File descriptor */
 	private int fd = 0;
@@ -1055,58 +1055,52 @@ public class RXTXPort extends SerialPort
 
 	/** Close the port */
 	private native void nativeClose( String name );
-	/**
-	*/
-	boolean closeLock = false;
-	public void close()
+
+        public void close()
 	{
-		synchronized (this) {
-			if (debug)
-				z.reportln( "RXTXPort:close( " + this.name + " )"); 
+                if (debug)
+                        z.reportln( "RXTXPort:close( " + this.name + " )"); 
 
-			while( IOLocked > 0 )
-			{
-				if( debug )
-					z.reportln("IO is locked " + IOLocked);
-				try {
-					this.wait(500);
-				} catch( InterruptedException ie ) {
-					// somebody called interrupt() on us
-					// we obbey and return without without closing the socket
-					Thread.currentThread().interrupt();
-					return;
-				}
-			}
+                try {
+                        while( !IOLockedMutex.writeLock().tryLock(500, TimeUnit.MILLISECONDS) )
+                        {
+                                if( debug )
+                                        z.reportln("IO is locked " + IOLockedMutex.getReadLockCount());
+                        }
+ 
+                        if ( fd <= 0 )
+                        {
+                                z.reportln(  "RXTXPort:close detected bad File Descriptor" );
+                                return;
+                        }
+                        setDTR(false);
+                        setDSR(false);
+                        if (debug)
+                                z.reportln( "RXTXPort:close( " + this.name + " ) setting monThreadisInterrupted"); 
+                        if ( ! monThreadisInterrupted )
+                        {
+                                removeEventListener();
+                        }
+                        if (debug)
+                                z.reportln( "RXTXPort:close( " + this.name + " ) calling nativeClose"); 
+                        nativeClose( this.name );
+                        if (debug)
+                                z.reportln( "RXTXPort:close( " + this.name + " ) calling super.close"); 
+                        super.close();
+                        fd = 0;
+                        if (debug)
+                                z.reportln( "RXTXPort:close( " + this.name + " ) leaving"); 
+                } catch( InterruptedException ie ) {
+                        // somebody called interrupt() on us
+                        // we obbey and return without without closing the socket
+                        Thread.currentThread().interrupt();
+                        return;
+                }
+                finally
+                {
+                    IOLockedMutex.writeLock().unlock();
+                }
 
-			// we set the closeLock after the above check because we might
-			// have returned without proceeding
-			if( closeLock ) return;
-			closeLock = true;
-		}
-
-		if ( fd <= 0 )
-		{
-			z.reportln(  "RXTXPort:close detected bad File Descriptor" );
-			return;
-		}
-		setDTR(false);
-		setDSR(false);
-		if (debug)
-			z.reportln( "RXTXPort:close( " + this.name + " ) setting monThreadisInterrupted"); 
-		if ( ! monThreadisInterrupted )
-		{
-			removeEventListener();
-		}
-		if (debug)
-			z.reportln( "RXTXPort:close( " + this.name + " ) calling nativeClose"); 
-		nativeClose( this.name );
-		if (debug)
-			z.reportln( "RXTXPort:close( " + this.name + " ) calling super.close"); 
-		super.close();
-		fd = 0;
-		closeLock = false;
-		if (debug)
-			z.reportln( "RXTXPort:close( " + this.name + " ) leaving"); 
 	}
 
 
@@ -1140,9 +1134,7 @@ public class RXTXPort extends SerialPort
 			{
 				return;
 			}
-			synchronized (IOLockedMutex) {
-				IOLocked++;
-			}
+			IOLockedMutex.readLock().lock();
 			try {
 				waitForTheNativeCodeSilly();
 				if ( fd == 0 )
@@ -1154,9 +1146,7 @@ public class RXTXPort extends SerialPort
 				if (debug_write)
 					z.reportln( "Leaving RXTXPort:SerialOutputStream:write( int )");
 			} finally {
-				synchronized (IOLockedMutex) {
-					IOLocked--;
-				}
+				IOLockedMutex.readLock().unlock();
 			}
 		}
 	/**
@@ -1175,18 +1165,14 @@ public class RXTXPort extends SerialPort
 				return;
 			}
 			if ( fd == 0 ) throw new IOException();
-			synchronized (IOLockedMutex) {
-				IOLocked++;
-			}
+			IOLockedMutex.readLock().lock();
 			try {
 				waitForTheNativeCodeSilly();
 				writeArray( b, 0, b.length, monThreadisInterrupted );
 				if (debug_write)
 					z.reportln( "Leaving RXTXPort:SerialOutputStream:write(" +b.length  +")");
 			} finally {
-				synchronized(IOLockedMutex) {
-					IOLocked--;
-				}
+				IOLockedMutex.readLock().unlock();
 			}
 			
 		}
@@ -1218,9 +1204,7 @@ public class RXTXPort extends SerialPort
 			{
 				return;
 			}
-			synchronized (IOLockedMutex) {
-				IOLocked++;
-			}
+			IOLockedMutex.readLock().lock();
 			try
 			{
 				waitForTheNativeCodeSilly();
@@ -1228,9 +1212,7 @@ public class RXTXPort extends SerialPort
 				if( debug_write )
 					z.reportln( "Leaving RXTXPort:SerialOutputStream:write(" + send.length + " " + off + " " + len + " " +") "  /*+ new String(send)*/ );
 			} finally {
-				synchronized (IOLockedMutex) {
-					IOLocked--;
-				}
+				IOLockedMutex.readLock().unlock();
 			}
 		}
 	/**
@@ -1247,9 +1229,7 @@ public class RXTXPort extends SerialPort
 				z.reportln( "RXTXPort:SerialOutputStream:flush() Leaving Interrupted");
 				return;
 			}
-			synchronized(IOLockedMutex) {
-				IOLocked++;
-			}
+			IOLockedMutex.readLock().lock();
 			try
 			{
 				waitForTheNativeCodeSilly();
@@ -1264,9 +1244,7 @@ public class RXTXPort extends SerialPort
 			}
 			finally
 			{
-				synchronized (IOLockedMutex) {
-					IOLocked--;
-				}
+				IOLockedMutex.readLock().unlock();
 			}
 		}
 	}
@@ -1298,9 +1276,7 @@ public class RXTXPort extends SerialPort
 			{
 				z.reportln( "+++++++++ read() monThreadisInterrupted" );
 			}
-			synchronized (IOLockedMutex) {
-				IOLocked++;
-			}
+			IOLockedMutex.readLock().lock();
 			try {
 				if (debug_read_results)
 					z.reportln(  "RXTXPort:SerialInputStream:read() L" );
@@ -1315,9 +1291,7 @@ public class RXTXPort extends SerialPort
 			}				
 			finally
 			{
-				synchronized (IOLockedMutex) {
-					IOLocked--;
-				}
+				IOLockedMutex.readLock().unlock();
 			}
 		}
 	/**
@@ -1342,9 +1316,7 @@ public class RXTXPort extends SerialPort
 			{
 				return(0);
 			}
-			synchronized (IOLockedMutex) {
-				IOLocked++;
-			}
+			IOLockedMutex.readLock().lock();
 			try
 			{
 				waitForTheNativeCodeSilly();
@@ -1355,9 +1327,7 @@ public class RXTXPort extends SerialPort
 			}
 			finally
 			{
-				synchronized (IOLockedMutex) {
-					IOLocked--;
-				}
+				IOLockedMutex.readLock().unlock();
 			}
 		}
 /*
@@ -1457,9 +1427,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 					z.reportln( "RXTXPort:SerialInputStream:read() Interrupted");
 				return(0);
 			}
-			synchronized (IOLockedMutex) {
-				IOLocked++;
-			}
+			IOLockedMutex.readLock().lock();
 			try
 			{
 				waitForTheNativeCodeSilly();
@@ -1470,9 +1438,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 			}
 			finally
 			{
-				synchronized (IOLockedMutex) {
-					IOLocked--;
-				}
+				IOLockedMutex.readLock().unlock();
 			}
 		}
 
@@ -1570,9 +1536,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 					z.reportln( "RXTXPort:SerialInputStream:read() Interrupted");
 				return(0);
 			}
-			synchronized (IOLockedMutex) {
-				IOLocked++;
-			}
+			IOLockedMutex.readLock().lock();
 			try
 			{
 				waitForTheNativeCodeSilly();
@@ -1583,9 +1547,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 			}
 			finally
 			{
-				synchronized (IOLockedMutex) {
-					IOLocked--;
-				}
+				IOLockedMutex.readLock().unlock();
 			}
 		}
 	/**
@@ -1600,9 +1562,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 			}
 			if ( debug_verbose )
 				z.reportln( "RXTXPort:available() called" );
-			synchronized (IOLockedMutex) {
-				IOLocked++;
-			}
+			IOLockedMutex.readLock().lock();
 			try
 			{
 				int r = nativeavailable();
@@ -1613,9 +1573,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 			}
 			finally
 			{
-				synchronized (IOLockedMutex) {
-					IOLocked--;
-				}
+				IOLockedMutex.readLock().unlock();
 			}
 		}
 	}
