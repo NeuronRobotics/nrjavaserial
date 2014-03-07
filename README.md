@@ -1,6 +1,3 @@
-nrjavaserial
-============
-
 #About
 
 This is a fork of the RXTX library with a focus on ease of use and the ability to embed in other libraries. 
