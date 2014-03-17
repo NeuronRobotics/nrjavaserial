@@ -176,7 +176,7 @@ public class RXTXCommDriver implements CommDriver
 	private final String[] getValidPortPrefixes(String CandidatePortPrefixes[])
 	{
 		/*
-		256 is the number of prefixes ( COM, cua, ttyS, ...) not
+		getScannedBufferSize() is the number of prefixes ( COM, cua, ttyS, ...) not
 		the number of devices (ttyS0, ttyS1, ttyS2, ...)
 
 		On a Linux system there are about 400 prefixes in
@@ -187,7 +187,7 @@ public class RXTXCommDriver implements CommDriver
 		Trent
 		*/
 
-		String ValidPortPrefixes[]=new String [40960];
+		String ValidPortPrefixes[]=new String [getScannedBufferSize()];
 		if (debug)
 			System.out.println("\nRXTXCommDriver:getValidPortPrefixes()");
 		if(CandidatePortPrefixes==null)
