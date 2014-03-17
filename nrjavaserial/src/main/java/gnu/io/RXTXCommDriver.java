@@ -187,7 +187,7 @@ public class RXTXCommDriver implements CommDriver
 		Trent
 		*/
 
-		String ValidPortPrefixes[]=new String [256];
+		String ValidPortPrefixes[]=new String [40960];
 		if (debug)
 			System.out.println("\nRXTXCommDriver:getValidPortPrefixes()");
 		if(CandidatePortPrefixes==null)
@@ -502,7 +502,10 @@ public class RXTXCommDriver implements CommDriver
 			return false;
 		}
 	}
-
+	private int getScannedBufferSize(){
+		
+		return 40960;
+	}
    /*
     * Look for all entries in deviceDirectory, and if they look like they should
     * be serial ports on this OS and they can be opened then register
@@ -516,23 +519,16 @@ public class RXTXCommDriver implements CommDriver
 		String[] CandidateDeviceNames;
 		if (debug)
 			System.out.println("scanning device directory "+deviceDirectory+" for ports of type "+PortType);
-		if(osName.equals("Windows CE"))
+		if(osName.toLowerCase().indexOf("windows") != -1 )
 		{
-			String[] temp =
-			{ "COM1:", "COM2:","COM3:","COM4:",
-			"COM5:", "COM6:", "COM7:", "COM8:" };
-			CandidateDeviceNames=temp;
-		}
-		else if(osName.toLowerCase().indexOf("windows") != -1 )
-		{
-			String[] temp = new String[259];
-			for( int i = 1; i <= 256; i++ )
+			String[] temp = new String[getScannedBufferSize()+1];
+			for( int i = 1; i <= getScannedBufferSize(); i++ )
 			{
 				temp[i - 1] = "COM" + i;
 			}
 			for( int i = 1; i <= 3; i++ )
 			{
-				temp[i + 255] = "LPT" + i;
+				temp[i + getScannedBufferSize()-1] = "LPT" + i;
 			}
 			CandidateDeviceNames=temp;
 			}
