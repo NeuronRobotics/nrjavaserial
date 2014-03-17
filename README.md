@@ -1,6 +1,3 @@
-nrjavaserial
-============
-
 #About
 
 This is a fork of the RXTX library with a focus on ease of use and the ability to embed in other libraries. 
@@ -14,8 +11,6 @@ Self deployment of native libraries ( all native code is stored inside the jar a
 Arm Cortex support (Gumstix)
 
 Android Support (requires a rooted phone to access the serial hardware)
-
-Google Code (SVN) repository for easy code and jar access
 
 Single makefile compile (simplifies the compilation of project binaries)
 
