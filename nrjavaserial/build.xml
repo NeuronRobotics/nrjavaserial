@@ -3,7 +3,7 @@
 	<!--<property file="../NRSDK/src/com/neuronrobotics/sdk/config/build.properties"/>-->
 
   <property name="app.name"      value="nr-java-serial"/>
-  <property name="app.version"      value="3.9.0"/>
+  <property name="app.version"      value="3.9.1"/>
   <property name="app.path"      value="/${app.name}"/>
   <property name="build.home"    value="${basedir}/build"/>
   <property name="lib.home"      value="${basedir}/src/main/c/resources"/>
