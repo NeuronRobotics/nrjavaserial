@@ -521,7 +521,7 @@ public class RXTXCommDriver implements CommDriver
 			System.out.println("scanning device directory "+deviceDirectory+" for ports of type "+PortType);
 		if(osName.toLowerCase().indexOf("windows") != -1 )
 		{
-			String[] temp = new String[getScannedBufferSize()+1];
+			String[] temp = new String[getScannedBufferSize()+3];
 			for( int i = 1; i <= getScannedBufferSize(); i++ )
 			{
 				temp[i - 1] = "COM" + i;
