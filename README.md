@@ -50,6 +50,8 @@ $make wine #This will build the windows binaries on Linux
 
 $make linux #This will attempt to build both the 32 and 64 bit Linux binaries
 
+$make linux32 or $make linux64 #This will attempt to build 32 or 64 bit Linux binaries
+
 $make arm #This will attempt to build the binaries for all the supported ARM flavors
 
 $make ppc #This will attempt to build the PPC binaries. 
