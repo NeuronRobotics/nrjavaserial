@@ -59,5 +59,8 @@ $make ppc #This will attempt to build the PPC binaries.
 $make osx #This will attempt to build the OSX binaries. 
 
 
+#Windows Builds
+
+Download mingw64: http://tdm-gcc.tdragon.net/
 
 
