@@ -36,7 +36,8 @@ LINKLINPPC=/usr/local/powerpc-none-linux-gnuspe/bin/powerpc-none-linux-gnuspe-g+
 #Wine Windows
 WINLINKOPT = -shared -Wl,--add-stdcall-alias -DBUILD_DLL
 WINCCOPT = -O3 -Wall -DBUILD_DLL
-JDKDIR = C:\Program Files\Java\jdk1.6.0_24\include
+#JDKDIR = C:\Program Files\Java\jdk1.6.0_24\include
+JDKDIR = D:/java-32/jdk1.7.0_25/include
 
 WININCLUDE32=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\MinGW\include" -I"$(JDKDIR)" -I"$(JDKDIR)\win32"
 CCWIN32 = wine "C:\MinGW\bin\gcc.exe" $(WININCLUDE32) -m32 $(WINCCOPT)
@@ -46,15 +47,21 @@ WININCLUDE64=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\MinG
 CCWIN64 = wine "C:\MinGW64\bin\gcc.exe" $(WININCLUDE64) -m64 $(WINCCOPT)
 LINKWIN64 =wine "C:\MinGW64\bin\gcc.exe" $(WINLINKOPT)
 
+
+
 #Native Windows
+# MINGW32 = C:\MinGW32
+# MINGW64 = C:\MinGW64
+MINGW32 = C:\TDM-GCC-32
+MINGW64 = C:\TDM-GCC-64
 
-WININCLUDE32N=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\MinGW32\include" -I"$(JDKDIR)" -I"$(JDKDIR)\win32"
-CCWIN32N = "C:\MinGW32\bin\gcc.exe" $(WININCLUDE32N) -m32 $(WINCCOPT)
-LINKWIN32N ="C:\MinGW32\bin\gcc.exe" $(WINLINKOPT)
+WININCLUDE32N=-I".\include" -I".\include\target" -I".\include\windows" -I"$(MINGW32)\include" -I"$(JDKDIR)" -I"$(JDKDIR)/win32"
+CCWIN32N = "$(MINGW32)\bin\gcc.exe" $(WININCLUDE32N) -m32 $(WINCCOPT)
+LINKWIN32N ="$(MINGW32)\bin\gcc.exe" $(WINLINKOPT)
 
-WININCLUDE64N=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\MinGW64\include" -I"$(JDKDIR)" -I"$(JDKDIR)\win32"
-CCWIN64N = "C:\MinGW64\bin\gcc.exe" $(WININCLUDE64N) -m64 $(WINCCOPT)
-LINKWIN64N ="C:\MinGW64\bin\gcc.exe" $(WINLINKOPT)
+WININCLUDE64N=-I".\include" -I".\include\target" -I".\include\windows" -I"$(MINGW64)\include" -I"$(JDKDIR)" -I"$(JDKDIR)/win32"
+CCWIN64N = "$(MINGW64)\bin\gcc.exe" $(WININCLUDE64N) -m64 $(WINCCOPT)
+LINKWIN64N ="$(MINGW64)\bin\gcc.exe" $(WINLINKOPT)
 
 all:
 	echo "Specify a system: make linux, make windows, make osx"
