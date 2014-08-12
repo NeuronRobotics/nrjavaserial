@@ -86,11 +86,7 @@
       				native/linux/x86_32/libNRJavaSerial_legacy.so;osname=linux;processor=x86,
       				native/linux/x86_64/libNRJavaSerial.so;osname=linux;processor=x86_64,
       				native/linux/x86_64/libNRJavaSerial_legacy.so;osname=linux;processor=x86_64,
-      				native/osx/libNRJavaSerial_10.7.jnilib;osname="mac os x";processor=x86,
-      				native/osx/libNRJavaSerial_10.6.jnilib;osname="mac os x";processor=x86,
-      				native/osx/libNRJavaSerial_10.5.jnilib;osname="mac os x";processor=x86,
-      				native/osx/libNRJavaSerial.jnilib;osname="mac os x";processor=x86,
-      				native/osx/libNRJavaSerial_legacy.jnilib;osname="mac os x";processor=x86
+      				native/osx/libNRJavaSerial.jnilib;osname="mac os x";processor=x86;processor=x86_64
       			</Bundle-NativeCode>
       		</instructions>
       	</configuration>
