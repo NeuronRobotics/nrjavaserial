@@ -1,13 +1,19 @@
+# If your system has the OS X 10.5 SDK installed, we want to build against it in
+# order to generate native libraries compatible with 10.5 and up.
+#
+# See https://stackoverflow.com/questions/5378518/ for installation help.
+OSXSDKPREFIX = /Developer/SDKs/MacOSX10.5.sdk
 
 OSXJAVAINCLUDE1 = -I/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Headers 
-OSXJAVAINCLUDE2 = -I/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers 
-OSXJAVAINCLUDE4 = -I/Developer/SDKs/MacOSX10.6.sdk/usr/include 
+OSXJAVAINCLUDE2 = -I$(OSXSDKPREFIX)/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers 
+OSXJAVAINCLUDE4 = -I$(OSXSDKPREFIX)/usr/include 
 OSXJAVAINCLUDE5 = -I./include/OSX/
 
 OSXJAVAINCLUDE = $(OSXJAVAINCLUDE1) $(OSXJAVAINCLUDE2) $(OSXJAVAINCLUDE3) $(OSXJAVAINCLUDE4) $(OSXJAVAINCLUDE5)		
 OSXINCLUDE=-I"./include" -I"./include/target"  $(OSXJAVAINCLUDE)
-CCOSX=cc $(OSXINCLUDE)  -g -O2 -D_BSD_SOURCE -c
-LINKOSX=cc  -dynamiclib -framework JavaVM -framework IOKit -framework CoreFoundation
+OSXARCH = -arch i386 -arch x86_64
+CCOSX=cc $(OSXINCLUDE) $(OSXARCH) -g -O2 -D_BSD_SOURCE -c
+LINKOSX=cc $(OSXARCH) -dynamiclib -framework JavaVM -framework IOKit -framework CoreFoundation
 
 
 LINOBJ=build/fixup.o build/fuserImp.o build/SerialImp.o
@@ -68,7 +74,7 @@ all:
 dirs:
 	if (test -d build); then rm -rf build;mkdir build;else mkdir build; fi
 	if (test -d resources/native);\
-	 then echo dirs ok;else\
+	 then echo Native output directories seem to exist.;else\
 	 mkdir -p resources/native/linux/x86_32/;\
 	 mkdir -p resources/native/linux/x86_64/;\
 	 mkdir -p resources/native/linux/ARM/; \
@@ -167,34 +173,34 @@ ppc:   dirs
 osx:dirs
 	if (test -d include/OSX/CoreFoundation/);\
 	then\
-		echo Dirs OK!;\
+		echo "CoreFoundation framework symlink exists.";\
 	else\
 		rm include/OSX/CoreFoundation;\
-		sudo ln -s /Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/CoreFoundation.framework/Headers/ include/OSX/CoreFoundation; \
+		ln -s $(OSXSDKPREFIX)/System/Library/Frameworks/CoreFoundation.framework/Headers/ include/OSX/CoreFoundation; \
 	fi
 	
 	if (test -d include/OSX/CoreServices/);\
 	then\
-		echo Dirs OK!;\
+		echo "CoreServices framework symlink exists.";\
 	else\
 		rm include/OSX/CoreServices;\
-		sudo ln -s /Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/CoreServices.framework/Headers/ include/OSX/CoreServices; \
+		ln -s $(OSXSDKPREFIX)/System/Library/Frameworks/CoreServices.framework/Headers/ include/OSX/CoreServices; \
 	fi
 	
 	if (test -d include/OSX/CarbonCore/);\
 	then\
-		echo Dirs OK!;\
+		echo "CarbonCore framework symlink exists.";\
 	else\
 		rm include/OSX/CarbonCore;\
-		sudo ln -s /Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/Headers include/OSX/CarbonCore; \
+		ln -s $(OSXSDKPREFIX)/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/Headers include/OSX/CarbonCore; \
 	fi
 	
 	if (test -d include/OSX/IOKit/);\
 	then\
-		echo Dirs OK!;\
+		echo "IOKit framework symlink exists";\
 	else\
-		rm include/OSX/CarbonCore;\
-		sudo ln -s /Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/IOKit.framework/Headers include/OSX/IOKit; \
+		rm include/OSX/IOKit;\
+		ln -s $(OSXSDKPREFIX)/System/Library/Frameworks/IOKit.framework/Headers include/OSX/IOKit; \
 	fi
 	
 	$(CCOSX) src/fuserImp.c -o build/fuserImp.o
