@@ -1,8 +1,7 @@
 # If your system has the OS X 10.5 SDK installed, we want to build against it in
 # order to generate native libraries compatible with 10.5 and up.
 #
-# See https://stackoverflow.com/questions/5378518/ for installation help;
-# substitute MacOSX10.4.Universal.pkg for MacOSX10.5.pkg.
+# See https://stackoverflow.com/questions/5378518/ for installation help.
 OSXSDKPREFIX = /Developer/SDKs/MacOSX10.5.sdk
 
 OSXJAVAINCLUDE1 = -I/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Headers 
