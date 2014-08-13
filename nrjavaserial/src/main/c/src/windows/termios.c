@@ -2331,7 +2331,7 @@ int tcsetattr( int fd, int when, struct termios *s_termios )
 	/* FIXME: IMAXBEL: if input buffer full, send bell */
 
 	/* no DTR control in termios? */
-	dcb.fDtrControl     =  DTR_CONTROL_DISABLE;
+	dcb.fDtrControl     =  DTR_CONTROL_ENABLE;
 	/* no DSR control in termios? */
 	dcb.fOutxDsrFlow    = FALSE;
 	/* DONT ignore rx bytes when DSR is OFF */
