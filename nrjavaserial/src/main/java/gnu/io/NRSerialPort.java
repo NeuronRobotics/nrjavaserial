@@ -163,4 +163,13 @@ public class NRSerialPort {
 	public void notifyOnDataAvailable(boolean b) {
 		serial.notifyOnDataAvailable(b);
 	}
+	public void addEventListener(SerialPortEventListener lsnr)
+                        throws TooManyListenersException {
+                serial.addEventListener(lsnr);
+        }
+
+        public void removeEventListener(SerialPortEventListener lsnr) {
+                serial.removeEventListener(lsnr);
+        }
+
 }
