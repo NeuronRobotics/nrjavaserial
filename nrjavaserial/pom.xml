@@ -39,12 +39,23 @@
     </developer>
   </developers>
 
+  <dependencies>
+    <dependency>
+      <groupId>commons-net</groupId>
+      <artifactId>commons-net</artifactId>
+      <version>3.3</version>
+    </dependency>
+  </dependencies>
+
   <build>
     <resources>
       <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
         <directory>src/main/c/resources/</directory>
         <excludes>
-        	<exclude>**/.svn/</exclude>
+          <exclude>**/.svn/</exclude>
         </excludes>
       </resource>
     </resources>
