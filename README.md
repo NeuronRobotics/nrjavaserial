@@ -20,6 +20,8 @@ Removal of partially implemented code to streamline the lib for just serial port
 
 Full Eclipse integration, for testing application code against sources.
 
+RFC 2217 support provided by incorporating the jvser library (see http://github.com/archiecobbs/jvser)
+
 ##And a bunch of bug fixes##
 
 Fixed the memory access error that causes OSX to crash the JVM when serial.close() is called
