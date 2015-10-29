@@ -109,7 +109,7 @@ public final class RFC2217 {
     /**
      * Decode an RFC 2217 {@code COM-PORT-OPTION} command.
      *
-     * @throws IllegalArgumentException if the bytes are not a valid encoded RFC 2217 {@link #COM_PORT_OPTION}
+     *   IllegalArgumentException if the bytes are not a valid encoded RFC 2217 {@link #COM_PORT_OPTION}
      */
     public static ComPortCommand decodeComPortCommand(int[] bytes) {
         if (bytes.length < 2)

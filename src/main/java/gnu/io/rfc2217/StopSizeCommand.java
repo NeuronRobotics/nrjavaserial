@@ -28,11 +28,11 @@ public class StopSizeCommand extends ComPortCommand {
      * Decoding constructor.
      *
      * @param bytes encoded option starting with the {@code COM-PORT-OPTION} byte
-     * @throws NullPointerException if {@code bytes} is null
-     * @throws IllegalArgumentException if {@code bytes} has length != 3
-     * @throws IllegalArgumentException if {@code bytes[0]} is not {@link RFC2217#COM_PORT_OPTION}
-     * @throws IllegalArgumentException if {@code bytes[1]} is not {@link RFC2217#SET_STOPSIZE} (client or server)
-     * @throws IllegalArgumentException if {@code bytes[2]} is not a valid RFC 2217 stop size value
+     *   NullPointerException if {@code bytes} is null
+     *   IllegalArgumentException if {@code bytes} has length != 3
+     *   IllegalArgumentException if {@code bytes[0]} is not {@link RFC2217#COM_PORT_OPTION}
+     *   IllegalArgumentException if {@code bytes[1]} is not {@link RFC2217#SET_STOPSIZE} (client or server)
+     *   IllegalArgumentException if {@code bytes[2]} is not a valid RFC 2217 stop size value
      */
     public StopSizeCommand(int[] bytes) {
         super("SET-STOPSIZE", SET_STOPSIZE, bytes);
@@ -53,7 +53,7 @@ public class StopSizeCommand extends ComPortCommand {
      *
      * @param stopSize stop size value
      * @param client true for the client-to-server command, false for the server-to-client command
-     * @throws IllegalArgumentException if {@code stopSize} is not a valid RFC 2217 stop size value
+     *   IllegalArgumentException if {@code stopSize} is not a valid RFC 2217 stop size value
      */
     public StopSizeCommand(boolean client, int stopSize) {
         this(new int[] {

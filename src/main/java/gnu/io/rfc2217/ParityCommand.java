@@ -30,11 +30,11 @@ public class ParityCommand extends ComPortCommand {
      * Decoding constructor.
      *
      * @param bytes encoded option starting with the {@code COM-PORT-OPTION} byte
-     * @throws NullPointerException if {@code bytes} is null
-     * @throws IllegalArgumentException if {@code bytes} has length != 3
-     * @throws IllegalArgumentException if {@code bytes[0]} is not {@link RFC2217#COM_PORT_OPTION}
-     * @throws IllegalArgumentException if {@code bytes[1]} is not {@link RFC2217#SET_PARITY} (client or server)
-     * @throws IllegalArgumentException if {@code bytes[2]} is not a valid RFC 2217 parity value
+     *   NullPointerException if {@code bytes} is null
+     *   IllegalArgumentException if {@code bytes} has length != 3
+     *   IllegalArgumentException if {@code bytes[0]} is not {@link RFC2217#COM_PORT_OPTION}
+     *   IllegalArgumentException if {@code bytes[1]} is not {@link RFC2217#SET_PARITY} (client or server)
+     *   IllegalArgumentException if {@code bytes[2]} is not a valid RFC 2217 parity value
      */
     public ParityCommand(int[] bytes) {
         super("SET-PARITY", SET_PARITY, bytes);
@@ -57,7 +57,7 @@ public class ParityCommand extends ComPortCommand {
      *
      * @param parity parity value
      * @param client true for the client-to-server command, false for the server-to-client command
-     * @throws IllegalArgumentException if {@code parity} is not a valid RFC 2217 parity value
+     *   IllegalArgumentException if {@code parity} is not a valid RFC 2217 parity value
      */
     public ParityCommand(boolean client, int parity) {
         this(new int[] {

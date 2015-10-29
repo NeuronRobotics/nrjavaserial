@@ -24,10 +24,10 @@ public class NotifyLineStateCommand extends ComPortCommand {
      * Decoding constructor.
      *
      * @param bytes encoded option starting with the {@code COM-PORT-OPTION} byte
-     * @throws NullPointerException if {@code bytes} is null
-     * @throws IllegalArgumentException if {@code bytes} has length != 3
-     * @throws IllegalArgumentException if {@code bytes[0]} is not {@link RFC2217#COM_PORT_OPTION}
-     * @throws IllegalArgumentException if {@code bytes[1]} is not {@link RFC2217#NOTIFY_LINESTATE} (client or server)
+     *   NullPointerException if {@code bytes} is null
+     *   IllegalArgumentException if {@code bytes} has length != 3
+     *   IllegalArgumentException if {@code bytes[0]} is not {@link RFC2217#COM_PORT_OPTION}
+     *   IllegalArgumentException if {@code bytes[1]} is not {@link RFC2217#NOTIFY_LINESTATE} (client or server)
      */
     public NotifyLineStateCommand(int[] bytes) {
         super("NOTIFY-LINESTATE", NOTIFY_LINESTATE, bytes);

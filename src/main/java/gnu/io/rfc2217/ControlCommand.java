@@ -44,11 +44,11 @@ public class ControlCommand extends ComPortCommand {
      * Decoding constructor.
      *
      * @param bytes encoded option starting with the {@code COM-PORT-OPTION} byte
-     * @throws NullPointerException if {@code bytes} is null
-     * @throws IllegalArgumentException if {@code bytes} has length != 3
-     * @throws IllegalArgumentException if {@code bytes[0]} is not {@link RFC2217#COM_PORT_OPTION}
-     * @throws IllegalArgumentException if {@code bytes[1]} is not {@link RFC2217#SET_CONTROL} (client or server)
-     * @throws IllegalArgumentException if {@code bytes[2]} is not a valid RFC 2217 control value
+     *   NullPointerException if {@code bytes} is null
+     *   IllegalArgumentException if {@code bytes} has length != 3
+     *   IllegalArgumentException if {@code bytes[0]} is not {@link RFC2217#COM_PORT_OPTION}
+     *   IllegalArgumentException if {@code bytes[1]} is not {@link RFC2217#SET_CONTROL} (client or server)
+     *   IllegalArgumentException if {@code bytes[2]} is not a valid RFC 2217 control value
      */
     public ControlCommand(int[] bytes) {
         super("SET-CONTROL", SET_CONTROL, bytes);
@@ -85,7 +85,7 @@ public class ControlCommand extends ComPortCommand {
      *
      * @param command control command
      * @param client true for the client-to-server command, false for the server-to-client command
-     * @throws IllegalArgumentException if {@code command} is not a valid RFC 2217 control value
+     *   IllegalArgumentException if {@code command} is not a valid RFC 2217 control value
      */
     public ControlCommand(boolean client, int command) {
         this(new int[] {

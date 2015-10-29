@@ -104,7 +104,7 @@ public class RXTXPort extends SerialPort
 	/** 
 	*  Open the named port
 	*  @param name the name of the device to open
-	*  @throws  PortInUseException
+	*     PortInUseException
 	*  @see gnu.io.SerialPort
 	*/
 	public RXTXPort( String name ) throws PortInUseException
@@ -193,7 +193,7 @@ public class RXTXPort extends SerialPort
 	*  @param  d databits
 	*  @param  s stopbits
 	*  @param  p parity
-	*  @throws UnsupportedCommOperationException
+	*    UnsupportedCommOperationException
 	*  @see gnu.io.UnsupportedCommOperationException
 
 	*  If speed is not a predifined speed it is assumed to be
@@ -327,7 +327,7 @@ public class RXTXPort extends SerialPort
 	/**
 	*  Receive framing control
 	*  @param  f framming
-	*  @throws UnsupportedCommOperationException
+	*    UnsupportedCommOperationException
 	*/
 	public void enableReceiveFraming( int f )
 		throws UnsupportedCommOperationException
@@ -798,7 +798,7 @@ public class RXTXPort extends SerialPort
 	/**
 	*  Add an event listener
 	*  @param lsnr SerialPortEventListener
-	*  @throws TooManyListenersException
+	*    TooManyListenersException
 	*/
 
 	boolean MonitorThreadLock = true;
@@ -1123,7 +1123,7 @@ public class RXTXPort extends SerialPort
 	{
 	/**
 	*  @param b
-	*  @throws IOException
+	*    IOException
 	*/
 		public void write( int b ) throws IOException
 		{
@@ -1151,7 +1151,7 @@ public class RXTXPort extends SerialPort
 		}
 	/**
 	*  @param b[]
-	*  @throws IOException
+	*    IOException
 	*/
 		public void write( byte b[] ) throws IOException
 		{
@@ -1180,7 +1180,7 @@ public class RXTXPort extends SerialPort
 	*  @param b[]
 	*  @param off
 	*  @param len
-	*  @throws IOException
+	*    IOException
 	*/
 		public void write( byte b[], int off, int len )
 			throws IOException
@@ -1254,7 +1254,7 @@ public class RXTXPort extends SerialPort
 	{
 	/**
 	*  @return int the int read
-	*  @throws IOException
+	*    IOException
 	*  @see java.io.InputStream
 *
 *timeout threshold       Behavior
@@ -1297,7 +1297,7 @@ public class RXTXPort extends SerialPort
 	/**
 	*  @param b[]
 	*  @return int  number of bytes read
-	*  @throws IOException
+	*    IOException
 *
 *timeout threshold       Behavior
 *------------------------------------------------------------------------
@@ -1339,7 +1339,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*  @param off
 	*  @param len
 	*  @return int  number of bytes read
-	*  @throws IOException
+	*    IOException
 *
 *timeout threshold       Behavior
 *------------------------------------------------------------------------
@@ -1448,7 +1448,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*  @param len
 	*  @param t[]
 	*  @return int  number of bytes read
-	*  @throws IOException
+	*    IOException
 
 	   We are trying to catch the terminator in the native code
 	   Right now it is assumed that t[] is an array of 2 bytes.
@@ -1552,7 +1552,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 		}
 	/**
 	*  @return int bytes available
-	*  @throws IOException
+	*    IOException
 	*/
 		public synchronized int available() throws IOException
 		{
@@ -1702,7 +1702,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*
 	*  @param  port the name of the port thats been preopened
 	*  @return BaudRate on success
-	*  @throws UnsupportedCommOperationException;
+	*    UnsupportedCommOperationException;
 	*  This will not behave as expected with custom speeds
 	*
 	*/
@@ -1721,7 +1721,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*
 	*  @param  port the name of the port thats been preopened
 	*  @return DataBits on success
-	*  @throws UnsupportedCommOperationException;
+	*    UnsupportedCommOperationException;
 	*
 	*/
 	public static int staticGetDataBits( String port )
@@ -1740,7 +1740,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*
 	*  @param  port the name of the port thats been preopened
 	*  @return Parity on success
-	*  @throws UnsupportedCommOperationException;
+	*    UnsupportedCommOperationException;
 	*
 	*/
 	public static int staticGetParity( String port )
@@ -1759,7 +1759,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*
 	*  @param  port the name of the port thats been preopened
 	*  @return StopBits on success
-	*  @throws UnsupportedCommOperationException;
+	*    UnsupportedCommOperationException;
 	*
 	*/
 	public static int staticGetStopBits( String port )
@@ -1784,7 +1784,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*  @param  s stopbits
 	*  @param  p parity
 	*
-	*  @throws UnsupportedCommOperationException
+	*    UnsupportedCommOperationException
 	*  @see gnu.io.UnsupportedCommOperationException
 	*/
 
@@ -1809,7 +1809,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*  the port a second time later on.
 	*
 	*  @return true on success
-	*  @throws UnsupportedCommOperationException;
+	*    UnsupportedCommOperationException;
 	*
 	*/
 
@@ -1832,7 +1832,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*  the port a second time later on.
 	*
 	*  @return true on success
-	*  @throws UnsupportedCommOperationException;
+	*    UnsupportedCommOperationException;
 	*
 	*/
 
@@ -1855,7 +1855,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*  the port a second time later on.
 	*
 	*  @return none
-	*  @throws UnsupportedCommOperationException;
+	*    UnsupportedCommOperationException;
 	*
 	*/
 
@@ -1877,7 +1877,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*
 	*  @param port
 	*  @return true if asserted
-	*  @throws UnsupportedCommOperationException;
+	*    UnsupportedCommOperationException;
 	*
 	*/
 
@@ -1897,7 +1897,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*
 	*  @param port
 	*  @return true if asserted
-	*  @throws UnsupportedCommOperationException;
+	*    UnsupportedCommOperationException;
 	*
 	*/
 
@@ -1917,7 +1917,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*
 	*  @param port
 	*  @return true if asserted
-	*  @throws UnsupportedCommOperationException;
+	*    UnsupportedCommOperationException;
 	*
 	*/
 
@@ -1937,7 +1937,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*
 	*  @param port
 	*  @return true if asserted
-	*  @throws UnsupportedCommOperationException;
+	*    UnsupportedCommOperationException;
 	*
 	*/
 
@@ -1957,7 +1957,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*
 	*  @param port
 	*  @return true if asserted
-	*  @throws UnsupportedCommOperationException;
+	*    UnsupportedCommOperationException;
 	*
 	*/
 
@@ -1977,7 +1977,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*
 	*  @param port
 	*  @return true if asserted
-	*  @throws UnsupportedCommOperationException;
+	*    UnsupportedCommOperationException;
 	*
 	*/
 
@@ -1995,7 +1995,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*  This is an extension to CommAPI.  It may not be supported on
 	*  all operating systems.
 	*  @return int the Parity Error Character
-	*  @throws UnsupportedCommOperationException;
+	*    UnsupportedCommOperationException;
 	*
 	*  Anyone know how to do this in Unix?
 	*/
@@ -2019,7 +2019,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*  all operating systems.
 	*  @param b Parity Error Character
 	*  @return boolean true on success
-	*  @throws UnsupportedCommOperationException;
+	*    UnsupportedCommOperationException;
 	*
 	*  Anyone know how to do this in Unix?
 	*/
@@ -2037,7 +2037,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*  This is an extension to CommAPI.  It may not be supported on
 	*  all operating systems.
 	*  @return int the End of Input Character
-	*  @throws UnsupportedCommOperationException;
+	*    UnsupportedCommOperationException;
 	*
 	*  Anyone know how to do this in Unix?
 	*/
@@ -2061,7 +2061,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*  all operating systems.
 	*  @param b End Of Input Character
 	*  @return boolean true on success
-	*  @throws UnsupportedCommOperationException;
+	*    UnsupportedCommOperationException;
 	*/
 
 	public boolean setEndOfInputChar( byte b )
@@ -2081,7 +2081,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*  or "16750".
 	*  @param test boolean flag to determin if the UART should be tested.
 	*  @return boolean true on success
-	*  @throws UnsupportedCommOperationException;
+	*    UnsupportedCommOperationException;
 	*/
 	public boolean setUARTType(String type, boolean test)
 		throws UnsupportedCommOperationException
@@ -2097,7 +2097,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*  @return type String representation of the UART type which mayb
 	*  be "none", "8250", "16450", "16550", "16550A", "16650", "16550V2"
 	*  or "16750".
-	*  @throws UnsupportedCommOperationException;
+	*    UnsupportedCommOperationException;
 	*/
 	public String getUARTType() throws UnsupportedCommOperationException
 	{
@@ -2110,7 +2110,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*  @param BaudBase The clock frequency divided by 16.  Default
 	*  BaudBase is 115200.
 	*  @return true on success
-	*  @throws UnsupportedCommOperationException, IOException
+	*    UnsupportedCommOperationException, IOException
 	*/
 
 	public boolean setBaudBase(int BaudBase)
@@ -2125,7 +2125,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	/**
 	*  Extension to CommAPI
 	*  @return BaudBase
-	*  @throws UnsupportedCommOperationException, IOException
+	*    UnsupportedCommOperationException, IOException
 	*/
 
 	public int getBaudBase() throws UnsupportedCommOperationException,
@@ -2140,7 +2140,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*  Extension to CommAPI.  Set Baud Base to 38600 on Linux and W32
 	*  before using.
 	*  @param Divisor
-	*  @throws UnsupportedCommOperationException, IOException
+	*    UnsupportedCommOperationException, IOException
 	*/
 
 	public boolean setDivisor(int Divisor)
@@ -2154,7 +2154,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	/**
 	*  Extension to CommAPI
 	*  @return Divisor;
-	*  @throws UnsupportedCommOperationException, IOException
+	*    UnsupportedCommOperationException, IOException
 	*/
 
 	public int getDivisor() throws UnsupportedCommOperationException,
@@ -2168,7 +2168,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	/**
 	*  Extension to CommAPI
 	*  returns boolean true on success
-	*  @throws UnsupportedCommOperationException
+	*    UnsupportedCommOperationException
 	*/
 
 	public boolean setLowLatency() throws UnsupportedCommOperationException
@@ -2181,7 +2181,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	/**
 	*  Extension to CommAPI
 	*  returns boolean true on success
-	*  @throws UnsupportedCommOperationException
+	*    UnsupportedCommOperationException
 	*/
 
 	public boolean getLowLatency() throws UnsupportedCommOperationException
@@ -2194,7 +2194,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	/**
 	*  Extension to CommAPI
 	*  returns boolean true on success
-	*  @throws UnsupportedCommOperationException
+	*    UnsupportedCommOperationException
 	*/
 
 	public boolean setCallOutHangup(boolean NoHup)
@@ -2208,7 +2208,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	/**
 	*  Extension to CommAPI
 	*  returns boolean true on success
-	*  @throws UnsupportedCommOperationException
+	*    UnsupportedCommOperationException
 	*/
 
 	public boolean getCallOutHangup()
@@ -2222,7 +2222,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	/**
 	*  Extension to CommAPI
 	*  returns boolean true on success
-	*  @throws UnsupportedCommOperationException
+	*    UnsupportedCommOperationException
 	*/
 
 	public boolean clearCommInput()

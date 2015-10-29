@@ -22,10 +22,10 @@ public class FlowControlResumeCommand extends ComPortCommand {
      * Decoding constructor.
      *
      * @param bytes encoded option starting with the {@code COM-PORT-OPTION} byte
-     * @throws NullPointerException if {@code bytes} is null
-     * @throws IllegalArgumentException if {@code bytes} has length != 3
-     * @throws IllegalArgumentException if {@code bytes[0]} is not {@link RFC2217#COM_PORT_OPTION}
-     * @throws IllegalArgumentException if {@code bytes[1]} is not {@link RFC2217#FLOWCONTROL_RESUME} (client or server)
+     *   NullPointerException if {@code bytes} is null
+     *   IllegalArgumentException if {@code bytes} has length != 3
+     *   IllegalArgumentException if {@code bytes[0]} is not {@link RFC2217#COM_PORT_OPTION}
+     *   IllegalArgumentException if {@code bytes[1]} is not {@link RFC2217#FLOWCONTROL_RESUME} (client or server)
      */
     public FlowControlResumeCommand(int[] bytes) {
         super("FLOWCONTROL-RESUME", FLOWCONTROL_RESUME, bytes);

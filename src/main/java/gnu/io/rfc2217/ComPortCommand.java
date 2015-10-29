@@ -32,11 +32,11 @@ public abstract class ComPortCommand {
      * @param name human readable name of this command
      * @param command required {@code COM-PORT-OPTION} command byte value (must be the client-to-server value)
      * @param bytes encoded command starting with the {@code COM-PORT-OPTION} byte
-     * @throws NullPointerException if {@code bytes} is null
-     * @throws IllegalArgumentException if {@code bytes} has length that is too short or too long
-     * @throws IllegalArgumentException if {@code bytes[0]} is not {@link RFC2217#COM_PORT_OPTION}
-     * @throws IllegalArgumentException if {@code command} is greater than or equal to {@link RFC2217#SERVER_OFFSET}
-     * @throws IllegalArgumentException if {@code bytes[1]} is not {@code command}
+     *   NullPointerException if {@code bytes} is null
+     *   IllegalArgumentException if {@code bytes} has length that is too short or too long
+     *   IllegalArgumentException if {@code bytes[0]} is not {@link RFC2217#COM_PORT_OPTION}
+     *   IllegalArgumentException if {@code command} is greater than or equal to {@link RFC2217#SERVER_OFFSET}
+     *   IllegalArgumentException if {@code bytes[1]} is not {@code command}
      *  or {@code command} + {@link RFC2217#SERVER_OFFSET}
      */
     protected ComPortCommand(String name, int command, int[] bytes) {
