@@ -10,12 +10,18 @@ targetCompatibility = '1.6'
 File buildDir = file(".");
 
 Properties props = new Properties()
-props.load(new FileInputStream(buildDir.getAbsolutePath()+"/src/main/resources/com/neuronrobotics/sdk/config/build.properties"))
+props.load(new FileInputStream(buildDir.getAbsolutePath()+"/src/main/resources/com/neuronrobotics/nrjavaserial/build.properties"))
 sourceSets {
 	
 	test {
 		java {
 			srcDirs = ["test/java/src","examples/java/src" ]  // Note @Peter's comment below
+		}
+	}
+	main {
+		resources {
+			srcDirs = ["src/main/resources/"]
+			includes = ["**/*.so","**/*.dll", "**/*.jnilib","**/*.properties"]
 		}
 	}
 }
