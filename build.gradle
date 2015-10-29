@@ -1,0 +1,170 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'maven'
+apply plugin: 'signing'
+	
+sourceCompatibility = '1.6'
+targetCompatibility = '1.6'
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+File buildDir = file(".");
+
+Properties props = new Properties()
+props.load(new FileInputStream(buildDir.getAbsolutePath()+"/src/main/resources/com/neuronrobotics/sdk/config/build.properties"))
+sourceSets {
+	
+	test {
+		java {
+			srcDirs = ["test/java/src","examples/java/src" ]  // Note @Peter's comment below
+		}
+	}
+}
+manifest {
+    attributes(	
+    			"Manifest-Version": "1.0",
+    			"Created-By": "Neuron Robotics Cooperative",
+    			"Specification-Title": props."app.name",
+    			"Specification-Version": props."app.version",
+    			"Specification-Vendor": "Neuron Robotics Cooperative",,
+    			"Implementation-Title": props."app.name",
+    			"Implementation-Version" : props."app.version",
+    			"Implementation-Vendor": "Neuron Robotics Cooperative"
+        		
+    )
+}
+
+jar.archiveName = "nrjavaserial-"+props."app.version"+".jar"
+
+//apply from: 'http://gradle-plugins.mihosoft.eu/latest/vlicenseheader.gradle'
+//repairHeaders.licenseHeaderText = new File(projectDir,'./license-template.txt')
+
+task wrapper(type: Wrapper, description: 'Creates and deploys the Gradle wrapper to the current directory.') {
+    gradleVersion = '2.7'
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://jcenter.bintray.com"
+    }
+}
+	
+dependencies {
+	//TODO change as many of these as possible to Maven repositories
+    compile fileTree (dir: 'libs', includes: ['*.jar'])
+	testCompile "junit:junit:4.11"  // Or whatever version
+	compile 'org.apache.commons:commons-lang3:3.2.1'
+	compile 'commons-net:commons-net:3.3'
+
+}
+
+// create a fat-jar (class files plus dependencies
+// excludes VRL.jar (plugin jar files must not start with 'vrl-\\d+')
+jar {
+	
+	// remove the security files (from mail.jar / activation.jar) so that the jar will be executable.
+	
+	doFirst { 
+	    // dependencies except VRL
+	    from (configurations.runtime.asFileTree.
+	        filter({file->return !file.name.startsWith("vrl-0")}).
+	        files.collect { zipTree(it) } ){
+	    	exclude 'META-INF/MANIFEST.MF'
+			exclude 'META-INF/*.SF'
+			exclude 'META-INF/*.DSA'
+			exclude 'META-INF/*.RSA'
+	    }
+	}
+	
+    // project class files compiled from source
+    from files(sourceSets.main.output.classesDir)
+
+}
+
+group = "com.neuronrobotics"
+archivesBaseName = "nrjavaserial"
+version = props."app.version"
+
+task javadocJar(type: Jar) {
+	classifier = 'javadoc'
+	from javadoc
+}
+
+task sourcesJar(type: Jar) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
+}
+signing {
+	sign configurations.archives
+}
+artifacts {
+	archives javadocJar
+	archives  sourcesJar
+	archives  jar
+}
+//import org.gradle.plugins.signing.Sign
+//
+//gradle.taskGraph.whenReady { taskGraph ->
+//	if (taskGraph.allTasks.any { it instanceof Sign }) {
+//		// Use Java 6's console to read from the console (no good for
+//		// a CI environment)
+//		Console console = System.console()
+//		console.printf "\n\nWe have to sign some things in this build." +
+//					   "\n\nPlease enter your signing details.\n\n"
+//
+//		def id = console.readLine("PGP Key Id: ")
+//		def file = console.readLine("PGP Secret Key Ring File (absolute path): ")
+//		def password = console.readPassword("PGP Private Key Password: ")
+//
+//		allprojects { ext."signing.keyId" = id }
+//		allprojects { ext."signing.secretKeyRingFile" = file }
+//		allprojects { ext."signing.password" = password }
+//
+//		console.printf "\nThanks.\n\n"
+//	}
+//}
+
+uploadArchives {
+	repositories {
+	  mavenDeployer {
+		beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+  
+		repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+		  authentication(userName: ossrhUsername, password: ossrhPassword)
+		}
+  
+		snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+		  authentication(userName: ossrhUsername, password: ossrhPassword)
+		}
+  
+		pom.project {
+		  name 'NRJavaSerial'
+		  packaging 'jar'
+		  // optionally artifactId can be defined here
+		  description 'A form of RXTX serial with native files packages inside'
+		  url 'http://neuronrobotics.com'
+  
+		  scm {
+			connection 			'scm:git:https://github.com/NeuronRobotics/nrjavaserial.git'
+			developerConnection 'scm:git:git@github.com:NeuronRobotics/nrjavaserial.git'
+			url 'https://github.com/NeuronRobotics/nrjavaserial'
+		  }
+  
+		  licenses {
+			license {
+			  name 'The Apache License, Version 2.0'
+			  url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+			}
+		  }
+  
+		  developers {
+			developer {
+			  id 'madhephaestus'
+			  name 'Kevin Harrington'
+			  email 'kharrington@neuronrobotics.com'
+			}
+		  }
+		}
+	  }
+	}
+  }
