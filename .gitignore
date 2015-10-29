@@ -1,0 +1,9 @@
+*build*
+/bin/
+/build.gradle~
+/gradle.properties
+*.gradle*
+.classpath
+.project
+.settings/
+*~*
