@@ -30,6 +30,23 @@ Fixed the windows serial port zombie bind that prevents re-accessing serial port
 
 Fixed erroneous printouts of native library mis-match
 
+#Maven
+```
+<dependency>
+  <groupId>com.neuronrobotics</groupId>
+  <artifactId>nrjavaserial</artifactId>
+  <version>3.10.2</version>
+</dependency>
+```
+#Gradle 
+```
+dependencies {
+ compile "com.neuronrobotics:nrjavaserial:3.10.2"
+}
+```
+
+
+
 # Building Jar
 
 Checkout the repository.
