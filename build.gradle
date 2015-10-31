@@ -81,9 +81,6 @@ jar {
 			exclude 'META-INF/*.RSA'
 	    }
 	}
-	
-    // project class files compiled from source
-    from files(sourceSets.main.output.classesDir)
 
 }
 
