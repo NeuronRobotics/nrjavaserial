@@ -35,13 +35,13 @@ Fixed erroneous printouts of native library mis-match
 <dependency>
   <groupId>com.neuronrobotics</groupId>
   <artifactId>nrjavaserial</artifactId>
-  <version>3.10.2</version>
+  <version>3.11.0</version>
 </dependency>
 ```
 #Gradle 
 ```
 dependencies {
- compile "com.neuronrobotics:nrjavaserial:3.10.2"
+ compile "com.neuronrobotics:nrjavaserial:3.11.0"
 }
 ```
 
