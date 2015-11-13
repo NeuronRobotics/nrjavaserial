@@ -415,6 +415,20 @@ public class RXTXCommDriver implements CommDriver
 		
 	}
 
+	public boolean addSpecifiedPort(String PortName, int PortType)
+	{
+		if (testRead(PortName, PortType))
+		{
+			CommPortIdentifier.addPortName(PortName,
+				PortType, this);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
 	private void addSpecifiedPorts(String names, int PortType)
 	{
 		final String pathSep = System.getProperty("path.separator", ":");
@@ -426,9 +440,7 @@ public class RXTXCommDriver implements CommDriver
 		{
 			String PortName = tok.nextToken();
 
-			if (testRead(PortName, PortType))
-				CommPortIdentifier.addPortName(PortName,
-					PortType, this);
+			addSpecifiedPort(PortName, PortType);
 		}
 	}
 
