@@ -13,7 +13,7 @@
   <artifactId>nrjavaserial</artifactId>
   <packaging>jar</packaging>
   <name>nrjavaserial</name>
-  <version>3.10.0</version>
+  <version>3.11.0</version>
   <description>Fork of the RXTX library with a focus on ease of use and the ability to embed in other libraries.</description>
   <url>http://code.google.com/p/nrjavaserial/</url>
   <licenses>
