@@ -20,7 +20,7 @@ sourceSets {
 	}
 	main {
 		resources {
-			srcDirs = ["src/main/resources/"]
+			srcDirs = ["src/main/resources", "src/main/c/resources"]
 			includes = ["**/*.so","**/*.dll", "**/*.jnilib","**/*.properties"]
 		}
 	}
@@ -31,7 +31,7 @@ manifest {
     			"Created-By": "Neuron Robotics Cooperative",
     			"Specification-Title": props."app.name",
     			"Specification-Version": props."app.version",
-    			"Specification-Vendor": "Neuron Robotics Cooperative",,
+    			"Specification-Vendor": "Neuron Robotics Cooperative",
     			"Implementation-Title": props."app.name",
     			"Implementation-Version" : props."app.version",
     			"Implementation-Vendor": "Neuron Robotics Cooperative"
