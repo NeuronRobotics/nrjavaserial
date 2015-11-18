@@ -98,6 +98,9 @@ task sourcesJar(type: Jar) {
 	from sourceSets.main.allSource
 }
 signing {
+	required {
+		gradle.taskGraph.hasTask("uploadArchives")
+	}
 	sign configurations.archives
 }
 artifacts {
