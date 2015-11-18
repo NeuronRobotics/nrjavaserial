@@ -1,4 +1,5 @@
 apply plugin: 'java'
+apply plugin: 'osgi'
 apply plugin: 'eclipse'
 apply plugin: 'maven'
 apply plugin: 'signing'
