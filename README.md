@@ -97,6 +97,13 @@ After the native code is built, the JAR is rebuilt.
 You'll need some installation of GCC. We recommend the
 [TDM-GCC](http://tdm-gcc.tdragon.net/) distribution of mingw64-w64.
 
+## Building on OS X
+
+We're pretty big on maintaining backwards compatibility as far as reasonable.
+Our OS X natives target OS X 10.5, so to build them, you'll need an appropriate
+SDK installed. [This StackOverflow answer](http://stackoverflow.com/a/6293605)
+provides pointers for getting the appropriate SDK installed.
+
 # How to use NRSerialPort objects
 
     String port = "COM3";
