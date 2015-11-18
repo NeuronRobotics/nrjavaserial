@@ -1,30 +1,30 @@
-
 all:
 	echo "Please specify a system: windows wine linux osx"
-	ant
+	gradle build
 windows:
 	make -C .\src\main\c windowsLocal
-	ant
+	gradle build
 wine:
 	make -C src/main/c windows
-	ant
+	gradle build
 linux:
 	make -C src/main/c linux
-	ant
+	gradle build
 linux32:
 	make -C src/main/c linux32
-	ant
+	gradle build
 linux64:
 	make -C src/main/c linux64
-	ant
+	gradle build
 arm:
 	sudo apt-get install g++-arm-linux-gnueabihf g++-arm-linux-gnueabi
 	make -C src/main/c arm7
 	make -C src/main/c arm7HF
-	ant
+	gradle build
 ppc:
 	make -C src/main/c ppc
-	ant
+	gradle build
 osx:
 	make -C src/main/c osx
-	ant
+	gradle build
+
