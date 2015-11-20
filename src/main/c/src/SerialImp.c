@@ -4929,7 +4929,8 @@ JNIEXPORT void JNICALL RXTXPort(interruptEventLoop)(JNIEnv *env,
 	to close indefinetly.
 	*/
 #if defined(__APPLE__)
- 	//If you continue on in OSX you get an invalid memory access error
+	index->closing = 1;
+	/* Continuing on OS X causes an invalid memory access. */
 	return;
 #endif
 	if (index->drain_loop_running != 0) {
