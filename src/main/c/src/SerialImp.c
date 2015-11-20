@@ -4146,7 +4146,7 @@ end:
 	if (eis->fd < FD_SETSIZE && eis->fd > 0) {
 		FD_SET( eis->fd, &eis->rfds );
 		eis->tv_sleep.tv_sec = 0;
-		eis->tv_sleep.tv_usec = 1000;
+		eis->tv_sleep.tv_usec = 100 * 1000;
 		eis->initialised = 1;
 		return( 1 );
 	} else {
