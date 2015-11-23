@@ -4146,7 +4146,7 @@ end:
 	if (eis->fd < FD_SETSIZE && eis->fd > 0) {
 		FD_SET( eis->fd, &eis->rfds );
 		eis->tv_sleep.tv_sec = 0;
-		eis->tv_sleep.tv_usec = 1000;
+		eis->tv_sleep.tv_usec = 100 * 1000;
 		eis->initialised = 1;
 		return( 1 );
 	} else {
@@ -4929,7 +4929,8 @@ JNIEXPORT void JNICALL RXTXPort(interruptEventLoop)(JNIEnv *env,
 	to close indefinetly.
 	*/
 #if defined(__APPLE__)
- 	//If you continue on in OSX you get an invalid memory access error
+	index->closing = 1;
+	/* Continuing on OS X causes an invalid memory access. */
 	return;
 #endif
 	if (index->drain_loop_running != 0) {
