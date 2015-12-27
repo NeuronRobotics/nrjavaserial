@@ -1,3 +1,5 @@
+#define DEBUG 1
+#define DEBUG_VERBOSE 1
 /*-------------------------------------------------------------------------
 |   RXTX License v 2.1 - LGPL v 2.1 + Linking Over Controlled Interface.
 |   RXTX is a native interface to serial ports in java.
@@ -1276,23 +1278,29 @@ void *drain_loop( void *arg )
 		report_verbose("drain_loop:  looping\n");
 		if( eis->eventloop_interrupted )
 		{
+                        report_verbose("drain_loop:  1 eventloop_interrupted\n");
 			goto end;
 		}
 #if defined(__sun__)
 	/* FIXME: No time to test on all OS's for production */
+		report_verbose("drain_loop:  before usleep(5000)\n");
 		if (usleep(5000)) {
 			report("drain_loop:  received EINTR");
 		}
+		report_verbose("drain_loop:  after usleep(5000)\n");
 #else
+		report_verbose("drain_loop:  before usleep(1000000)\n");
 		if (usleep(1000000)) {
 			report("drain_loop:  received EINTR");
 		}
+		report_verbose("drain_loop:  after usleep(1000000)\n");
 #endif /* __sun__ */
 		/*
 		system_wait();
 		*/
 		if( eis->eventloop_interrupted )
 		{
+                        report_verbose("drain_loop:  2 eventloop_interrupted\n");
 			goto end;
 		}
 		if( tcdrain( eis->fd ) == 0 )
@@ -3058,10 +3066,6 @@ int read_byte_array( JNIEnv *env,
 		get_java_var_long( env, *jobj,"eis","J" );
 
 	report_time_start();
-        if (eis == NULL) {
-            // eventLoop() may have returned and eis is out of scope.
-            return 0;
-        }
 	flag = eis->eventflags[SPE_DATA_AVAILABLE];
 	eis->eventflags[SPE_DATA_AVAILABLE] = 0;
 /*
@@ -3078,13 +3082,12 @@ int read_byte_array( JNIEnv *env,
 			now = GetTickCount();
 			if ( now-start >= timeout )
 			{
-                            struct event_info_struct *eis2 = ( struct event_info_struct * )
-                                get_java_var_long( env, *jobj,"eis","J" );
-
+                                struct event_info_struct *eis2 = ( struct event_info_struct * )
+                                    get_java_var_long( env, *jobj,"eis","J" );
                                 if (eis2 == NULL) {
-                                    report("read_byte_array(): eis was null, this can happen if reading after RXTXPort.run() returns while reading.");
+                                        report("read_byte_array(): eis was null, this can happen if reading after RXTXPort.run() returns while reading.");
                                 } else {
-                                    eis->eventflags[SPE_DATA_AVAILABLE] = flag;
+				        eis->eventflags[SPE_DATA_AVAILABLE] = flag;
                                 }
 				return bytes;
 			}
@@ -4895,7 +4898,7 @@ JNIEXPORT void JNICALL RXTXPort(interruptEventLoop)(JNIEnv *env,
 	int fd = get_java_var( env, jobj, "fd", "I" );
 	int searching = 1;
 
-
+        report_verbose("interruptEventLoop(): start\n");
 	while( searching )
 	{
 		index = master_index;
@@ -4913,6 +4916,7 @@ JNIEXPORT void JNICALL RXTXPort(interruptEventLoop)(JNIEnv *env,
 			usleep(1000);
 		}
 	}
+        report_verbose("interruptEventLoop(): after searching loop\n");
 	index->eventloop_interrupted = 1;
 	/*
 	Many OS's need a thread running to determine if output buffer is
@@ -4929,8 +4933,14 @@ JNIEXPORT void JNICALL RXTXPort(interruptEventLoop)(JNIEnv *env,
 	termios_interrupt_event_loop( index->fd, 1 );
 #endif /* WIN32 */
 #if !defined(TIOCSERGETLSR) && !defined(WIN32)
+        report_verbose("interruptEventLoop(): about to kill pthread_kill()\n");
 	/* make sure that the drainloop unblocks from tcdrain */
+#if defined(__APPLE__)
+	pthread_cancel(index->drain_tid);
+#else
 	pthread_kill(index->drain_tid, SIGABRT);
+#endif
+        report_verbose("interruptEventLoop(): after kill pthread_kill()\n");
 	/* TODO use wait/join/SIGCHLD/?? instead of sleep? */
 	usleep(50 * 1000);
 	/*
@@ -4941,6 +4951,7 @@ JNIEXPORT void JNICALL RXTXPort(interruptEventLoop)(JNIEnv *env,
 	*/
 #if defined(__APPLE__)
 	index->closing = 1;
+        report_verbose("interruptEventLoop(): eventloop_interrupted set to 1\n");
 	/* Continuing on OS X causes an invalid memory access. */
 	return;
 #endif
