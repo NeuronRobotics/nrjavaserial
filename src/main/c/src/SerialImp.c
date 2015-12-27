@@ -3058,6 +3058,10 @@ int read_byte_array( JNIEnv *env,
 		get_java_var_long( env, *jobj,"eis","J" );
 
 	report_time_start();
+        if (eis == NULL) {
+            // eventLoop() may have returned and eis is out of scope.
+            return 0;
+        }
 	flag = eis->eventflags[SPE_DATA_AVAILABLE];
 	eis->eventflags[SPE_DATA_AVAILABLE] = 0;
 /*
@@ -3074,7 +3078,14 @@ int read_byte_array( JNIEnv *env,
 			now = GetTickCount();
 			if ( now-start >= timeout )
 			{
-				eis->eventflags[SPE_DATA_AVAILABLE] = flag;
+                            struct event_info_struct *eis2 = ( struct event_info_struct * )
+                                get_java_var_long( env, *jobj,"eis","J" );
+
+                                if (eis2 == NULL) {
+                                    report("read_byte_array(): eis was null, this can happen if reading after RXTXPort.run() returns while reading.");
+                                } else {
+                                    eis->eventflags[SPE_DATA_AVAILABLE] = flag;
+                                }
 				return bytes;
 			}
 		}
