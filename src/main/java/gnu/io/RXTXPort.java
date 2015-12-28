@@ -1609,8 +1609,9 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 				z.reportln( "RXTXPort:MontitorThread:run()"); 
 			monThreadisInterrupted=false;
 			eventLoop();
+                        eis = 0;
 			if (debug)
-				z.reportln( "eventLoop() returned"); 
+				z.reportln( "eventLoop() returned, eis is invalid."); 
 		}
 		protected void finalize() throws Throwable 
 		{ 

@@ -3074,7 +3074,13 @@ int read_byte_array( JNIEnv *env,
 			now = GetTickCount();
 			if ( now-start >= timeout )
 			{
-				eis->eventflags[SPE_DATA_AVAILABLE] = flag;
+                                struct event_info_struct *eis2 = ( struct event_info_struct * )
+                                    get_java_var_long( env, *jobj,"eis","J" );
+                                if (eis2 == NULL) {
+                                        report("read_byte_array(): eis was null, this can happen if reading after RXTXPort.run() returns while reading.");
+                                } else {
+                                        eis->eventflags[SPE_DATA_AVAILABLE] = flag;
+                                }
 				return bytes;
 			}
 		}
