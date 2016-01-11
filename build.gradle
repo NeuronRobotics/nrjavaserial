@@ -38,7 +38,9 @@ task wrapper(type: Wrapper, description: 'Creates and deploys the Gradle wrapper
 
 repositories {
 	mavenCentral()
-	jcenter()
+	maven {
+        url "https://jcenter.bintray.com"
+    }
 }
 
 dependencies {
