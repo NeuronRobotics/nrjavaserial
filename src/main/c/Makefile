@@ -39,6 +39,17 @@ LINKLINANDROID=/home/opt/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3/
 CCLINPPC=/usr/local/powerpc-none-linux-gnuspe/bin/powerpc-none-linux-gnuspe-gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MMD -MP
 LINKLINPPC=/usr/local/powerpc-none-linux-gnuspe/bin/powerpc-none-linux-gnuspe-g++ -shared
 
+BSDOBJ=build/fixup.o build/fuserImp.o build/SerialImp.o
+BSDINCLUDE=-I"./include" -I"./include/target" -I/usr/local/openjdk8/include/ -I/usr/local/openjdk8/include/freebsd/
+
+CCBSD32=cc $(BSDINCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -m32 -MMD
+LINKBSD32=c++ -m32 -shared 
+
+
+CCBSD64=cc $(BSDINCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -m64 -MMD
+LINKBSD64=c++ -m64 -shared 
+
+
 #Wine Windows
 WINLINKOPT = -shared -Wl,--add-stdcall-alias -DBUILD_DLL
 WINCCOPT = -O3 -Wall -DBUILD_DLL
@@ -85,6 +96,11 @@ dirs:
 	 mkdir -p resources/native/windows/x86_64/; \
 	 mkdir -p resources/native/osx/; \
 	 fi
+	if (test -d resources/native/freebsd);\
+	 then echo "FreeBSD native dir exists"; else\
+	 mkdir -p resources/native/freebsd/x86_64/; \
+	 mkdir -p resources/native/freebsd/x86_32/; \
+	fi
 	 
 windowsLocal:
 	$(CCWIN64N) -c src/windows/init.c -o build/init.o
@@ -137,6 +153,23 @@ linux64:dirs
 	#rm "resources/native/linux/x86_64/libNRJavaSerial.so"
 	$(LINKLIN64) -o"resources/native/linux/x86_64/libNRJavaSerial.so" $(LINOBJ)
 	rm -rf build
+freebsd:freebsd32 freebsd64
+	echo all FreeBSD ok!
+freebsd32:dirs
+	$(CCBSD32) src/fixup.c -o build/fixup.o
+	$(CCBSD32) src/fuserImp.c -o build/fuserImp.o
+	$(CCBSD32) src/SerialImp.c -o build/SerialImp.o
+	#rm "resources/native/freebsd/x86_32/libNRJavaSerial.so"
+	$(LINKBSD32) -o"resources/native/freebsd/x86_32/libNRJavaSerial.so" $(LINOBJ)
+	rm build/*
+freebsd64:dirs	
+	$(CCBSD64) src/fixup.c -o build/fixup.o
+	$(CCBSD64) src/fuserImp.c -o build/fuserImp.o
+	$(CCBSD64) src/SerialImp.c -o build/SerialImp.o
+	#rm "resources/native/freebsd/x86_64/libNRJavaSerial.so"
+	$(LINKBSD64) -o"resources/native/freebsd/x86_64/libNRJavaSerial.so" $(LINOBJ)
+	rm -rf build	
+	
 arm7:	dirs
 	$(CCLINARM) --with-arch=armv7  src/fixup.c -o build/fixup.o
 	$(CCLINARM) --with-arch=armv7  src/fuserImp.c -o build/fuserImp.o

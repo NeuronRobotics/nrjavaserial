@@ -121,6 +121,12 @@ public class NativeResource {
 					file="/native/linux/x86_32/" + name;
 				}
 			}
+		}else if(OSUtil.isFreeBSD()) {
+			if(OSUtil.is64Bit()) {
+				file="/native/freebsd/x86_64/" + name;
+			}else {
+				file="/native/freebsd/x86_32/" + name;
+			}
 		}else{
 			//System.err.println("Can't load native file: "+name+" for os arch: "+OSUtil.getOsArch());
 			return null;
@@ -243,7 +249,11 @@ public class NativeResource {
 		public static boolean isLinux() {
 			return getOsName().toLowerCase().startsWith("linux");
 		}
-		
+
+		public static boolean isFreeBSD() {
+			return getOsName().toLowerCase().startsWith("freebsd");
+		}
+
 		public static boolean isOSX() {
 			return getOsName().toLowerCase().startsWith("mac");
 		}
@@ -253,7 +263,7 @@ public class NativeResource {
 				return ".dll";
 			}
 			
-			if(isLinux()) {
+			if(isLinux() || isFreeBSD()) {
 				return ".so";
 			}
 			
