@@ -84,7 +84,7 @@ After the native code is built, the JAR is rebuilt.
     $ make linux32
     $ make linux64
 
-    # Build the binaries for all the supported ARM flavors.
+    # Build the binaries for all the supported ARM flavors (requires arm-linux-geabi-* packages)
     $ make arm
 
     # Build the OSX binaries.
