@@ -19,18 +19,18 @@ LINKOSX=cc $(OSXARCH) -dynamiclib -framework JavaVM -framework IOKit -framework 
 LINOBJ=build/fixup.o build/fuserImp.o build/SerialImp.o
 LININCLUDE=-I/usr/lib/jvm/java-7-openjdk-amd64/include/ -I/usr/lib/jvm/java-7-openjdk-i386/include/ -I"./include" -I"./include/target" -I/usr/lib/jvm/java-6-openjdk-amd64/include/ -I/usr/lib/jvm/java-6-openjdk-armhf/include/ -I/usr/lib/jvm/java-6-openjdk-arm/include/ -I/usr/lib/jvm/java-6-openjdk-i386/include/ -I/etc/alternatives/java_sdk/include -I/etc/alternatives/java_sdk/include/linux
 
-CCLIN32=gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -m32 -MMD
-LINKLIN32=g++ -m32 -shared 
+CCLIN32=gcc $(LININCLUDE) -DLIBLOCKDEV -O3 -Wall -c -fmessage-length=0 -fPIC -m32 -MMD
+LINKLIN32=g++ -m32 -shared
 
 
-CCLIN64=gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -m64 -MMD
-LINKLIN64=g++ -m64 -shared 
+CCLIN64=gcc $(LININCLUDE) -DLIBLOCKDEV -O3 -Wall -c -fmessage-length=0 -fPIC -m64 -MMD
+LINKLIN64=g++ -m64 -shared
 
-CCLINARM=arm-linux-gnueabi-gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MMD -MP
-LINKLINARM=arm-linux-gnueabi-g++ -shared
+CCLINARM=arm-linux-gnueabi-gcc $(LININCLUDE) -DLIBLOCKDEV -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MP
+LINKLINARM=arm-linux-gnueabi-g++ -shared -fPIC -nostdlib -Lcross-compile-libs/ARM
 
-CCLINARM_HF=arm-linux-gnueabihf-gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MMD -MP
-LINKLINARM_HF=arm-linux-gnueabihf-g++ -shared
+CCLINARM_HF=arm-linux-gnueabihf-gcc $(LININCLUDE) -DLIBLOCKDEV -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MP
+LINKLINARM_HF=arm-linux-gnueabihf-g++ -shared -fPIC -nostdlib -Lcross-compile-libs/ARM
 
 CCLINANDROID=/home/opt/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/arm-linux-androideabi/bin/gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MMD -MP
 LINKLINANDROID=/home/opt/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/arm-linux-androideabi/bin/g++ -shared
@@ -144,14 +144,14 @@ linux32:dirs
 	$(CCLIN32) src/fuserImp.c -o build/fuserImp.o
 	$(CCLIN32) src/SerialImp.c -o build/SerialImp.o
 	#rm "resources/native/linux/x86_32/libNRJavaSerial.so"
-	$(LINKLIN32) -o"resources/native/linux/x86_32/libNRJavaSerial.so" $(LINOBJ)
+	$(LINKLIN32) -o"resources/native/linux/x86_32/libNRJavaSerial.so" $(LINOBJ) -llockdev
 	rm build/*
 linux64:dirs	
 	$(CCLIN64) src/fixup.c -o build/fixup.o
 	$(CCLIN64) src/fuserImp.c -o build/fuserImp.o
 	$(CCLIN64) src/SerialImp.c -o build/SerialImp.o
 	#rm "resources/native/linux/x86_64/libNRJavaSerial.so"
-	$(LINKLIN64) -o"resources/native/linux/x86_64/libNRJavaSerial.so" $(LINOBJ)
+	$(LINKLIN64) -o"resources/native/linux/x86_64/libNRJavaSerial.so" $(LINOBJ) -llockdev
 	rm -rf build
 freebsd:freebsd32 freebsd64
 	echo all FreeBSD ok!
@@ -170,31 +170,48 @@ freebsd64:dirs
 	$(LINKBSD64) -o"resources/native/freebsd/x86_64/libNRJavaSerial.so" $(LINOBJ)
 	rm -rf build	
 	
+.PHONY: arm
+arm:
+	$(MAKE) arm7
+	$(MAKE) arm7HF
+	$(MAKE) arm6
+	$(MAKE) arm6HF
+	$(MAKE) arm5
+	@echo all ARM ok!
+
 arm7:	dirs
-	$(CCLINARM) --with-arch=armv7  src/fixup.c -o build/fixup.o
-	$(CCLINARM) --with-arch=armv7  src/fuserImp.c -o build/fuserImp.o
-	$(CCLINARM) --with-arch=armv7  src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM) --with-arch=armv7  -o"resources/native/linux/ARM/libNRJavaSerial.so" $(LINOBJ)
+	$(CCLINARM) -march=armv7-a src/fixup.c -o build/fixup.o
+	$(CCLINARM) -march=armv7-a src/fuserImp.c -o build/fuserImp.o
+	$(CCLINARM) -march=armv7-a src/SerialImp.c -o build/SerialImp.o
+	$(LINKLINARM) -march=armv7-a -o"resources/native/linux/ARM/libNRJavaSerial.so" $(LINOBJ) -llockdev
 	rm -rf build
+	
 arm7HF:dirs
-	$(CCLINARM_HF) --with-arch=armv7  src/fixup.c -o build/fixup.o
-	$(CCLINARM_HF) --with-arch=armv7  src/fuserImp.c -o build/fuserImp.o
-	$(CCLINARM_HF) --with-arch=armv7  src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM_HF) --with-arch=armv7 -o"resources/native/linux/ARM/libNRJavaSerial_HF.so" $(LINOBJ)
+	$(CCLINARM_HF) -march=armv7-a src/fixup.c -o build/fixup.o
+	$(CCLINARM_HF) -march=armv7-a src/fuserImp.c -o build/fuserImp.o
+	$(CCLINARM_HF) -march=armv7-a src/SerialImp.c -o build/SerialImp.o
+	$(LINKLINARM_HF) -march=armv7-a -o"resources/native/linux/ARM/libNRJavaSerial_HF.so" $(LINOBJ) -llockdev
 	rm  build/*	
 	
 arm6:	dirs
-	$(CCLINARM) --with-arch=armv6  src/fixup.c -o build/fixup.o
-	$(CCLINARM) --with-arch=armv6  src/fuserImp.c -o build/fuserImp.o
-	$(CCLINARM) --with-arch=armv6  src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM) --with-arch=armv6  -o"resources/native/linux/ARM/libNRJavaSerialv6.so" $(LINOBJ)
+	$(CCLINARM) -march=armv6 src/fixup.c -o build/fixup.o
+	$(CCLINARM) -march=armv6 src/fuserImp.c -o build/fuserImp.o
+	$(CCLINARM) -march=armv6 src/SerialImp.c -o build/SerialImp.o
+	$(LINKLINARM) -march=armv6 -o"resources/native/linux/ARM/libNRJavaSerialv6.so" $(LINOBJ) -llockdev
 	rm -rf build
 arm6HF:dirs
-	$(CCLINARM_HF)  src/fixup.c -o build/fixup.o
-	$(CCLINARM_HF)  src/fuserImp.c -o build/fuserImp.o
-	$(CCLINARM_HF)  src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM_HF)  -o"resources/native/linux/ARM/libNRJavaSerialv6_HF.so" $(LINOBJ)
+	$(CCLINARM_HF) -march=armv6 -mfpu=vfp -marm src/fixup.c -o build/fixup.o
+	$(CCLINARM_HF) -march=armv6 -mfpu=vfp -marm src/fuserImp.c -o build/fuserImp.o
+	$(CCLINARM_HF) -march=armv6 -mfpu=vfp -marm src/SerialImp.c -o build/SerialImp.o
+	$(LINKLINARM_HF) -march=armv6 -mfpu=vfp -marm -o"resources/native/linux/ARM/libNRJavaSerialv6_HF.so" $(LINOBJ) -llockdev
 	rm  build/*	
+
+arm5:	dirs
+	$(CCLINARM) -march=armv5t src/fixup.c -o build/fixup.o
+	$(CCLINARM) -march=armv5t src/fuserImp.c -o build/fuserImp.o
+	$(CCLINARM) -march=armv5t src/SerialImp.c -o build/SerialImp.o
+	$(LINKLINARM) -march=armv5t -o"resources/native/linux/ARM/libNRJavaSerialv5.so" $(LINOBJ) -llockdev
+	rm -rf build
 
 ppc:   dirs
 	$(CCLINPPC) src/fixup.c -o build/fixup.o
