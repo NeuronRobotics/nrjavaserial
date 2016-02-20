@@ -44,13 +44,13 @@ ease of use and embeddability in other libraries.
     <dependency>
         <groupId>com.neuronrobotics</groupId>
         <artifactId>nrjavaserial</artifactId>
-        <version>3.11.0</version>
+        <version>3.12.0</version>
     </dependency>
 
 ## Gradle
 
     dependencies {
-        compile "com.neuronrobotics:nrjavaserial:3.11.0"
+        compile "com.neuronrobotics:nrjavaserial:3.12.0"
     }
 
 # Building the JAR
