@@ -139,21 +139,7 @@ public class NativeResource {
 		if(!resource.canRead())
 			throw new RuntimeException("Cant open JNI file: "+resource.getAbsolutePath());
 		//System.out.println("Loading: "+resource.getAbsolutePath());
-		try {
-			System.out.println("Going to load " + resource + ". Hit return...");
-			System.in.read();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		System.load(resource.getAbsolutePath());
-		try {
-			System.out.println("Loaded successfully, hit return...");
-			System.in.read();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 
 	private void copyResource(InputStream io, File file) throws IOException {
