@@ -40,7 +40,7 @@ public class NativeResource {
 		loadResource(resourceLocation);
 		testNativeCode();
 	}
-	private String[] armLibs = {"libNRJavaSerialv5","libNRJavaSerialv6_HF","libNRJavaSerialv6","libNRJavaSerial_HF","libNRJavaSerial"};
+	private String[] armLibs = {"libNRJavaSerial_HF","libNRJavaSerial","libNRJavaSerialv6_HF","libNRJavaSerialv6","libNRJavaSerialv5"};
 	private void loadLib(String name) throws NativeResourceException {
 
 		String libName = name.substring(name.indexOf("lib")+3);
@@ -139,7 +139,21 @@ public class NativeResource {
 		if(!resource.canRead())
 			throw new RuntimeException("Cant open JNI file: "+resource.getAbsolutePath());
 		//System.out.println("Loading: "+resource.getAbsolutePath());
+		try {
+			System.out.println("Going to load " + resource + ". Hit return...");
+			System.in.read();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		System.load(resource.getAbsolutePath());
+		try {
+			System.out.println("Loaded successfully, hit return...");
+			System.in.read();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private void copyResource(InputStream io, File file) throws IOException {
