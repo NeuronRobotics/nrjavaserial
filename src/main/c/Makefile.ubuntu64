@@ -1,0 +1,183 @@
+#
+# This Makefile aims to support as many native library compilations as possible
+# on a Ubuntu amd64 system.
+# 
+# Ubuntu may or may not be your favourite Linux distribution. But it provides the best
+# cross compilation support of all the major distributions.
+#
+# You'll need to have the following packages installed (Ubuntu wily):
+#
+# liblockdev1-dev
+# g++-5-multilib
+# g++-5-multilib-arm-linux-gnueabi
+# g++-5-multilib-arm-linux-gnueabihf
+# g++-mingw-w64
+#
+
+JDKINCLUDE=-I/usr/lib/jvm/java-7-openjdk-amd64/include/ -I/usr/lib/jvm/java-7-openjdk-i386/include/ -I"./include" -I"./include/target" -I/usr/lib/jvm/java-6-openjdk-amd64/include/ -I/usr/lib/jvm/java-6-openjdk-armhf/include/ -I/usr/lib/jvm/java-6-openjdk-arm/include/ -I/usr/lib/jvm/java-6-openjdk-i386/include/ -I/etc/alternatives/java_sdk/include -I/etc/alternatives/java_sdk/include/linux
+
+LINOBJ=fixup.o fuserImp.o SerialImp.o
+
+CCLIN32=gcc -I./include/ubuntu-multilib-fix $(JDKINCLUDE) -DLIBLOCKDEV -O3 -Wall -c -fmessage-length=0 -fPIC -m32 -MMD
+LINKLIN32=g++ -m32 -shared -Lcross-compile-libs/x86_32
+
+CCLIN64=gcc $(JDKINCLUDE) -DLIBLOCKDEV -O3 -Wall -c -fmessage-length=0 -fPIC -m64 -MMD
+LINKLIN64=g++ -m64 -shared
+
+CCLINARM=arm-linux-gnueabi-gcc-5 $(JDKINCLUDE) -DLIBLOCKDEV -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MP
+LINKLINARM=arm-linux-gnueabi-g++-5 -shared -fPIC -nostdlib -Lcross-compile-libs/ARM
+
+CCLINARM_HF=arm-linux-gnueabihf-gcc-5 $(JDKINCLUDE) -DLIBLOCKDEV -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MP
+LINKLINARM_HF=arm-linux-gnueabihf-g++-5 -shared -fPIC -nostdlib -Lcross-compile-libs/ARM
+
+CCLINANDROID=/home/opt/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/arm-linux-androideabi/bin/gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MMD -MP
+LINKLINANDROID=/home/opt/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/arm-linux-androideabi/bin/g++ -shared
+
+WINOBJ=windows/init.o windows/termios.o fixup.o fuserImp.o SerialImp.o
+
+WININCLUDE32N=-I./include -I./include/target -I./include/windows -I./include/windows/win32 $(JDKINCLUDE)
+CCWIN32N = i686-w64-mingw32-gcc-win32 $(WININCLUDE32N) -c
+LINKWIN32N = i686-w64-mingw32-g++-win32 -static-libgcc -static-libstdc++ -Wl,--add-stdcall-alias -shared
+
+WININCLUDE64N=-I./include -I./include/target -I./include/windows -I./include/windows/win32 $(JDKINCLUDE)
+CCWIN64N = x86_64-w64-mingw32-gcc-win32 $(WININCLUDE64N) -c
+LINKWIN64N = x86_64-w64-mingw32-g++-win32 -static-libgcc -static-libstdc++ -Wl,--add-stdcall-alias -shared
+
+all:
+	echo "Specify a system: make linux, make windows, make osx"
+	
+
+# Linux (x86[_64] and ARM)
+
+.PHONY: linux linux32 linux64
+
+linux: linux32 linux64 arm
+	echo all Linux ok!
+
+# Linux x86_32
+
+linux32: resources/native/linux/x86_32/libNRJavaSerial.so
+
+resources/native/linux/x86_32/libNRJavaSerial.so: $(LINOBJ:%=build/linux32/%)
+	@mkdir -p `dirname $@`
+	$(LINKLIN32) -o $@ $^ -llockdev
+
+build/linux32/%.o: src/%.c
+	@mkdir -p `dirname $@`
+	$(CCLIN32) -o $@ $<
+
+# Linux x86_64
+
+linux64: resources/native/linux/x86_64/libNRJavaSerial.so
+
+resources/native/linux/x86_64/libNRJavaSerial.so: $(LINOBJ:%=build/linux64/%)
+	@mkdir -p `dirname $@`
+	$(LINKLIN64) -o $@ $^ -llockdev
+
+build/linux64/%.o: src/%.c
+	@mkdir -p `dirname $@`
+	$(CCLIN64) -o $@ $<
+
+# (Linux) ARM
+	
+.PHONY: arm arm7 arm7HF arm6 arm6HF arm5
+
+arm: arm7 arm7HF arm6 arm6HF arm5
+	@echo all ARM ok!
+
+# ARM v7
+
+arm7: resources/native/linux/ARM/libNRJavaSerial.so
+
+resources/native/linux/ARM/libNRJavaSerial.so: $(LINOBJ:%=build/arm7/%)
+	@mkdir -p `dirname $@`
+	$(LINKLINARM) -march=armv7-a -o $@ $^ -llockdev
+
+build/arm7/%.o: src/%.c
+	@mkdir -p `dirname $@`
+	$(CCLINARM) -march=armv7-a -o $@ $<
+
+# ARM v7 HF
+
+arm7HF: resources/native/linux/ARM/libNRJavaSerial_HF.so
+
+resources/native/linux/ARM/libNRJavaSerial_HF.so: $(LINOBJ:%=build/arm7HF/%)
+	@mkdir -p `dirname $@`
+	$(LINKLINARM_HF) -march=armv7-a -o $@ $^ -llockdev
+
+build/arm7HF/%.o: src/%.c
+	@mkdir -p `dirname $@`
+	$(CCLINARM_HF) -march=armv7-a -o $@ $<
+
+# ARM v6	
+	
+arm6: resources/native/linux/ARM/libNRJavaSerialv6.so
+
+resources/native/linux/ARM/libNRJavaSerialv6.so: $(LINOBJ:%=build/arm6/%)
+	@mkdir -p `dirname $@`
+	$(LINKLINARM) -march=armv6 -o $@ $^ -llockdev
+
+build/arm6/%.o: src/%.c
+	@mkdir -p `dirname $@`
+	$(CCLINARM) -march=armv6 -o $@ $<
+
+# ARM v6 HF
+
+arm6HF: resources/native/linux/ARM/libNRJavaSerialv6_HF.so
+
+resources/native/linux/ARM/libNRJavaSerialv6_HF.so: $(LINOBJ:%=build/arm6HF/%)
+	@mkdir -p `dirname $@`
+	$(LINKLINARM_HF) -march=armv6 -mfpu=vfp -marm -o $@ $^ -llockdev
+
+build/arm6HF/%.o: src/%.c
+	@mkdir -p `dirname $@`
+	$(CCLINARM_HF) -march=armv6 -mfpu=vfp -marm -o $@ $<
+
+# ARM 5
+
+arm5: resources/native/linux/ARM/libNRJavaSerialv5.so
+
+resources/native/linux/ARM/libNRJavaSerialv5.so: $(LINOBJ:%=build/arm5/%)
+	@mkdir -p `dirname $@`
+	$(LINKLINARM) -march=armv5t -o $@ $^ -llockdev
+
+build/arm5/%.o: src/%.c
+	@mkdir -p `dirname $@`
+	$(CCLINARM) -march=armv5t -o $@ $<
+
+# Windows
+
+.PHONY: windows windows32 windows64
+
+windows: windows32 windows64
+
+# Windows 32
+
+windows32: resources/native/windows/x86_32/libNRJavaSerial.dll
+
+resources/native/windows/x86_32/libNRJavaSerial.dll: $(WINOBJ:%=build/win32/%)
+	$(LINKWIN32N) -o $@ $^
+
+build/win32/%.o: src/%.c
+	@mkdir -p `dirname $@`
+	$(CCWIN32N) -o $@ $<
+
+# Windows 64
+
+windows64: resources/native/windows/x86_64/libNRJavaSerial.dll
+
+resources/native/windows/x86_64/libNRJavaSerial.dll: $(WINOBJ:%=build/win64/%)
+	$(LINKWIN64N) -o $@ $^
+
+build/win64/%.o: src/%.c
+	@mkdir -p `dirname $@`
+	$(CCWIN64N) -o $@ $<
+
+		
+# Miscellaneous
+
+.PHONY: clean
+
+clean:
+	rm -rf build/
+	
