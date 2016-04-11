@@ -1,5 +1,7 @@
 # About
 
+[![Join the chat at https://gitter.im/NeuronRobotics/nrjavaserial](https://badges.gitter.im/NeuronRobotics/nrjavaserial.svg)](https://gitter.im/NeuronRobotics/nrjavaserial?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 This is a fork of the [RXTX library](http://rxtx.qbang.org/) with a focus on
 ease of use and embeddability in other libraries.
 
