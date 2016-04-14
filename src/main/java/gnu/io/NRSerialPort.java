@@ -1,5 +1,6 @@
 package gnu.io;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -7,14 +8,17 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TooManyListenersException;
 
+import gnu.io.factory.DefaultSerialPortFactory;
+import gnu.io.factory.SerialPortFactory;
+
 public class NRSerialPort
 {
 
-    private RXTXPort serial;
+    private SerialPort serial;
     private String port = null;
     private boolean connected = false;
     private int baud = 115200;
-
+    private SerialPortFactory serialPortFactory;
 
     /**
      * Class Constructor for a NRSerialPort with a given port and baudrate.
@@ -24,8 +28,21 @@ public class NRSerialPort
      */
     public NRSerialPort(String port, int baud)
     {
+    	this(port, baud, new DefaultSerialPortFactory());
+    }
+    
+    /**
+     * Class Constructor for a NRSerialPort with a given port and baudrate.
+     * The factory can be used to create the serial port.
+     * 
+     * @param port the port to connect to (i.e. COM6 or /dev/ttyUSB0)
+     * @param baud the baudrate to use (i.e. 9600 or 115200)
+     */
+    public NRSerialPort(String port, int baud, SerialPortFactory factory)
+    {
         setPort(port);
         setBaud(baud);
+        this.serialPortFactory = factory;
     }
 
 
@@ -39,42 +56,7 @@ public class NRSerialPort
 
         try
         {
-            RXTXPort comm = null;
-            CommPortIdentifier ident = null;
-            if ((System.getProperty("os.name").toLowerCase().indexOf("linux") != -1))
-            {
-                // if ( port.toLowerCase().contains("rfcomm".toLowerCase())||
-                // port.toLowerCase().contains("ttyUSB".toLowerCase()) ||
-                // port.toLowerCase().contains("ttyS".toLowerCase())||
-                // port.toLowerCase().contains("ACM".toLowerCase()) ||
-                // port.toLowerCase().contains("Neuron_Robotics".toLowerCase())||
-                // port.toLowerCase().contains("DyIO".toLowerCase())||
-                // port.toLowerCase().contains("NR".toLowerCase())||
-                // port.toLowerCase().contains("FTDI".toLowerCase())||
-                // port.toLowerCase().contains("ftdi".toLowerCase())
-                // ){
-                System.setProperty("gnu.io.rxtx.SerialPorts", port);
-                // }
-            }
-            ident = CommPortIdentifier.getPortIdentifier(port);
-
-            try
-            {
-                comm = ident.open("NRSerialPort", 2000);
-            }
-            catch (PortInUseException e)
-            {
-                System.err.println("This is a bug, passed the ownership test above: " + e.getMessage());
-                return false;
-            }
-
-            if (!(comm instanceof RXTXPort))
-            {
-                throw new UnsupportedCommOperationException("Non-serial connections are unsupported.");
-            }
-
-            serial = (RXTXPort) comm;
-            serial.enableReceiveTimeout(100);
+        	serial = this.serialPortFactory.createSerialPort(port);
             serial.setSerialPortParams(getBaud(), SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
             setConnected(true);
         }
@@ -99,13 +81,21 @@ public class NRSerialPort
 
     public InputStream getInputStream()
     {
-        return serial.getInputStream();
+        try {
+			return serial.getInputStream();
+		} catch (IOException e) {
+			throw new RuntimeException("InputStream cannot be accessed", e);
+		}
     }
 
 
     public OutputStream getOutputStream()
     {
-        return serial.getOutputStream();
+        try {
+			return serial.getOutputStream();
+		} catch (IOException e) {
+			throw new RuntimeException("OutputStream cannot be accessed", e);
+		}
     }
 
 
@@ -233,7 +223,7 @@ public class NRSerialPort
     }
 
 
-    public RXTXPort getSerialPortInstance()
+    public SerialPort getSerialPortInstance()
     {
         return serial;
     }

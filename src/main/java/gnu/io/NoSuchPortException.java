@@ -67,13 +67,16 @@ package gnu.io;
 @SuppressWarnings("serial")
 public class NoSuchPortException extends Exception
 {
-	NoSuchPortException( String str )
+	public NoSuchPortException( String str )
 	{
 		super( str );
 	}
 	public NoSuchPortException()
 	{
 		super();
+	}
+	public NoSuchPortException(String message, Throwable cause) {
+		super(message, cause);
 	}
 }
 
