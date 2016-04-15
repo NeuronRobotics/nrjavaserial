@@ -8,13 +8,13 @@ import gnu.io.SerialPort;
 
 public class SerialPortRegistry {
 
-	private Collection<SerialPortCreator<?>> portCreators;
+	private Collection<SerialPortCreator<? extends SerialPort>> portCreators;
 	
 	public SerialPortRegistry() {
-		this.portCreators = new TreeSet<SerialPortCreator<?>>(new Comparator<SerialPortCreator<?>>() {
+		this.portCreators = new TreeSet<SerialPortCreator<? extends SerialPort>>(new Comparator<SerialPortCreator<? extends SerialPort>>() {
 
 			@Override
-			public int compare(SerialPortCreator<?> o1, SerialPortCreator<?> o2) {
+			public int compare(SerialPortCreator<? extends SerialPort> o1, SerialPortCreator<? extends SerialPort> o2) {
 				if(o1.getProtocol().equals(SerialPortCreator.LOCAL)) {
 					return 1;
 				}
@@ -33,7 +33,7 @@ public class SerialPortRegistry {
 	 * Registers a {@link SerialPortCreator}.
 	 * @param creator
 	 */
-	public void registerSerialPortCreator(SerialPortCreator<?> creator) {
+	public void registerSerialPortCreator(SerialPortCreator<? extends SerialPort> creator) {
 		this.portCreators.add(creator);
 	}
 	

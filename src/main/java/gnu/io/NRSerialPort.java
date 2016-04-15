@@ -223,8 +223,21 @@ public class NRSerialPort
     }
 
 
-    public SerialPort getSerialPortInstance()
+    /**
+     * @deprecated please use {@link #getSerialPort()} as the return type can be another implementation.
+     * @return
+     */
+    @Deprecated
+    public RXTXPort getSerialPortInstance()
     {
-        return serial;
+        return (RXTXPort) serial;
+    }
+    /**
+     * Gets the {@link SerialPort} instance.
+     * This will return null until {@link #connect()} is successfully called.
+     * @return The {@link SerialPort} instance or null.
+     */
+    public SerialPort getSerialPort() {
+    	return serial;
     }
 }
