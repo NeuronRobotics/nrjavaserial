@@ -5,7 +5,7 @@ import gnu.io.PortInUseException;
 import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
 
-public interface SerialPortCreator {
+public interface SerialPortCreator<T extends SerialPort> {
 
 	final static String LOCAL = "local";
 	
@@ -14,7 +14,7 @@ public interface SerialPortCreator {
 	 * @param portName The ports name.
 	 * @return Whether the port can be created and opened by this creator.
 	 */
-	public boolean isApplicable(String portName);
+	public boolean isApplicable(String portName, Class<T> epectedClass);
 	
 	/**
 	 * Creates the {@link SerialPort} and opens it for communication.
@@ -24,7 +24,7 @@ public interface SerialPortCreator {
 	 * @throws UnsupportedCommOperationException 
 	 * @throws PortInUseException 
 	 */
-	public SerialPort createPort(String portName) throws NoSuchPortException, UnsupportedCommOperationException, PortInUseException;
+	public T createPort(String portName) throws NoSuchPortException, UnsupportedCommOperationException, PortInUseException;
 	
 	/**
 	 * Gets the protocol type of the Port to create.

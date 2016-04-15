@@ -4,18 +4,17 @@ import gnu.io.CommPortIdentifier;
 import gnu.io.NoSuchPortException;
 import gnu.io.PortInUseException;
 import gnu.io.RXTXPort;
-import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
 
-public class RxTxPortCreator implements SerialPortCreator {
+public class RxTxPortCreator implements SerialPortCreator<RXTXPort> {
 
 	@Override
-	public boolean isApplicable(String portName) {
-		return true;
+	public boolean isApplicable(String portName, Class<RXTXPort> expectedClass) {
+		return expectedClass.isAssignableFrom(RXTXPort.class);
 	}
 
 	@Override
-	public SerialPort createPort(String port) throws NoSuchPortException, UnsupportedCommOperationException, PortInUseException {
+	public RXTXPort createPort(String port) throws NoSuchPortException, UnsupportedCommOperationException, PortInUseException {
         RXTXPort comm = null;
         CommPortIdentifier ident = null;
         if ((System.getProperty("os.name").toLowerCase().indexOf("linux") != -1))

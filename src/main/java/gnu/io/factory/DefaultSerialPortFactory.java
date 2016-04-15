@@ -17,8 +17,8 @@ public class DefaultSerialPortFactory implements SerialPortFactory {
 	 * @see gnu.io.factory.SerialPortFactory#createSerialPort(java.lang.String)
 	 */
 	@Override
-	public SerialPort createSerialPort(String portName) throws PortInUseException, NoSuchPortException, UnsupportedCommOperationException{
-		SerialPortCreator portCreator = this.portRegistry.getPortCreatorForPortName(portName);
+	public <T extends SerialPort> T createSerialPort(String portName, Class<T> expectedClass) throws PortInUseException, NoSuchPortException, UnsupportedCommOperationException{
+		SerialPortCreator<T> portCreator = this.portRegistry.getPortCreatorForPortName(portName, expectedClass);
 		if(portCreator != null) {
 			return portCreator.createPort(portName);
 		}

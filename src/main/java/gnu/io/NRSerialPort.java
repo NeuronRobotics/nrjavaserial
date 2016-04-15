@@ -56,7 +56,7 @@ public class NRSerialPort
 
         try
         {
-        	serial = this.serialPortFactory.createSerialPort(port);
+        	serial = this.serialPortFactory.createSerialPort(port, SerialPort.class);
             serial.setSerialPortParams(getBaud(), SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
             setConnected(true);
         }

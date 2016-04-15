@@ -5,19 +5,21 @@ import java.net.UnknownHostException;
 
 import gnu.io.NoSuchPortException;
 import gnu.io.PortInUseException;
-import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
 import gnu.io.rfc2217.TelnetSerialPort;
 
-public class RFC2217PortCreator implements SerialPortCreator{
+public class RFC2217PortCreator implements SerialPortCreator<TelnetSerialPort> {
 
 	private final static String PROTOCOL = "rfc2217";
 	
 	@Override
-	public boolean isApplicable(String portName) {
+	public boolean isApplicable(String portName, Class<TelnetSerialPort> expectedClass) {
 		try {
-			URI uri = URI.create(portName);
-			return uri.getScheme().equalsIgnoreCase(PROTOCOL);
+			if(expectedClass.isAssignableFrom(TelnetSerialPort.class)) {
+				URI uri = URI.create(portName);
+				return uri.getScheme().equalsIgnoreCase(PROTOCOL);
+			}
+			return false;
 		} catch(Throwable t) {
 			return false;
 		}
@@ -28,7 +30,7 @@ public class RFC2217PortCreator implements SerialPortCreator{
 	 * @throws NoSuchPortException if the host does not exist.
 	 */
 	@Override
-	public SerialPort createPort(String portName)
+	public TelnetSerialPort createPort(String portName)
 			throws NoSuchPortException, UnsupportedCommOperationException, PortInUseException {
 		 URI url = URI.create(portName);
 	      try
