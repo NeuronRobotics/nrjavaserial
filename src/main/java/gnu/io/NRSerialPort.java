@@ -188,24 +188,10 @@ public class NRSerialPort
 
     public void setBaud(int baud)
     {
-        switch (baud)
-        {
-            case 2400:
-            case 4800:
-            case 9600:
-            case 14400:
-            case 19200:
-            case 28800:
-            case 38400:
-            case 57600:
-            case 76800:
-            case 115200:
-            case 230400:
-                this.baud = baud;
-                return;
-            default:
-                throw new RuntimeException("Invalid baudrate! " + baud);
-        }
+
+        this.baud = baud;
+        return;
+
     }
 
 
