@@ -51,6 +51,8 @@ dependencies {
 }
 
 jar {
+	
+	jar.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 	/* Package up all runtime files (our classes and those of dependencies) into
 	 * our JAR. This gets us a sort of poor man's shaded JAR/"fat JAR". */
 	from (configurations.runtime.files.collect { zipTree(it) }) {
