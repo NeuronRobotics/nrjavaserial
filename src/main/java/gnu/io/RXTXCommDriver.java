@@ -63,9 +63,21 @@
 
 package gnu.io;
 
-import java.util.*;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
+
+import com.sun.jna.platform.win32.Advapi32Util;
+import com.sun.jna.platform.win32.Win32Exception;
+import com.sun.jna.platform.win32.WinReg;
 
 /**
    This is the JavaComm for Linux driver.
@@ -262,13 +274,13 @@ public class RXTXCommDriver implements CommDriver
 		private void registerValidPorts(
 		String CandidateDeviceNames[],
 		String ValidPortPrefixes[],
-		int PortType
+		int PortType,
+		boolean performTestRead
 	) {
 		int i =0;
 		int p =0 ;
-		/* FIXME quick fix to get COM1-8 on windows working.  The
-		   Read test is not working properly and its crunch time...
-		if(osName.toLowerCase().indexOf("windows") != -1 )
+		// on windows, if performTestRead is false, we can just add the port because is read directly from registry
+		if(osName.toLowerCase().indexOf("windows") != -1 && !performTestRead)
 		{
 			for( i=0;i < CandidateDeviceNames.length;i++ )
 			{
@@ -278,7 +290,7 @@ public class RXTXCommDriver implements CommDriver
 			return;
 
 		}
-		*/
+		
 		if (debug)
 		{
 			System.out.println("Entering registerValidPorts()");
@@ -519,18 +531,33 @@ public class RXTXCommDriver implements CommDriver
 		String[] CandidateDeviceNames;
 		if (debug)
 			System.out.println("scanning device directory "+deviceDirectory+" for ports of type "+PortType);
+		
+		boolean performTestRead = true;
+		
 		if(osName.toLowerCase().indexOf("windows") != -1 )
 		{
-			String[] temp = new String[getScannedBufferSize()+3];
-			for( int i = 1; i <= getScannedBufferSize(); i++ )
-			{
-				temp[i - 1] = "COM" + i;
+			// on windows, we try to get the serial port list from the registry
+			try {
+				String[] temp = windowsGetSerialPortsFromRegistry();
+				CandidateDeviceNames=temp;
+				performTestRead = false; // disable the testRead to simply add the port to the CommPortIdentifier index
 			}
-			for( int i = 1; i <= 3; i++ )
-			{
-				temp[i + getScannedBufferSize()-1] = "LPT" + i;
+			catch (Win32Exception ex) {
+				// if something goes wrong, fallback to full scan
+				if (debug)
+					System.err.println("Error reading the registry to get port list " + ex.getMessage());
+				
+				String[] temp = new String[getScannedBufferSize()+3];
+				for( int i = 1; i <= getScannedBufferSize(); i++ )
+				{
+					temp[i - 1] = "COM" + i;
+				}
+				for( int i = 1; i <= 3; i++ )
+				{
+					temp[i + getScannedBufferSize()-1] = "LPT" + i;
+				}
+				CandidateDeviceNames=temp;
 			}
-			CandidateDeviceNames=temp;
 			}
 			else if ( osName.equals("Solaris") || osName.equals("SunOS"))
 			{
@@ -896,10 +923,25 @@ public class RXTXCommDriver implements CommDriver
 				if (debug)
 					System.out.println("Unknown PortType "+PortType+" passed to RXTXCommDriver.registerScannedPorts()");
 		}
-		registerValidPorts(CandidateDeviceNames, CandidatePortPrefixes, PortType);
+		registerValidPorts(CandidateDeviceNames, CandidatePortPrefixes, PortType, performTestRead);
 	}
 
-
+	/**
+	 * @return an array contaning the serial ports, taken from registry HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP\SERIALCOMM
+	 * @throws Win32Exception in case something goes wrong with the registry
+	 */
+	private String[] windowsGetSerialPortsFromRegistry() throws Win32Exception {
+		TreeMap<String, Object> map = Advapi32Util.registryGetValues(WinReg.HKEY_LOCAL_MACHINE, "HARDWARE\\DEVICEMAP\\SERIALCOMM");
+		
+		List<String> ports = new ArrayList<String>(map.size());
+		for (Object p : map.values()) {
+			if (p != null && p.toString().startsWith("COM"))
+				ports.add(p.toString());
+		}
+		
+		return ports.toArray(new String[0]);
+	}
+	
 	/*
 	 *  From the NullDriver.java CommAPI sample.
 	 */

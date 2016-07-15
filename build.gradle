@@ -48,6 +48,8 @@ dependencies {
 	testCompile 'junit:junit:4.12'
 	compile 'org.apache.commons:commons-lang3:3.2.1'
 	compile 'commons-net:commons-net:3.3'
+	compile 'net.java.dev.jna:jna:4.2.2'
+	compile 'net.java.dev.jna:jna-platform:4.2.2'
 }
 
 jar {
