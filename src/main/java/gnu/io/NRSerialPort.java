@@ -39,7 +39,7 @@ public class NRSerialPort
 
         try
         {
-            RXTXPort comm = null;
+            CommPort comm = null;
             CommPortIdentifier ident = null;
             if ((System.getProperty("os.name").toLowerCase().indexOf("linux") != -1))
             {

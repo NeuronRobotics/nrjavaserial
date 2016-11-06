@@ -415,7 +415,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 	@SuppressWarnings("unused")
 	private boolean HideOwnerEvents;
 
-	public RXTXPort open(String TheOwner, int i) 
+	public CommPort open(String TheOwner, int i)
 		throws gnu.io.PortInUseException 
 	{ 
 		if(debug) System.out.println("CommPortIdentifier:open("+TheOwner + ", " +i+")");
