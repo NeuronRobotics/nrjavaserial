@@ -74,9 +74,8 @@
 #define YACK() \
 { \
 	char *allocTextBuf, message[80]; \
-	unsigned long nChars; \
 	unsigned int errorCode = GetLastError(); \
-	nChars = FormatMessage ( \
+	FormatMessage ( \
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | \
 		FORMAT_MESSAGE_FROM_SYSTEM, \
 		NULL, \
