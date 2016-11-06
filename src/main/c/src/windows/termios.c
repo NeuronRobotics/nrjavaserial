@@ -2485,6 +2485,7 @@ int tcdrain ( int fd )
 */
 	if ( !FlushFileBuffers( index->hComm ) )
 	{
+		int lastError = GetLastError();
 		/* FIXME  Need to figure out what the various errors are in
 		          windows.  YACK() should report them and we can
 			  handle them as we find them
@@ -2493,18 +2494,26 @@ int tcdrain ( int fd )
 			  Something funky is happening on NT.  GetLastError =
 			  0.
 		*/
-		sprintf( message,  "FlushFileBuffers() %i\n",
-			(int) GetLastError() );
+		sprintf( message,  "FlushFileBuffers() %i\n", lastError);
 		report( message );
-		if( GetLastError() == 0 )
-		{
-			set_errno( 0 );
-			return(0);
+		switch (lastError) {
+			/* No error */
+			case ERROR_SUCCESS:
+
+			/* No flush function
+			 * As the driver does not support flushing, assume that all
+			 * data was written directly and not buffered in any way
+			 */
+			case ERROR_INVALID_FUNCTION:
+				set_errno( 0 );
+				return(0);
+
+			default:
+				set_errno( EAGAIN );
+				YACK();
+				LEAVE( "tcdrain" );
+				return -1;
 		}
-		set_errno( EAGAIN );
-		YACK();
-		LEAVE( "tcdrain" );
-		return -1;
 	}
 /*
 	sprintf( message,  "FlushFileBuffers() %i\n",
