@@ -1642,6 +1642,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeDrain)( JNIEnv *env,
 	int result, count=0;
 
 	char message[80];
+	int localErrno=0;
 
 	ENTER( "SerialImp.c:drain()" );
 	report_time_start( );
@@ -1650,6 +1651,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeDrain)( JNIEnv *env,
 		result=tcdrain(fd);
 		count++;
 	}  while (result && errno==EINTR && count <3);
+	localErrno = errno;
 
 	sprintf( message, "RXTXPort:drain() returns: %i\n", result );
 	report_verbose( message );
@@ -1659,7 +1661,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeDrain)( JNIEnv *env,
 #endif /* __sun__ */
 	LEAVE( "RXTXPort:drain()" );
 	if( result ) throw_java_exception( env, IO_EXCEPTION, "nativeDrain",
-		strerror( errno ) );
+		strerror( localErrno ) );
 	if( interrupted ) return( JNI_FALSE );
 #if !defined(TIOCSERGETLSR) && !defined(WIN32)
 	if( eis && eis->writing )
