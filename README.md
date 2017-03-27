@@ -43,7 +43,11 @@ ease of use and embeddability in other libraries.
 
 ## Maven
 
-https://oss.sonatype.org/#nexus-search;gav~com.neuronrobotics~nrjavaserial
+<dependency>
+  <groupId>com.neuronrobotics</groupId>
+  <artifactId>nrjavaserial</artifactId>
+  <version>3.12.1</version>
+</dependency>
 
 # Building the JAR
 
