@@ -43,11 +43,11 @@ ease of use and embeddability in other libraries.
 
 ## Maven
 
-<dependency>
-  <groupId>com.neuronrobotics</groupId>
-  <artifactId>nrjavaserial</artifactId>
-  <version>3.12.1</version>
-</dependency>
+	<dependency>
+	  <groupId>com.neuronrobotics</groupId>
+	  <artifactId>nrjavaserial</artifactId>
+	  <version>3.12.1</version>
+	</dependency>
 
 # Building the JAR
 
