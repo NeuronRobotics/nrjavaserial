@@ -199,14 +199,14 @@ arm7:	dirs
 	$(CCLINARM) -march=armv7-a src/fixup.c -o build/fixup.o
 	$(CCLINARM) -march=armv7-a src/fuserImp.c -o build/fuserImp.o
 	$(CCLINARM) -march=armv7-a src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM) -march=armv7-a -o"resources/native/linux/ARM/libNRJavaSerial.so" $(LINOBJ) -llockdev
+	$(LINKLINARM) -march=armv7-a -o"resources/native/linux/ARM/libNRJavaSerialv7.so" $(LINOBJ) -llockdev
 	rm -rf build
 	
 arm7HF:dirs
 	$(CCLINARM_HF) -march=armv7-a src/fixup.c -o build/fixup.o
 	$(CCLINARM_HF) -march=armv7-a src/fuserImp.c -o build/fuserImp.o
 	$(CCLINARM_HF) -march=armv7-a src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM_HF) -march=armv7-a -o"resources/native/linux/ARM/libNRJavaSerial_HF.so" $(LINOBJ) -llockdev
+	$(LINKLINARM_HF) -march=armv7-a -o"resources/native/linux/ARM/libNRJavaSerialv7_HF.so" $(LINOBJ) -llockdev
 	rm  build/*	
 	
 arm6:	dirs
