@@ -653,6 +653,7 @@ public class RXTXCommDriver implements CommDriver
 						"ttyS", // linux Serial Ports
 						"ttySA", // for the IPAQs
 						"ttyUSB", // for USB frobs
+						"ttyAMA", // Raspberry Pi
 						"rfcomm",       // bluetooth serial device
 						"ttyircomm", // linux IrCommdevices (IrDA serial emu)
 						"ttyACM",// linux CDC ACM devices
