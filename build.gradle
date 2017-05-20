@@ -46,20 +46,11 @@ repositories {
 dependencies {
 	compile fileTree(dir: 'libs', includes: ['*.jar'])
 	testCompile 'junit:junit:4.12'
-	compile 'org.apache.commons:commons-lang3:3.2.1'
 	compile 'commons-net:commons-net:3.3'
 }
 
 jar {
-	
 	jar.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-	/* Package up all runtime files (our classes and those of dependencies) into
-	 * our JAR. This gets us a sort of poor man's shaded JAR/"fat JAR". */
-	from (configurations.runtime.files.collect { zipTree(it) }) {
-		/* We don't want the metadata from any shaded JARs in our output. */
-		exclude 'META-INF/'
-	}
-
 	manifest {
 		attributes(
 			"Created-By": "Neuron Robotics Cooperative",
@@ -70,7 +61,7 @@ jar {
 			"Implementation-Version" : props."app.version",
 			"Implementation-Vendor": "Neuron Robotics Cooperative",
 		)
-		instruction 'Import-Package', '!org.apache.commons.*'
+		instruction 'Import-Package', '*'
 	}
 }
 
