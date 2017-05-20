@@ -172,6 +172,8 @@ freebsd64:dirs
 	
 .PHONY: arm
 arm:
+	$(MAKE) arm8
+	$(MAKE) arm8HF
 	$(MAKE) arm7
 	$(MAKE) arm7HF
 	$(MAKE) arm6
@@ -179,18 +181,32 @@ arm:
 	$(MAKE) arm5
 	@echo all ARM ok!
 
+arm8:	dirs
+	$(CCLINARM) -march=armv8-a src/fixup.c -o build/fixup.o
+	$(CCLINARM) -march=armv8-a src/fuserImp.c -o build/fuserImp.o
+	$(CCLINARM) -march=armv8-a src/SerialImp.c -o build/SerialImp.o
+	$(LINKLINARM) -march=armv8-a -o"resources/native/linux/ARM/libNRJavaSerialv8.so" $(LINOBJ) -llockdev
+	rm -rf build
+	
+arm8HF:dirs
+	$(CCLINARM_HF) -march=armv8-a src/fixup.c -o build/fixup.o
+	$(CCLINARM_HF) -march=armv8-a src/fuserImp.c -o build/fuserImp.o
+	$(CCLINARM_HF) -march=armv8-a src/SerialImp.c -o build/SerialImp.o
+	$(LINKLINARM_HF) -march=armv8-a -o"resources/native/linux/ARM/libNRJavaSerialv8_HF.so" $(LINOBJ) -llockdev
+	rm  build/*	
+
 arm7:	dirs
 	$(CCLINARM) -march=armv7-a src/fixup.c -o build/fixup.o
 	$(CCLINARM) -march=armv7-a src/fuserImp.c -o build/fuserImp.o
 	$(CCLINARM) -march=armv7-a src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM) -march=armv7-a -o"resources/native/linux/ARM/libNRJavaSerial.so" $(LINOBJ) -llockdev
+	$(LINKLINARM) -march=armv7-a -o"resources/native/linux/ARM/libNRJavaSerialv7.so" $(LINOBJ) -llockdev
 	rm -rf build
 	
 arm7HF:dirs
 	$(CCLINARM_HF) -march=armv7-a src/fixup.c -o build/fixup.o
 	$(CCLINARM_HF) -march=armv7-a src/fuserImp.c -o build/fuserImp.o
 	$(CCLINARM_HF) -march=armv7-a src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM_HF) -march=armv7-a -o"resources/native/linux/ARM/libNRJavaSerial_HF.so" $(LINOBJ) -llockdev
+	$(LINKLINARM_HF) -march=armv7-a -o"resources/native/linux/ARM/libNRJavaSerialv7_HF.so" $(LINOBJ) -llockdev
 	rm  build/*	
 	
 arm6:	dirs
