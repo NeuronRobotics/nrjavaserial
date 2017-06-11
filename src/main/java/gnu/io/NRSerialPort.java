@@ -14,6 +14,9 @@ public class NRSerialPort
     private String port = null;
     private boolean connected = false;
     private int baud = 115200;
+    private int parity = SerialPort.PARITY_NONE;
+    private int dataBits = SerialPort.DATABITS_8;
+    private int stopBits = SerialPort.STOPBITS_1;
 
 
     /**
@@ -22,10 +25,39 @@ public class NRSerialPort
      * @param port the port to connect to (i.e. COM6 or /dev/ttyUSB0)
      * @param baud the baudrate to use (i.e. 9600 or 115200)
      */
+    public NRSerialPort(String port)
+    {
+        this.port = port;
+    }
+
     public NRSerialPort(String port, int baud)
     {
         setPort(port);
         setBaud(baud);
+    }
+    
+    public NRSerialPort(String port, int baud, int parity)
+    {
+        this.port = port;
+        this.baud = baud;
+        this.parity = parity;
+    }
+
+    public NRSerialPort(String port, int baud, int parity, int dataBits)
+    {
+        this.port = port;
+        this.baud = baud;
+        this.parity = parity;
+        this.dataBits = dataBits;
+    }
+
+    public NRSerialPort(String port, int baud, int parity, int dataBits, int stopBits)
+    {
+        this.port = port;
+        this.baud = baud;
+        this.parity = parity;
+        this.dataBits = dataBits;
+        this.stopBits = stopBits;
     }
 
 
