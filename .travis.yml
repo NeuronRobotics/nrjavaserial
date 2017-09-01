@@ -1,9 +1,15 @@
-language: java
+# Travis CI build matrix.  Each entry below will trigger an extra, parallel build on Travis.
+matrix:
+  include:
 
-jdk:
-  - oraclejdk7
-  - oraclejdk8
-  - openjdk7
+  # Compile Java as usual
+  - language: java
+    os: linux
+    jdk: oraclejdk8
 
-os:
-- linux
+  - language: java
+    os: linux
+    jdk: openjdk7
+    # Override ./gradlew and use gradle instead to overcome errors
+    install: gradle assemble
+    script: gradle check
