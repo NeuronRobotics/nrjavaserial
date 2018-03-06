@@ -54,7 +54,7 @@ LINKBSD64=c++ -m64 -shared
 WINLINKOPT = -shared -Wl,--add-stdcall-alias -DBUILD_DLL
 WINCCOPT = -O3 -Wall -DBUILD_DLL
 #JDKDIR = C:\Program Files\Java\jdk1.6.0_24\include
-JDKDIR = D:/java-32/jdk1.7.0_25/include
+JDKDIR = C:/jdk1.8.0_161/include
 
 WININCLUDE32=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\MinGW\include" -I"$(JDKDIR)" -I"$(JDKDIR)\win32"
 CCWIN32 = wine "C:\MinGW\bin\gcc.exe" $(WININCLUDE32) -m32 $(WINCCOPT)
@@ -69,12 +69,12 @@ LINKWIN64 =wine "C:\MinGW64\bin\gcc.exe" $(WINLINKOPT)
 #Native Windows
 # MINGW32 = C:\MinGW32
 # MINGW64 = C:\MinGW64
-MINGW32 = C:\TDM-GCC-32
+MINGW32 = C:\TDM-GCC-64
 MINGW64 = C:\TDM-GCC-64
 
 WININCLUDE32N=-I".\include" -I".\include\target" -I".\include\windows" -I"$(MINGW32)\include" -I"$(JDKDIR)" -I"$(JDKDIR)/win32"
 CCWIN32N = "$(MINGW32)\bin\gcc.exe" $(WININCLUDE32N) -m32 $(WINCCOPT)
-LINKWIN32N ="$(MINGW32)\bin\gcc.exe" $(WINLINKOPT)
+LINKWIN32N ="$(MINGW32)\bin\gcc.exe" -m32 $(WINLINKOPT)
 
 WININCLUDE64N=-I".\include" -I".\include\target" -I".\include\windows" -I"$(MINGW64)\include" -I"$(JDKDIR)" -I"$(JDKDIR)/win32"
 CCWIN64N = "$(MINGW64)\bin\gcc.exe" $(WININCLUDE64N) -m64 $(WINCCOPT)
