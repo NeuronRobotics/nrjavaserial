@@ -58,10 +58,9 @@
 package  gnu.io;
 
 import  java.io.FileDescriptor;
-import java.util.ArrayList;
+import  java.util.Enumeration;
 import java.util.HashMap;
 import  java.util.Vector;
-import  java.util.Enumeration;
 
 /**
 * @author Trent Jarvi
@@ -84,7 +83,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
  	static CommPortIdentifier   CommPortIndex;
 	CommPortIdentifier next;
 	private int PortType;
-	private final static boolean debug = false;
+	private static boolean debug = false;
 	static Object Sync;
 	@SuppressWarnings("unchecked")
 	Vector ownershipListener;
@@ -102,6 +101,8 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 	// initialization only done once....
 	static 
 	{
+        initDebugFlags();
+        
 		if(debug) System.out.println("CommPortIdentifier:static initialization()");
 		Sync = new Object();
 		try 
@@ -112,6 +113,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 		catch (Throwable e) 
 		{
 			System.err.println(e + " thrown while loading " + "gnu.io.RXTXCommDriver");
+			e.printStackTrace();
 		}
 
 		String OS;
@@ -125,6 +127,15 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 		//System.loadLibrary( "rxtxSerial" );
 		SerialManager.getInstance();
 	}
+
+	/** Initializes the debug flags */
+    private static void initDebugFlags()
+    {
+        System.out.println("CommPortIdentifier: initializing debug flags");
+        debug = Zystem.getSysEnvBool( "log.debug");
+        System.out.println("CommPortIdentifier-debug: " + debug);
+    }
+    
 	CommPortIdentifier ( String pn, RXTXPort cp, int pt, CommDriver driver) 
 	{
 		PortName        = pn;

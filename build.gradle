@@ -10,7 +10,22 @@ targetCompatibility = '1.6'
 
 File buildDir = file(".");
 Properties props = new Properties()
-props.load(new FileInputStream(buildDir.getAbsolutePath() + "/src/main/resources/com/neuronrobotics/nrjavaserial/build.properties"))
+File propsFile = new File( buildDir, "src/main/resources/com/neuronrobotics/nrjavaserial/build.properties")
+props.load(new FileInputStream( propsFile))
+project.logger.info("build.properties:\n    " + props)
+File userPropsFile = new File(buildDir, "user.build.properties")
+if ( userPropsFile.exists() ) {
+	Properties userProps = new Properties(props);
+	userProps.load(new FileInputStream(userPropsFile));
+	
+	for ( Object key : props.keySet() )	{
+		String value = props.getProperty( (String) key);
+		userProps.setProperty( (String) key, value);
+	}
+	
+	props = userProps;
+	project.logger.info("overloaded properties by user.build.properties:\n    " + props);
+}
 
 group = "com.neuronrobotics"
 archivesBaseName = "nrjavaserial"
@@ -30,7 +45,12 @@ sourceSets {
 	}
 }
 
-jar.archiveName = "nrjavaserial-${props.'app.version'}.jar"
+if ( "true".equals( props.getProperty("jar.noversion") ) ) {
+    jar.archiveName = "nrjavaserial.jar"
+}
+else {
+    jar.archiveName = "nrjavaserial-${props.'app.version'}.jar"
+}
 
 task wrapper(type: Wrapper, description: 'Creates and deploys the Gradle wrapper to the current directory.') {
 	gradleVersion = '2.7'

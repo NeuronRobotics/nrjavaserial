@@ -85,6 +85,12 @@ public class Zystem
 		mode = SILENT_MODE;
 	}
 
+    public static boolean getSysEnvBool( String key)
+    {
+        String s = System.getProperty ("gnu.io." + key);
+        return Boolean.valueOf( s);
+    }
+    
 	private static String target;
 
 	public Zystem( int m ) throws UnSupportedLoggerException
@@ -186,7 +192,8 @@ public class Zystem
 		return;
 	}
 
-	public void finalize()
+	@Override
+    public void finalize()
 	{
 	/*
 		if ( mode == NET_MODE )

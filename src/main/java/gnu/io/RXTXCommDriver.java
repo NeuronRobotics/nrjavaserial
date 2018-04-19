@@ -63,8 +63,13 @@
 
 package gnu.io;
 
-import java.util.*;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Properties;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 /**
@@ -74,12 +79,14 @@ public class RXTXCommDriver implements CommDriver
 {
 	private static Set<String> ports =new HashSet<String>();
 	
-	private final static boolean debug = false;
-	private final static boolean devel = false;
+	private static boolean debug = false;
+	private static boolean devel = false;
 	private final static boolean noVersionOutput = "true".equals( System.getProperty( "gnu.io.rxtx.NoVersionOutput" ) );
 
 	static
 	{
+        initDebugFlags();
+        
 		if(ports==null)
 			ports =new HashSet<String>();
 		if(debug ) System.out.println("RXTXCommDriver {}");
@@ -125,6 +132,17 @@ public class RXTXCommDriver implements CommDriver
 		}
 	}
 
+	/** Initializes the debug flags */
+    private static void initDebugFlags()
+    {
+        System.out.println("RXTXCommDriver: initializing debug flags");
+        debug = Zystem.getSysEnvBool( "log.debug");
+        System.out.println("RXTXCommDriver-debug: " + debug);
+        devel = Zystem.getSysEnvBool( "log.devel");
+        System.out.println("RXTXCommDriver-devel: " + devel);
+    }
+    
+
 	/** Get the Serial port prefixes for the running OS */
 	private String deviceDirectory;
 	private String osName;
@@ -150,7 +168,7 @@ public class RXTXCommDriver implements CommDriver
         }
         if(pe != null){
 	        while (pe.hasMoreElements()) {
-	            CommPortIdentifier com = (CommPortIdentifier) pe.nextElement();
+	            CommPortIdentifier com = pe.nextElement();
 	            switch (com.getPortType()) {
 	            case CommPortIdentifier.PORT_SERIAL:
 	            	if(com.getName().matches("^/.+/cu\\..+$")) {
@@ -394,7 +412,8 @@ public class RXTXCommDriver implements CommDriver
 	/**
 	*  Determine the OS and where the OS has the devices located
 	*/
-	public void initialize()
+	@Override
+    public void initialize()
 	{
 
 		if (debug) System.out.println("RXTXCommDriver:initialize()");
@@ -421,10 +440,12 @@ public class RXTXCommDriver implements CommDriver
 		final StringTokenizer tok = new StringTokenizer(names, pathSep);
 
 		if (debug)
-			System.out.println("\nRXTXCommDriver:addSpecifiedPorts()");
+			System.out.println("\nRXTXCommDriver:addSpecifiedPorts(): " + names);
 		while (tok.hasMoreElements())
 		{
 			String PortName = tok.nextToken();
+	        if (debug)
+	            System.out.println("\nRXTXCommDriver:adding port: " + PortName);
 
 			if (testRead(PortName, PortType))
 				CommPortIdentifier.addPortName(PortName,
@@ -439,69 +460,115 @@ public class RXTXCommDriver implements CommDriver
     * 			gnu.io.rxtx.ParallelPorts
     *
     * Tested only with sun jdk1.3
-    * The file gnu.io.rxtx.properties must reside in the java extension dir
+    * The file gnu.io.rxtx.properties must reside in one of the java extension dir (lib/ext)
     *
     * Example: /usr/local/java/jre/lib/ext/gnu.io.rxtx.properties
     *
     * The file contains the following key properties:
     *
-    *  gnu.io.rxtx.SerialPorts=/dev/ttyS0:/dev/ttyS1:
-    *  gnu.io.rxtx.ParallelPorts=/dev/lp0:
-    *
+    *    gnu.io.rxtx.SerialPorts=/dev/ttyS0:/dev/ttyS1:
+    *    gnu.io.rxtx.ParallelPorts=/dev/lp0:
+    *  
+    * Note: in windows systems the path separator is ';', so the property value must be:
+    *  
+    *    gnu.io.rxtx.SerialPorts=COM1;COM2
     */
 	@SuppressWarnings({  "rawtypes" })
 	private boolean registerSpecifiedPorts(int PortType)
 	{
+	    // TODO: This routine is called three times during startup (enable console output by debug=true)
+	    // Better: Move such initialization code centralized at one spot, e.g. Zystem and ensure it is called only
+	    // once.
 		String val = null;
+		// TODO: Why use a temporary system.env for the registration of ports? Better: Move the loading of the  
+		// "gnu.io.rxtx.properties" somewhere at a static initializer and overload the system.env definitively.
+		// But be aware that a command line overload ("-Dgnu.io.SerialPorts=xy") should have precedence to the overload
+		// by the "gnu.io.rxtx.properties" file.
 		Properties origp = System.getProperties();//save system properties
-
 		try
-		    {
+        {
+	        final String pathSep = System.getProperty("path.separator", ":");
+	        // "java.ext.dirs" may return more than one dir, like: "C:\Program Files\Java\jre1.8.0_66\lib\ext;C:\Windows\Sun\Java\lib\ext"
+	        String[] extDirs = System.getProperty( "java.ext.dirs").split( pathSep); 
+	        
+	        for ( int i = 0; i < extDirs.length; i++ )
+	        {
+	            File file = new File( extDirs[i], "gnu.io.rxtx.properties");
+	            
+	            if (debug)
+	                System.out.println( "Looking up properties file: " + file);
+	            
+	            if ( file.exists() )
+	            {
+	                try
+	                {
+	                    FileInputStream rxtx_prop = new FileInputStream( file);
+	                    try
+	                    {
+	                        Properties p = new Properties();
+	                        p.load( rxtx_prop);
+	                        if (debug)
+	                            System.out.println( "Found properties file gnu.io.rxtx.properties: " + p);
+//	                        System.setProperties( p);
+	                        for ( Iterator it = p.keySet().iterator(); it.hasNext(); )
+	                        {
+	                            String key = (String) it.next();
+	                            System.setProperty( key, p.getProperty( key));
+	                        }
+	                    }
+	                    finally
+	                    {
+	                        rxtx_prop.close();
+	                    }
+	                }
+	                catch ( Exception e )
+	                {
+	                    if ( debug )
+	                    {
+	                        e.printStackTrace();
+	                        System.err.println( "file doesn't exists: " + file);
+	                    } // end if
+	                } // end catch
+	            }
+	            else
+	            {
+	                if (debug)
+	                    System.out.println( "File no found: " + file);
+	            }
 
-		     String ext_dir=System.getProperty("java.ext.dirs")+System.getProperty("file.separator");
-		     FileInputStream rxtx_prop=new FileInputStream(ext_dir+"gnu.io.rxtx.properties");
-		     Properties p=new Properties();
-		     p.load(rxtx_prop);
-		     System.setProperties(p);
-		     for (Iterator it = p.keySet().iterator(); it.hasNext();) {
-		          String key = (String) it.next();
-		          System.setProperty(key, p.getProperty(key));
-		     }
-		    }catch(Exception e){
-			if (debug){
-			    System.out.println("The file: gnu.io.rxtx.properties doesn't exists.");
-			    System.out.println(e.toString());
-			    }//end if
-			}//end catch
+	            if (debug)
+	                System.out.println("checking for specified ports of type "+PortType);
 
-		if (debug)
-			System.out.println("checking for system-known ports of type "+PortType);
-		if (debug)
-			System.out.println("checking registry for ports of type "+PortType);
+	            switch (PortType) {
+	                case CommPortIdentifier.PORT_SERIAL:
+	                    if ((val = System.getProperty("gnu.io.rxtx.SerialPorts")) == null)
+	                    val = System.getProperty("gnu.io.SerialPorts");
+	                    break;
 
-		switch (PortType) {
-			case CommPortIdentifier.PORT_SERIAL:
-				if ((val = System.getProperty("gnu.io.rxtx.SerialPorts")) == null)
-				val = System.getProperty("gnu.io.SerialPorts");
-				break;
+	                case CommPortIdentifier.PORT_PARALLEL:
+	                    if ((val = System.getProperty("gnu.io.rxtx.ParallelPorts")) == null)
+	                    val = System.getProperty("gnu.io.ParallelPorts");
+	                    break;
+	                default:
+	                    if (debug)
+	                    System.out.println("unknown port type "+PortType+" passed to RXTXCommDriver.registerSpecifiedPorts()");
+	            }
+	            
+	        }
+        }
+        finally
+        {
+            System.setProperties(origp); //recall saved properties
+        }
 
-			case CommPortIdentifier.PORT_PARALLEL:
-				if ((val = System.getProperty("gnu.io.rxtx.ParallelPorts")) == null)
-				val = System.getProperty("gnu.io.ParallelPorts");
-				break;
-			default:
-				if (debug)
-				System.out.println("unknown port type "+PortType+" passed to RXTXCommDriver.registerSpecifiedPorts()");
-		}
-
-		System.setProperties(origp); //recall saved properties
 		if (val != null) {
 			addSpecifiedPorts(val, PortType);
 			return true;
-		} else {
-			return false;
-		}
+		} 
+		
+		return false;
 	}
+	
 	private int getScannedBufferSize(){
 		
 		return 40960;
@@ -912,7 +979,8 @@ public class RXTXCommDriver implements CommDriver
 	*  using the CommPortIdentifier.addPortName() method. getCommPort()
 	*  returns an object that extends either SerialPort or ParallelPort.
 	*/
-	public CommPort getCommPort( String PortName, int PortType )
+	@Override
+    public CommPort getCommPort( String PortName, int PortType )
 	{
 		if (debug) System.out.println("RXTXCommDriver:getCommPort("
 			+PortName+","+PortType+")");
