@@ -114,3 +114,59 @@ provides pointers for getting the appropriate SDK installed.
     outs.write(b);
 
     serial.disconnect();
+
+# Recognized system environment variables
+## libNRJavaSerial.userlib:
+Rules the loading of the native library.
+    if set to 'sys': 
+	    library is loaded by 
+		    System.loadLibrary("libNRJavaSerial")
+	if set to any value 'xyz':	 
+	    library is loaded by 
+		    System.load("xyz")
+	if not set at all
+	    library is loaded in different try..error attempts. See implementation of NativeResource.java
+		
+## gnu.io.rxtx.SerialPorts
+## gnu.io.SerialPorts
+Rules the behaviour of recognizing known ports.
+    Syntax (windows):
+	    gnu.io.SerialPorts=COM1;COM2
+    Syntax (linux):
+	    gnu.io.SerialPorts=/dev/ttyS0:/dev/ttyS1
+		
+	if not set:
+	    ports are scanned by using well known port identifiers (OS dependant)
+	if set 
+		only indicated ports are added as known ports.
+		
+## gnu.io.log.mode		 
+defines the destination of the debug outputs of the RxTx library
+    possible values:
+		PRINT_MODE    -> output on console
+		FILE_MODE     -> writes to a file "./asdf"
+		SILENT_MODE   -> no logging (regardless of the various debug settings)
+		J2SE_LOG_MODE -> logs to java.util.logging.Logger
+	Default (if not set) is SILENT_MODE
+	
+## gnu.io.log.debug
+## gnu.io.log.devel
+## gnu.io.log.debug_read
+## gnu.io.log.debug_read_results_0
+## gnu.io.log.debug_read_results_not_0
+## gnu.io.log.debug_write
+## gnu.io.log.debug_events
+## gnu.io.log.debug_verbose
+Enables or disables the log output of different categories of actions
+    if set to 'true': 
+	    the log of this action category is enabled
+	all other values, or not set at all:
+	    the log of this action category is disabled
+
+## gnu.io.rxtx.NoVersionOutput
+    if set to 'true':
+	    no version information is printed to console at all (although gnu.io.log.devel might be true)
+    if not set:
+		printing of version information depends on the value of gnu.io.log.devel
+
+	
