@@ -75,10 +75,6 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 
-import com.sun.jna.platform.win32.Advapi32Util;
-import com.sun.jna.platform.win32.Win32Exception;
-import com.sun.jna.platform.win32.WinReg;
-
 /**
    This is the JavaComm for Linux driver.
 */
@@ -536,31 +532,36 @@ public class RXTXCommDriver implements CommDriver
 		
 		if(osName.toLowerCase().indexOf("windows") != -1 )
 		{
-			// on windows, we try to get the serial port list from the registry
-			try {
-				String[] temp = windowsGetSerialPortsFromRegistry();
-				CandidateDeviceNames=temp;
-				performTestRead = false; // disable the testRead to simply add the port to the CommPortIdentifier index
+			boolean useFallback = false;
+			String[] temp = new String[0];
+			if (isClassPresent("com.sun.jna.platform.win32.Advapi32Util")) {
+				// on windows, we try to get the serial port list from the registry
+				try {
+					temp = windowsGetSerialPortsFromRegistry();
+					performTestRead = false; // disable the testRead to simply add the port to the CommPortIdentifier index
+					useFallback = false;
+				}
+				catch (Throwable ex) {
+					if (debug)
+						System.err.println("Error reading the registry to get port list " + ex.getMessage());
+					useFallback = true;
+				}
 			}
-			catch (Win32Exception ex) {
-				// if something goes wrong, fallback to full scan
-				if (debug)
-					System.err.println("Error reading the registry to get port list " + ex.getMessage());
-				
-				String[] temp = new String[getScannedBufferSize()+3];
-				for( int i = 1; i <= getScannedBufferSize(); i++ )
-				{
+
+			// if something goes wrong, fallback to full scan
+			if (useFallback) {
+				temp = new String[getScannedBufferSize() + 3];
+				for (int i = 1; i <= getScannedBufferSize(); i++) {
 					temp[i - 1] = "COM" + i;
 				}
-				for( int i = 1; i <= 3; i++ )
-				{
-					temp[i + getScannedBufferSize()-1] = "LPT" + i;
+				for (int i = 1; i <= 3; i++) {
+					temp[i + getScannedBufferSize() - 1] = "LPT" + i;
 				}
-				CandidateDeviceNames=temp;
 			}
-			}
-			else if ( osName.equals("Solaris") || osName.equals("SunOS"))
-			{
+			CandidateDeviceNames = temp;
+		}
+		else if ( osName.equals("Solaris") || osName.equals("SunOS"))
+		{
 			/* Solaris uses a few different ways to identify ports.
 			   They could be /dev/term/a /dev/term0 /dev/cua/a /dev/cuaa
 			   the /dev/???/a appears to be on more systems.
@@ -926,21 +927,36 @@ public class RXTXCommDriver implements CommDriver
 		}
 		registerValidPorts(CandidateDeviceNames, CandidatePortPrefixes, PortType, performTestRead);
 	}
-
+	
 	/**
-	 * @return an array contaning the serial ports, taken from registry HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP\SERIALCOMM
-	 * @throws Win32Exception in case something goes wrong with the registry
+	 * @return an array containing the serial ports, taken from registry HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP\SERIALCOMM
+	 * @throws Exception in case something goes wrong with the registry
 	 */
-	private String[] windowsGetSerialPortsFromRegistry() throws Win32Exception {
-		TreeMap<String, Object> map = Advapi32Util.registryGetValues(WinReg.HKEY_LOCAL_MACHINE, "HARDWARE\\DEVICEMAP\\SERIALCOMM");
+	private String[] windowsGetSerialPortsFromRegistry() throws Exception {
+		final TreeMap<String, Object> map = com.sun.jna.platform.win32.Advapi32Util.registryGetValues(com.sun.jna.platform.win32.WinReg.HKEY_LOCAL_MACHINE, "HARDWARE\\DEVICEMAP\\SERIALCOMM");
 		
-		List<String> ports = new ArrayList<String>(map.size());
+		final List<String> ports = new ArrayList<String>(map.size());
 		for (Object p : map.values()) {
 			if (p != null && p.toString().startsWith("COM"))
 				ports.add(p.toString());
 		}
-		
+
 		return ports.toArray(new String[0]);
+	}
+
+	/**
+	 * Function to test if a given class is currently present
+	 * @param className The desired class name
+	 * @return true, if class found, false otherwise
+	 */
+	private static boolean isClassPresent(final String className) {
+	    try {
+	        Class.forName(className);
+	        return true;
+	    } catch (Throwable ex) {
+	        // Class or one of its dependencies is not present...
+	        return false;
+	    }
 	}
 	
 	/*
