@@ -76,7 +76,7 @@ task sourcesJar(type: Jar) {
 		exclude 'native/'
 	}
 }
-
+/*
 signing {
 	required {
 		gradle.taskGraph.hasTask("uploadArchives")
@@ -155,3 +155,4 @@ uploadArchives {
 		}
 	}
 }
+*/
