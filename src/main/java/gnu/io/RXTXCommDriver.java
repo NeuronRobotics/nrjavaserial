@@ -532,7 +532,7 @@ public class RXTXCommDriver implements CommDriver
 		
 		if(osName.toLowerCase().indexOf("windows") != -1 )
 		{
-			boolean useFallback = false;
+			boolean useFallback = true;
 			String[] temp = new String[0];
 			if (isClassPresent("com.sun.jna.platform.win32.Advapi32Util")) {
 				// on windows, we try to get the serial port list from the registry
@@ -543,8 +543,7 @@ public class RXTXCommDriver implements CommDriver
 				}
 				catch (Throwable ex) {
 					if (debug)
-						System.err.println("Error reading the registry to get port list " + ex.getMessage());
-					useFallback = true;
+						System.err.println("Error reading the registry to get port list " + ex.getMessage());					
 				}
 			}
 
