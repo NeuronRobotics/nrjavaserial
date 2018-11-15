@@ -1,7 +1,7 @@
 #
 # This Makefile aims to support as many native library compilations as possible
 # on a Ubuntu amd64 system.
-# 
+#
 # Ubuntu may or may not be your favourite Linux distribution. But it provides the best
 # cross compilation support of all the major distributions.
 #
@@ -14,7 +14,7 @@
 # g++-mingw-w64
 #
 
-JDKINCLUDE=-I/usr/lib/jvm/java-7-openjdk-amd64/include/ -I/usr/lib/jvm/java-7-openjdk-i386/include/ -I"./include" -I"./include/target" -I/usr/lib/jvm/java-6-openjdk-amd64/include/ -I/usr/lib/jvm/java-6-openjdk-armhf/include/ -I/usr/lib/jvm/java-6-openjdk-arm/include/ -I/usr/lib/jvm/java-6-openjdk-i386/include/ -I/etc/alternatives/java_sdk/include -I/etc/alternatives/java_sdk/include/linux
+JDKINCLUDE=-I/usr/lib/jvm/java-8-openjdk-amd64/include/ -I/usr/lib/jvm/java-8-openjdk-amd64/include/linux/ -I/usr/lib/jvm/java-7-openjdk-amd64/include/ -I/usr/lib/jvm/java-7-openjdk-i386/include/ -I"./include" -I"./include/target" -I/usr/lib/jvm/java-6-openjdk-amd64/include/ -I/usr/lib/jvm/java-6-openjdk-armhf/include/ -I/usr/lib/jvm/java-6-openjdk-arm/include/ -I/usr/lib/jvm/java-6-openjdk-i386/include/ -I/etc/alternatives/java_sdk/include -I/etc/alternatives/java_sdk/include/linux
 
 LINOBJ=fixup.o fuserImp.o SerialImp.o
 
@@ -45,7 +45,7 @@ LINKWIN64N = x86_64-w64-mingw32-g++-win32 -static-libgcc -static-libstdc++ -Wl,-
 
 all:
 	echo "Specify a system: make linux, make windows, make osx"
-	
+
 
 # Linux (x86[_64] and ARM)
 
@@ -79,17 +79,41 @@ build/linux64/%.o: src/%.c
 	$(CCLIN64) -o $@ $<
 
 # (Linux) ARM
-	
-.PHONY: arm arm7 arm7HF arm6 arm6HF arm5
 
-arm: arm7 arm7HF arm6 arm6HF arm5
+.PHONY: arm arm8 arm8HF arm7 arm7HF arm6 arm6HF arm5
+
+arm: arm8 arm8HF arm7 arm7HF arm6 arm6HF arm5
 	@echo all ARM ok!
+
+# ARM v8
+
+arm8: resources/native/linux/ARM/libNRJavaSerialv8.so
+
+resources/native/linux/ARM/libNRJavaSerialv8.so: $(LINOBJ:%=build/arm8/%)
+	@mkdir -p `dirname $@`
+	$(LINKLINARM) -march=armv8-a -o $@ $^
+
+build/arm8/%.o: src/%.c
+	@mkdir -p `dirname $@`
+	$(CCLINARM) -march=armv8-a -o $@ $<
+
+# ARM v8 HF
+
+arm8HF: resources/native/linux/ARM/libNRJavaSerialv8_HF.so
+
+resources/native/linux/ARM/libNRJavaSerialv8_HF.so: $(LINOBJ:%=build/arm8HF/%)
+	@mkdir -p `dirname $@`
+	$(LINKLINARM_HF) -march=armv8-a -o $@ $^
+
+build/arm8HF/%.o: src/%.c
+	@mkdir -p `dirname $@`
+	$(CCLINARM_HF) -march=armv8-a -o $@ $<
 
 # ARM v7
 
-arm7: resources/native/linux/ARM/libNRJavaSerial.so
+arm7: resources/native/linux/ARM/libNRJavaSerialv7.so
 
-resources/native/linux/ARM/libNRJavaSerial.so: $(LINOBJ:%=build/arm7/%)
+resources/native/linux/ARM/libNRJavaSerialv7.so: $(LINOBJ:%=build/arm7/%)
 	@mkdir -p `dirname $@`
 	$(LINKLINARM) -march=armv7-a -o $@ $^ -llockdev
 
@@ -99,9 +123,9 @@ build/arm7/%.o: src/%.c
 
 # ARM v7 HF
 
-arm7HF: resources/native/linux/ARM/libNRJavaSerial_HF.so
+arm7HF: resources/native/linux/ARM/libNRJavaSerialv7_HF.so
 
-resources/native/linux/ARM/libNRJavaSerial_HF.so: $(LINOBJ:%=build/arm7HF/%)
+resources/native/linux/ARM/libNRJavaSerialv7_HF.so: $(LINOBJ:%=build/arm7HF/%)
 	@mkdir -p `dirname $@`
 	$(LINKLINARM_HF) -march=armv7-a -o $@ $^ -llockdev
 
@@ -109,8 +133,8 @@ build/arm7HF/%.o: src/%.c
 	@mkdir -p `dirname $@`
 	$(CCLINARM_HF) -march=armv7-a -o $@ $<
 
-# ARM v6	
-	
+# ARM v6
+
 arm6: resources/native/linux/ARM/libNRJavaSerialv6.so
 
 resources/native/linux/ARM/libNRJavaSerialv6.so: $(LINOBJ:%=build/arm6/%)
@@ -173,11 +197,11 @@ build/win64/%.o: src/%.c
 	@mkdir -p `dirname $@`
 	$(CCWIN64N) -o $@ $<
 
-		
+
 # Miscellaneous
 
 .PHONY: clean
 
 clean:
 	rm -rf build/
-	
+
