@@ -71,7 +71,7 @@ Native code is built using the Makefile found in the root of the repository.
 After the native code is built, the JAR is rebuilt.
 
     # Build both the 32- and 64-bit Windows binaries.
-    $ make windows
+    $ mingw32-make windows
 
     # Build the windows binaries on Linux via Wine.
     $ make wine

@@ -2,7 +2,7 @@ all:
 	echo "Please specify a system: windows wine linux osx"
 	gradle build
 windows:
-	make -C .\src\main\c windowsLocal
+	mingw32-make -C .\src\main\c windowsLocal
 	gradle build
 wine:
 	make -C src/main/c windows
