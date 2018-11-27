@@ -5075,9 +5075,9 @@ size_t get_java_var( JNIEnv *env, jobject jobj, char *id, char *type ) {
   return (size_t) get_java_var_long( env, jobj, id, type );
 }
 
-long get_java_var_long( JNIEnv *env, jobject jobj, char *id, char *type )
+size_t get_java_var_long( JNIEnv *env, jobject jobj, char *id, char *type )
 {
-	long result = 0;
+	size_t result = 0;
 	jclass jclazz = (*env)->GetObjectClass( env, jobj );
 	jfieldID jfd = (*env)->GetFieldID( env, jclazz, id, type );
 
@@ -5092,7 +5092,7 @@ long get_java_var_long( JNIEnv *env, jobject jobj, char *id, char *type )
 		return result;
 	}
 	if ( !strcmp( type, "J" ) ) {
-	  result = (long)( (*env)->GetLongField( env, jobj, jfd ) );
+	  result = (size_t)( (*env)->GetLongField( env, jobj, jfd ) );
 	} else {
 	  result = (size_t) ( (*env)->GetIntField( env, jobj, jfd ) );
 	}
