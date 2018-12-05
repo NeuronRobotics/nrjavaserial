@@ -98,7 +98,8 @@ After the native code is built, the JAR is rebuilt.
 You'll need some installation of GCC. We recommend the
 [TDM-GCC](http://tdm-gcc.tdragon.net/) distribution of mingw64-w64.
 To get the build working you need both mingw32, and ming64 installed in separate directories.
-Please modify JDKDIR to your installation of jdk.
+Please modify JDKDIR to your installation of JDK.
+
 
 ## Building on OS X
 
