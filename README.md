@@ -100,6 +100,7 @@ You'll need some installation of GCC. We recommend the
 To get the build working you need both mingw32, and ming64 installed in separate directories.
 Please modify JDKDIR to your installation of JDK.
 
+
 ## Building on OS X
 
 We're pretty big on maintaining backwards compatibility as far as reasonable.
