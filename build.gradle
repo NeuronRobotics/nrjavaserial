@@ -32,10 +32,6 @@ sourceSets {
 
 jar.archiveName = "nrjavaserial-${props.'app.version'}.jar"
 
-task wrapper(type: Wrapper, description: 'Creates and deploys the Gradle wrapper to the current directory.') {
-	gradleVersion = '3.5'
-}
-
 repositories {
 	mavenCentral()
 	jcenter()
