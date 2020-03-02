@@ -106,9 +106,11 @@ SDK installed. [This StackOverflow answer](http://stackoverflow.com/a/6293605)
 provides pointers for getting the appropriate SDK installed.
 
 # How to use NRSerialPort objects
+```
+    import gnu.io.NRSerialPort
     for(String s:NRSerialPort.getAvailableSerialPorts()){
-			System.out.println("Availible port: "+s);
-		}
+	System.out.println("Availible port: "+s);
+    }
     String port = "COM3";
     int baudRate = 115200;
     NRSerialPort serial = new NRSerialPort(port, baudRate);
@@ -121,3 +123,4 @@ provides pointers for getting the appropriate SDK installed.
     outs.write(b);
 
     serial.disconnect();
+```
