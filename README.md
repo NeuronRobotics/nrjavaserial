@@ -44,14 +44,22 @@ ease of use and embeddability in other libraries.
 
 # Dependency Management
 
-## Maven
-
+## Maven Java 8
+```
 	<dependency>
 	  <groupId>com.neuronrobotics</groupId>
 	  <artifactId>nrjavaserial</artifactId>
-	  <version>3.15.0</version>
+	  <version>3.16.0</version>
 	</dependency>
-
+```
+## Maven Java 11+
+```
+	<dependency>
+	  <groupId>com.neuronrobotics</groupId>
+	  <artifactId>nrjavaserial</artifactId>
+	  <version>4.0.0</version>
+	</dependency>
+```	
 # Building the JAR
 
 1. Checkout the repository.
@@ -71,7 +79,7 @@ Native code is built using the Makefile found in the root of the repository.
 After the native code is built, the JAR is rebuilt.
 
     # Build both the 32- and 64-bit Windows binaries.
-    $ make windows
+    $ mingw32-make windows
 
     # Build the windows binaries on Linux via Wine.
     $ make wine
@@ -109,9 +117,11 @@ SDK installed. [This StackOverflow answer](http://stackoverflow.com/a/6293605)
 provides pointers for getting the appropriate SDK installed.
 
 # How to use NRSerialPort objects
+```
+    import gnu.io.NRSerialPort
     for(String s:NRSerialPort.getAvailableSerialPorts()){
-			System.out.println("Availible port: "+s);
-		}
+	System.out.println("Availible port: "+s);
+    }
     String port = "COM3";
     int baudRate = 115200;
     NRSerialPort serial = new NRSerialPort(port, baudRate);
@@ -124,3 +134,4 @@ provides pointers for getting the appropriate SDK installed.
     outs.write(b);
 
     serial.disconnect();
+```

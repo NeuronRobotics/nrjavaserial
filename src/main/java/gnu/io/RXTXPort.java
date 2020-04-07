@@ -128,6 +128,7 @@ public class RXTXPort extends SerialPort
 
 			MonitorThreadLock = true;
 			monThread = new MonitorThread();
+			monThread.setName("RXTXPortMonitor("+name+")");
 			monThread.start();
 			waitForTheNativeCodeSilly();
 			MonitorThreadAlive=true;
@@ -821,6 +822,7 @@ public class RXTXPort extends SerialPort
 		{
 			MonitorThreadLock = true;
 			monThread = new MonitorThread();
+			monThread.setName("RXTXPortMonitor("+name+")");
 			monThread.start();
 			waitForTheNativeCodeSilly();
 			MonitorThreadAlive=true;
@@ -1092,13 +1094,15 @@ public class RXTXPort extends SerialPort
                                 z.reportln( "RXTXPort:close( " + this.name + " ) leaving"); 
                 } catch( InterruptedException ie ) {
                         // somebody called interrupt() on us
-                        // we obbey and return without without closing the socket
+                        // we obey and return without closing the socket
                         Thread.currentThread().interrupt();
                         return;
                 }
                 finally
                 {
-                    IOLockedMutex.writeLock().unlock();
+                    if (IOLockedMutex.writeLock().isHeldByCurrentThread()) {
+                        IOLockedMutex.writeLock().unlock();
+                    }
                 }
 
 	}

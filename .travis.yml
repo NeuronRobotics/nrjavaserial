@@ -1,3 +1,5 @@
+dist: trusty
+
 # Travis CI build matrix.  Each entry below will trigger an extra, parallel build on Travis.
 matrix:
   include:
@@ -8,3 +10,5 @@ matrix:
     # Override ./gradlew and use gradle instead to overcome errors
     install: gradle assemble
     script: gradle check
+
+
