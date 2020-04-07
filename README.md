@@ -57,7 +57,7 @@ ease of use and embeddability in other libraries.
 	<dependency>
 	  <groupId>com.neuronrobotics</groupId>
 	  <artifactId>nrjavaserial</artifactId>
-	  <version>4.0.0</version>
+	  <version>4.0.1</version>
 	</dependency>
 ```	
 # Building the JAR
