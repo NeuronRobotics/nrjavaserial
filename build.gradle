@@ -111,7 +111,6 @@ uploadArchives {
 		mavenDeployer {
 			beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
-<<<<<<< HEAD
 		repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
 		  authentication(userName: ossrhUsername, password: ossrhPassword)
 		}
@@ -119,16 +118,7 @@ uploadArchives {
 		snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
 		  authentication(userName: ossrhUsername, password: ossrhPassword)
 		}
-  
-=======
-			repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-				authentication(userName:ossrhUsername, password:ossrhPassword)
-			}
 
-			snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-				authentication(userName: ossrhUsername, password: ossrhPassword)
-			}
->>>>>>> branch 'master' of git@github.com:NeuronRobotics/nrjavaserial.git
 
 			pom.project {
 				name 'NRJavaSerial'
