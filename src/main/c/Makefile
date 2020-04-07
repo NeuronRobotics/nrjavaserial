@@ -4,6 +4,8 @@
 # See https://stackoverflow.com/questions/5378518/ for installation help.
 OSXSDKPREFIX = /Developer/SDKs/MacOSX10.5.sdk
 
+JDKLOCATION=$(HOME)/bin/java8
+
 OSXJAVAINCLUDE1 = -I/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Headers
 OSXJAVAINCLUDE2 = -I$(OSXSDKPREFIX)/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers
 OSXJAVAINCLUDE4 = -I$(OSXSDKPREFIX)/usr/include
@@ -17,21 +19,21 @@ LINKOSX=cc $(OSXARCH) -dynamiclib -framework JavaVM -framework IOKit -framework 
 
 
 LINOBJ=build/fixup.o build/fuserImp.o build/SerialImp.o
-LININCLUDE=-I/usr/lib/jvm/java-8-openjdk-amd64/include/ -I/usr/lib/jvm/java-8-openjdk-amd64/include/linux/ -I/usr/lib/jvm/java-7-openjdk-amd64/include/ -I/usr/lib/jvm/java-7-openjdk-i386/include/ -I"./include" -I"./include/target" -I/usr/lib/jvm/java-6-openjdk-amd64/include/ -I/usr/lib/jvm/java-6-openjdk-armhf/include/ -I/usr/lib/jvm/java-6-openjdk-arm/include/ -I/usr/lib/jvm/java-6-openjdk-i386/include/ -I/etc/alternatives/java_sdk/include -I/etc/alternatives/java_sdk/include/linux -I/usr/lib/jvm/default-java/include -I/usr/lib/jvm/default-java/include/linux
+LININCLUDE=    -I"./include" -I"./include/target" -I$(JDKLOCATION)/include -I$(JDKLOCATION)/include/linux
 
-CCLIN32=gcc $(LININCLUDE) -DLIBLOCKDEV -O3 -Wall -c -fmessage-length=0 -fPIC -m32 -MMD
+CCLIN32=gcc $(LININCLUDE)  -O3 -Wall -c -fmessage-length=0 -fPIC -m32 -MMD
 LINKLIN32=g++ -m32 -shared -Lcross-compile-libs/x86_32
 
-CCLIN64=gcc $(LININCLUDE) -DLIBLOCKDEV -O3 -Wall -c -fmessage-length=0 -fPIC -m64 -MMD
+CCLIN64=gcc $(LININCLUDE)  -O3 -Wall -c -fmessage-length=0 -fPIC -m64 -MMD
 LINKLIN64=g++ -m64 -shared
 
-CCLINARM32=arm-linux-gnueabi-gcc $(LININCLUDE) -DLIBLOCKDEV -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MP
+CCLINARM32=arm-linux-gnueabi-gcc $(LININCLUDE)  -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MP
 LINKLINARM32=arm-linux-gnueabi-g++ -shared -fPIC -nostdlib -Lcross-compile-libs/ARM_32
 
-CCLINARM32_HF=arm-linux-gnueabihf-gcc $(LININCLUDE) -DLIBLOCKDEV -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MP
+CCLINARM32_HF=arm-linux-gnueabihf-gcc $(LININCLUDE)  -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MP
 LINKLINARM32_HF=arm-linux-gnueabihf-g++ -shared -fPIC -nostdlib -Lcross-compile-libs/ARM_32
 
-CCLINARM64=aarch64-linux-gnu-gcc $(LININCLUDE) -DLIBLOCKDEV -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MP
+CCLINARM64=aarch64-linux-gnu-gcc $(LININCLUDE)  -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MP
 LINKLINARM64=aarch64-linux-gnu-g++ -shared -fPIC -nostdlib -Lcross-compile-libs/ARM_64
 
 CCLINANDROID=/home/opt/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/arm-linux-androideabi/bin/gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MMD -MP
@@ -122,7 +124,7 @@ windowsLocal:
 
 
 windows:dirs
-	export WINEPREFIX=/home/hephaestus/.wine/
+	export WINEPREFIX=$(HOME)/.wine/
 	$(CCWIN32) src/windows/init.c -o build/init.o
 	$(CCWIN32) src/windows/termios.c -o build/termios.o
 	$(CCWIN32) src/fixup.c -o build/fixup.o
@@ -142,18 +144,18 @@ windows:dirs
 linux:linux32 linux64 arm ppc
 	echo all Linux ok!
 linux32:dirs
-	$(CCLIN32) src/fixup.c -o build/fixup.o
-	$(CCLIN32) src/fuserImp.c -o build/fuserImp.o
-	$(CCLIN32) src/SerialImp.c -o build/SerialImp.o
+	$(CCLIN32) -m32 src/fixup.c -o build/fixup.o
+	$(CCLIN32) -m32  src/fuserImp.c -o build/fuserImp.o
+	$(CCLIN32) -m32  src/SerialImp.c -o build/SerialImp.o
 	#rm "resources/native/linux/x86_32/libNRJavaSerial.so"
-	$(LINKLIN32) -o"resources/native/linux/x86_32/libNRJavaSerial.so" $(LINOBJ) -llockdev
+	$(LINKLIN32) -o"resources/native/linux/x86_32/libNRJavaSerial.so" $(LINOBJ) 
 	rm build/*
 linux64:dirs
 	$(CCLIN64) src/fixup.c -o build/fixup.o
 	$(CCLIN64) src/fuserImp.c -o build/fuserImp.o
 	$(CCLIN64) src/SerialImp.c -o build/SerialImp.o
 	#rm "resources/native/linux/x86_64/libNRJavaSerial.so"
-	$(LINKLIN64) -o"resources/native/linux/x86_64/libNRJavaSerial.so" $(LINOBJ) -llockdev
+	$(LINKLIN64) -o"resources/native/linux/x86_64/libNRJavaSerial.so" $(LINOBJ) 
 	rm build/*
 freebsd:freebsd32 freebsd64
 	echo all FreeBSD ok!
@@ -188,56 +190,56 @@ arm64v8:dirs
 	$(CCLINARM64) -march=armv8-a src/fixup.c -o build/fixup.o
 	$(CCLINARM64) -march=armv8-a src/fuserImp.c -o build/fuserImp.o
 	$(CCLINARM64) -march=armv8-a src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM64) -march=armv8-a -o"resources/native/linux/ARM_64/libNRJavaSerialv8.so" $(LINOBJ) -llockdev
+	$(LINKLINARM64) -march=armv8-a -o"resources/native/linux/ARM_64/libNRJavaSerialv8.so" $(LINOBJ) 
 	rm build/*
 
 arm32v8:dirs
 	$(CCLINARM32) -march=armv8-a src/fixup.c -o build/fixup.o
 	$(CCLINARM32) -march=armv8-a src/fuserImp.c -o build/fuserImp.o
 	$(CCLINARM32) -march=armv8-a src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM32) -march=armv8-a -o"resources/native/linux/ARM_32/libNRJavaSerialv8.so" $(LINOBJ) -llockdev
+	$(LINKLINARM32) -march=armv8-a -o"resources/native/linux/ARM_32/libNRJavaSerialv8.so" $(LINOBJ) 
 	rm build/*
 
 arm32v8HF:dirs
 	$(CCLINARM32_HF) -march=armv8-a src/fixup.c -o build/fixup.o
 	$(CCLINARM32_HF) -march=armv8-a src/fuserImp.c -o build/fuserImp.o
 	$(CCLINARM32_HF) -march=armv8-a src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM32_HF) -march=armv8-a -o"resources/native/linux/ARM_32/libNRJavaSerialv8_HF.so" $(LINOBJ) -llockdev
+	$(LINKLINARM32_HF) -march=armv8-a -o"resources/native/linux/ARM_32/libNRJavaSerialv8_HF.so" $(LINOBJ) 
 	rm build/*
 
 arm32v7:dirs
 	$(CCLINARM32) -march=armv7-a src/fixup.c -o build/fixup.o
 	$(CCLINARM32) -march=armv7-a src/fuserImp.c -o build/fuserImp.o
 	$(CCLINARM32) -march=armv7-a src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM32) -march=armv7-a -o"resources/native/linux/ARM_32/libNRJavaSerialv7.so" $(LINOBJ) -llockdev
+	$(LINKLINARM32) -march=armv7-a -o"resources/native/linux/ARM_32/libNRJavaSerialv7.so" $(LINOBJ) 
 	rm build/*
 
 arm32v7HF:dirs
 	$(CCLINARM32_HF) -march=armv7-a src/fixup.c -o build/fixup.o
 	$(CCLINARM32_HF) -march=armv7-a src/fuserImp.c -o build/fuserImp.o
 	$(CCLINARM32_HF) -march=armv7-a src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM32_HF) -march=armv7-a -o"resources/native/linux/ARM_32/libNRJavaSerialv7_HF.so" $(LINOBJ) -llockdev
+	$(LINKLINARM32_HF) -march=armv7-a -o"resources/native/linux/ARM_32/libNRJavaSerialv7_HF.so" $(LINOBJ) 
 	rm build/*
 
 arm32v6:dirs
 	$(CCLINARM32) -march=armv6 src/fixup.c -o build/fixup.o
 	$(CCLINARM32) -march=armv6 src/fuserImp.c -o build/fuserImp.o
 	$(CCLINARM32) -march=armv6 src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM32) -march=armv6 -o"resources/native/linux/ARM_32/libNRJavaSerialv6.so" $(LINOBJ) -llockdev
+	$(LINKLINARM32) -march=armv6 -o"resources/native/linux/ARM_32/libNRJavaSerialv6.so" $(LINOBJ) 
 	rm build/*
 
 arm32v6HF:dirs
 	$(CCLINARM32_HF) -march=armv6 -mfpu=vfp -marm src/fixup.c -o build/fixup.o
 	$(CCLINARM32_HF) -march=armv6 -mfpu=vfp -marm src/fuserImp.c -o build/fuserImp.o
 	$(CCLINARM32_HF) -march=armv6 -mfpu=vfp -marm src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM32_HF) -march=armv6 -mfpu=vfp -marm -o"resources/native/linux/ARM_32/libNRJavaSerialv6_HF.so" $(LINOBJ) -llockdev
+	$(LINKLINARM32_HF) -march=armv6 -mfpu=vfp -marm -o"resources/native/linux/ARM_32/libNRJavaSerialv6_HF.so" $(LINOBJ) 
 	rm build/*
 
 arm32v5:dirs
 	$(CCLINARM32) -march=armv5t src/fixup.c -o build/fixup.o
 	$(CCLINARM32) -march=armv5t src/fuserImp.c -o build/fuserImp.o
 	$(CCLINARM32) -march=armv5t src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM32) -march=armv5t -o"resources/native/linux/ARM_32/libNRJavaSerialv5.so" $(LINOBJ) -llockdev
+	$(LINKLINARM32) -march=armv5t -o"resources/native/linux/ARM_32/libNRJavaSerialv5.so" $(LINOBJ) 
 	rm build/*
 
 ppc:dirs
