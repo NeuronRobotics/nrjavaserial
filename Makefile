@@ -26,11 +26,8 @@ freebsd64:
 	gmake -C src/main/c freebsd64
 	gradle build
 arm:
-	sudo apt-get install g++-arm-linux-gnueabihf g++-arm-linux-gnueabi
-	make -C src/main/c arm7
-	make -C src/main/c arm7HF
-	make -C src/main/c arm8
-	make -C src/main/c arm8HF
+	sudo apt-get install g++-arm-linux-gnueabihf g++-arm-linux-gnueabi g++-aarch64-linux-gnu
+	make -C src/main/c arm
 	gradle build
 ppc:
 	make -C src/main/c ppc
