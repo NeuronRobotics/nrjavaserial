@@ -1,5 +1,4 @@
 apply plugin: 'java'
-apply plugin: 'osgi'
 apply plugin: 'eclipse'
 apply plugin: 'maven'
 apply plugin: 'signing'
@@ -32,9 +31,6 @@ sourceSets {
 
 jar.archiveName = "nrjavaserial-${props.'app.version'}.jar"
 
-task wrapper(type: Wrapper, description: 'Creates and deploys the Gradle wrapper to the current directory.') {
-	gradleVersion = '3.5'
-}
 
 repositories {
 	mavenCentral()
@@ -61,7 +57,6 @@ jar {
 			"Implementation-Version" : props."app.version",
 			"Implementation-Vendor": "Neuron Robotics Cooperative",
 		)
-		instruction 'Import-Package', 'com.sun.jna.platform.win32;resolution:=optional,org.apache.commons.net.telnet;resolution:=optional,!gnu.io*,*'
 	}
 }
 
@@ -76,7 +71,7 @@ task sourcesJar(type: Jar) {
 		exclude 'native/'
 	}
 }
-/*
+
 signing {
 	required {
 		gradle.taskGraph.hasTask("uploadArchives")
@@ -155,4 +150,4 @@ uploadArchives {
 		}
 	}
 }
-*/
+
