@@ -8,12 +8,15 @@ wine:
 	make -C src/main/c windows
 	gradle build
 linux:
+	sudo apt-get install liblockdev1-dev
 	make -C src/main/c linux
 	gradle build
 linux32:
+	sudo apt-get install  liblockdev1-dev
 	make -C src/main/c linux32
 	gradle build
 linux64:
+	sudo apt-get install liblockdev1-dev
 	make -C src/main/c linux64
 	gradle build
 freebsd:
@@ -26,7 +29,7 @@ freebsd64:
 	gmake -C src/main/c freebsd64
 	gradle build
 arm:
-	sudo apt-get install g++-arm-linux-gnueabihf g++-arm-linux-gnueabi g++-aarch64-linux-gnu
+	sudo apt-get install g++-arm-linux-gnueabihf g++-arm-linux-gnueabi g++-aarch64-linux-gnu liblockdev1-dev
 	make -C src/main/c arm
 	gradle build
 ppc:
