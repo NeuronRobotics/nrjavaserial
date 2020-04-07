@@ -44,14 +44,22 @@ ease of use and embeddability in other libraries.
 
 # Dependency Management
 
-## Maven
-
+## Maven Java 8
+```
 	<dependency>
 	  <groupId>com.neuronrobotics</groupId>
 	  <artifactId>nrjavaserial</artifactId>
-	  <version>3.15.0</version>
+	  <version>3.16.0</version>
 	</dependency>
-
+```
+## Maven Java 11+
+```
+	<dependency>
+	  <groupId>com.neuronrobotics</groupId>
+	  <artifactId>nrjavaserial</artifactId>
+	  <version>4.0.0</version>
+	</dependency>
+```	
 # Building the JAR
 
 1. Checkout the repository.
