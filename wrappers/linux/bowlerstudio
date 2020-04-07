@@ -1,0 +1,10 @@
+#!/bin/bash
+
+NRDIR=/usr/share/bowlerstudio/
+JAR=BowlerStudio.jar
+
+if (test -d $NRDIR)then
+	java -jar $NRDIR$JAR "$@"
+else
+	zenity --error  --text="#ERROR: $JAR is not where i expect it to be, $NRDIR"
+fi

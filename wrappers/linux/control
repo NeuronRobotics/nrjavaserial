@@ -1,0 +1,13 @@
+Source: bowlerstudio
+Package: bowlerstudio
+Priority: extra
+Maintainer: Customer Support <mad.hephaestus@gmail.com>
+Architecture: all
+Version: BOWLERVERSION
+Depends: oracle-java8-set-default,libopencv2.4-java,libopencv2.4-jni,slic3r,jarwrapper,arduino
+Provides: bowlerstudio
+Conflicts: modemmanager,nr-rdk-java
+Replaces: modemmanager,nr-rdk-java
+Description: Robotics Development Engironment and runtime. 
+ A scripting platform for writing, designing, simulating 
+ and manufacturing robots.  
