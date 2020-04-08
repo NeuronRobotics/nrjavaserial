@@ -55,18 +55,17 @@ LINKBSD64=c++ -m64 -shared
 
 
 #Wine Windows
-WINLINKOPT = -shared -Wl,--add-stdcall-alias -DBUILD_DLL
-WINCCOPT = -O3 -Wall -DBUILD_DLL
-#JDKDIR = C:\Program Files\Java\jdk1.6.0_24\include
-JDKDIR = C:/jdk1.8.0_161/include
+WINLINKOPT = -shared  -Wl,--add-stdcall-alias -DBUILD_DLL
+WINCCOPT = -O3 -Wall -DBUILD_DLL -fPIC 
+JDKDIR = C:/jvm/include
 
-WININCLUDE32=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\MinGW\include" -I"$(JDKDIR)" -I"$(JDKDIR)\win32"
-CCWIN32 = wine "C:\MinGW\bin\gcc.exe" $(WININCLUDE32) -m32 $(WINCCOPT)
-LINKWIN32 =wine "C:\MinGW\bin\gcc.exe" $(WINLINKOPT)
+WININCLUDE32=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\TDM-GCC-64\include" -I"$(JDKDIR)" -I"$(JDKDIR)/win32"
+CCWIN32 = wine "C:\TDM-GCC-64\bin\gcc.exe" $(WININCLUDE32) -m32 $(WINCCOPT)
+LINKWIN32 =wine "C:\TDM-GCC-64\bin\gcc.exe" -m32  $(WINLINKOPT)
 
-WININCLUDE64=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\MinGW64\include" -I"$(JDKDIR)" -I"$(JDKDIR)\win32"
-CCWIN64 = wine "C:\MinGW64\bin\gcc.exe" $(WININCLUDE64) -m64 $(WINCCOPT)
-LINKWIN64 =wine "C:\MinGW64\bin\gcc.exe" $(WINLINKOPT)
+WININCLUDE64=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\TDM-GCC-64\include" -I"$(JDKDIR)" -I"$(JDKDIR)/win32"
+CCWIN64 = wine "C:\TDM-GCC-64\bin\gcc.exe" $(WININCLUDE64) -m64 $(WINCCOPT)
+LINKWIN64 =wine "C:\TDM-GCC-64\bin\gcc.exe" $(WINLINKOPT)
 
 
 
@@ -121,25 +120,29 @@ windowsLocal:
 	$(CCWIN32N) -c src/SerialImp.c -o build/SerialImp.o
 	$(LINKWIN32N) -o"resources/native/windows/x86_32/libNRJavaSerial.dll" build/SerialImp.o build/fuserImp.o build/fixup.o build/termios.o build/init.o
 
-
-
-windows:dirs
+windows:windows64 windows32
+	echo "Windows compile OK!"
+windows64:dirs
 	export WINEPREFIX=$(HOME)/.wine/
-	$(CCWIN32) src/windows/init.c -o build/init.o
-	$(CCWIN32) src/windows/termios.c -o build/termios.o
-	$(CCWIN32) src/fixup.c -o build/fixup.o
-	$(CCWIN32) src/fuserImp.c -o build/fuserImp.o
-	$(CCWIN32) src/SerialImp.c -o build/SerialImp.o
-	$(LINKWIN32) -o"resources/native/windows/x86_32/libNRJavaSerial.dll" build/SerialImp.o build/fuserImp.o build/fixup.o build/termios.o build/init.o
-	rm build/*
+	
+	$(CCWIN64) -c  src/windows/init.c -o build/init.o
+	$(CCWIN64)  -c src/windows/termios.c -o build/termios.o
+	$(CCWIN64)  -c src/fixup.c -o build/fixup.o
+	$(CCWIN64)  -c src/fuserImp.c -o build/fuserImp.o
+	$(CCWIN64)  -c src/SerialImp.c -o build/SerialImp.o
+	$(LINKWIN64) -o"resources/native/windows/x86_64/libNRJavaSerial.dll" build/SerialImp.o build/fuserImp.o build/fixup.o build/termios.o build/init.o
 
-	#$(CCWIN64) src/windows/init.c -o build/init.o
-	#$(CCWIN64) src/windows/termios.c -o build/termios.o
-	#$(CCWIN64) src/fixup.c -o build/fixup.o
-	#$(CCWIN64) src/fuserImp.c -o build/fuserImp.o
-	#$(CCWIN64) src/SerialImp.c -o build/SerialImp.o
-	#$(LINKWIN64) -o"resources/native/windows/x86_64/libNRJavaSerial.dll" build/SerialImp.o build/fuserImp.o build/fixup.o build/termios.o build/init.o
-	#rm build/*
+	rm build/*
+windows32:dirs
+	export WINEPREFIX=$(HOME)/.wine/
+	
+	$(CCWIN32)  -c src/windows/init.c -o build/init.o
+	$(CCWIN32)  -c src/windows/termios.c -o build/termios.o
+	$(CCWIN32)  -c src/fixup.c -o build/fixup.o
+	$(CCWIN32)  -c src/fuserImp.c -o build/fuserImp.o
+	$(CCWIN32)  -c src/SerialImp.c -o build/SerialImp.o
+	$(LINKWIN32) -o"resources/native/windows/x86_32/libNRJavaSerial.dll" build/SerialImp.o build/fuserImp.o build/fixup.o build/termios.o build/init.o
+
 	rm build/*
 linux:linux32 linux64 arm ppc
 	echo all Linux ok!
