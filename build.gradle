@@ -1,5 +1,4 @@
 apply plugin: 'java'
-apply plugin: 'osgi'
 apply plugin: 'eclipse'
 apply plugin: 'maven'
 apply plugin: 'signing'
@@ -49,16 +48,17 @@ jar {
 	jar.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 	manifest {
 		attributes(
-			"Created-By": "Neuron Robotics Cooperative",
+			"Created-By": "Commonwealth Robotics Cooperative",
 			"Specification-Title": props."app.name",
 			"Specification-Version": props."app.version",
-			"Specification-Vendor": "Neuron Robotics Cooperative",
+			"Specification-Vendor": "Commonwealth Robotics Cooperative",
 			"Implementation-Title": props."app.name",
 			"Implementation-Version" : props."app.version",
-			"Implementation-Vendor": "Neuron Robotics Cooperative",
+			"Implementation-Vendor": "Commonwealth Robotics Cooperative",
 		)
-		instruction 'Import-Package', 'com.sun.jna.platform.win32;resolution:=optional,org.apache.commons.net.telnet;resolution:=optional,!gnu.io*,*'
 	}
+	//bnd ( 'Import-Package': 'com.sun.jna.platform.win32;resolution:=optional,org.apache.commons.net.telnet;resolution:=optional,!gnu.io*,*')
+	
 }
 
 task javadocJar(type: Jar) {
