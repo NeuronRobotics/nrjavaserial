@@ -602,6 +602,48 @@ cf{get,set}{i,o}speed and shouldn't be provided or used.
 	(*env)->SetIntField(env, jobj, jfparity, ( jint ) jparity );
 }
 /*----------------------------------------------------------
+RXTXPort.controlRs485
+
+   accept:      fd of the preopened device,
+                boolean if the bus enable (RTS) is active low,
+                delay of RTS edge to first data edge (not supported by all serial drivers),
+                delay of RTS edge after end of transmission (not supported by all serial drivers)
+   perform:     set the rs485 config via ioctl
+   return:      return code of ioctl
+----------------------------------------------------------*/
+JNIEXPORT jint JNICALL RXTXPort(controlRs485)(
+        JNIEnv *env,
+        jobject jobj,
+        jint fd,
+        jboolean enable,
+        jboolean busEnableActiveLow,
+        jint delayRtsBeforeSendMs,
+        jint delayRtsAfterSendMs
+        )
+{
+#if defined(__linux__)
+    struct serial_rs485 rs485conf;
+    memset(&rs485conf, 0, sizeof(struct serial_rs485));
+
+    if(enable) {
+        rs485conf.flags |= SER_RS485_ENABLED;
+    }
+
+    if(busEnableActiveLow) {
+        rs485conf.flags |= SER_RS485_RTS_AFTER_SEND;
+    } else {
+        rs485conf.flags |= SER_RS485_RTS_ON_SEND;
+    }
+
+    rs485conf.delay_rts_before_send = delayRtsBeforeSendMs;
+    rs485conf.delay_rts_after_send = delayRtsAfterSendMs;
+
+    return ioctl (fd, TIOCSRS485, &rs485conf);
+#else
+    return -1;
+#endif
+}
+/*----------------------------------------------------------
 RXTXPort.open
 
    accept:      The device to open.  ie "/dev/ttyS0"
