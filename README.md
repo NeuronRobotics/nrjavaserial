@@ -106,6 +106,10 @@ After the native code is built, the JAR is rebuilt.
 You'll need some installation of GCC. We recommend the
 [TDM-GCC](http://tdm-gcc.tdragon.net/) distribution of mingw64-w64.
 
+Compile against Java
+
+https://cdn.azul.com/zulu/bin/zulu8.44.0.13-ca-fx-jdk8.0.242-win_x64.zip
+
 ## Building on OS X
 
 We're pretty big on maintaining backwards compatibility as far as reasonable.
