@@ -19,12 +19,12 @@ LINKOSX=cc $(OSXARCH) -dynamiclib -framework JavaVM -framework IOKit -framework 
 
 
 LINOBJ=build/fixup.o build/fuserImp.o build/SerialImp.o
-LININCLUDE=    -I"./include" -I"./include/target" -I$(JDKLOCATION)/include -I$(JDKLOCATION)/include/linux
+LININCLUDE=    -I./include -I./include/target -I$(JDKLOCATION)/include -I$(JDKLOCATION)/include/linux
 
-CCLIN32=gcc $(LININCLUDE)  -O3 -Wall -c -fmessage-length=0 -fPIC -m32 -MMD
-LINKLIN32=g++ -m32 -shared -Lcross-compile-libs/x86_32
+CCLIN32=gcc $(LININCLUDE) -I./include/ubuntu-multilib-fix  -O3 -Wall -fmessage-length=0 -fPIC -m32 -MMD
+LINKLIN32=gcc -m32 -shared 
 
-CCLIN64=gcc $(LININCLUDE)  -O3 -Wall -c -fmessage-length=0 -fPIC -m64 -MMD
+CCLIN64=gcc $(LININCLUDE)  -O3 -Wall -fmessage-length=0 -fPIC -m64 -MMD
 LINKLIN64=g++ -m64 -shared
 
 CCLINARM32=arm-linux-gnueabi-gcc $(LININCLUDE)  -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MP
@@ -144,19 +144,19 @@ windows32:dirs
 	$(LINKWIN32) -o"resources/native/windows/x86_32/libNRJavaSerial.dll" build/SerialImp.o build/fuserImp.o build/fixup.o build/termios.o build/init.o
 
 	rm build/*
-linux:linux32 linux64 arm ppc
+linux:linux32 linux64 arm 
 	echo all Linux ok!
 linux32:dirs
-	$(CCLIN32) -m32 src/fixup.c -o build/fixup.o
-	$(CCLIN32) -m32  src/fuserImp.c -o build/fuserImp.o
-	$(CCLIN32) -m32  src/SerialImp.c -o build/SerialImp.o
+	$(CCLIN32) -c  src/fixup.c -o build/fixup.o
+	$(CCLIN32) -c  src/fuserImp.c -o build/fuserImp.o
+	$(CCLIN32) -c src/SerialImp.c -o build/SerialImp.o
 	#rm "resources/native/linux/x86_32/libNRJavaSerial.so"
 	$(LINKLIN32) -o"resources/native/linux/x86_32/libNRJavaSerial.so" $(LINOBJ) 
 	rm build/*
 linux64:dirs
-	$(CCLIN64) src/fixup.c -o build/fixup.o
-	$(CCLIN64) src/fuserImp.c -o build/fuserImp.o
-	$(CCLIN64) src/SerialImp.c -o build/SerialImp.o
+	$(CCLIN64)  -c src/fixup.c -o build/fixup.o
+	$(CCLIN64)  -c src/fuserImp.c -o build/fuserImp.o
+	$(CCLIN64)  -c src/SerialImp.c -o build/SerialImp.o
 	#rm "resources/native/linux/x86_64/libNRJavaSerial.so"
 	$(LINKLIN64) -o"resources/native/linux/x86_64/libNRJavaSerial.so" $(LINOBJ) 
 	rm build/*
