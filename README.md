@@ -108,7 +108,7 @@ You'll need some installation of GCC. We recommend the
 
 Compile against Java
 
-https://www.azul.com/downloads/zulu/zulufx/ 
+https://cdn.azul.com/zulu/bin/zulu8.44.0.13-ca-fx-jdk8.0.242-win_x64.zip
 
 ## Building on OS X
 
