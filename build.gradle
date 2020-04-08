@@ -1,3 +1,7 @@
+plugins {
+  id "biz.aQute.bnd.builder" version "5.0.1"
+}
+
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'maven'
@@ -46,18 +50,17 @@ dependencies {
 
 jar {
 	jar.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-	manifest {
-		attributes(
-			"Created-By": "Commonwealth Robotics Cooperative",
-			"Specification-Title": props."app.name",
-			"Specification-Version": props."app.version",
-			"Specification-Vendor": "Commonwealth Robotics Cooperative",
-			"Implementation-Title": props."app.name",
-			"Implementation-Version" : props."app.version",
-			"Implementation-Vendor": "Commonwealth Robotics Cooperative",
-		)
-	}
-	//bnd ( 'Import-Package': 'com.sun.jna.platform.win32;resolution:=optional,org.apache.commons.net.telnet;resolution:=optional,!gnu.io*,*')
+
+	bnd("Created-By": "Commonwealth Robotics Cooperative",
+		"Specification-Title": props."app.name",
+		"Specification-Version": props."app.version",
+		"Specification-Vendor": "Commonwealth Robotics Cooperative",
+		"Implementation-Title": props."app.name",
+		"Implementation-Version" : props."app.version",
+		"Implementation-Vendor": "Commonwealth Robotics Cooperative",
+		"Import-Package": "com.sun.jna.platform.win32;resolution:=optional,org.apache.commons.net.telnet;resolution:=optional,!gnu.io*,*",
+		"Export-Package": "gnu.io*"
+	)
 	
 }
 
