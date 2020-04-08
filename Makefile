@@ -12,7 +12,7 @@ linux:
 	make -C src/main/c linux
 	./gradlew build
 linux32:
-	sudo apt-get install  liblockfile-dev libc6-dev-i386
+	sudo apt-get install  liblockfile-dev libc6-dev-i386 linux-libc-dev
 	make -C src/main/c linux32
 	./gradlew build
 linux64:
