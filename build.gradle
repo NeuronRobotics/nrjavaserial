@@ -58,7 +58,8 @@ jar {
 		"Implementation-Title": props."app.name",
 		"Implementation-Version" : props."app.version",
 		"Implementation-Vendor": "Commonwealth Robotics Cooperative",
-		"Import-Package": "com.sun.jna.platform.win32;resolution:=optional, org.apache.commons.net.telnet;resolution:=optional, !gnu.io*, *"	
+		"Import-Package": "com.sun.jna.platform.win32;resolution:=optional,org.apache.commons.net.telnet;resolution:=optional,!gnu.io*,*",
+		"Export-Package": "gnu.io*"
 	)
 	
 }
@@ -74,7 +75,7 @@ task sourcesJar(type: Jar) {
 		exclude 'native/'
 	}
 }
-
+/*
 signing {
 	required {
 		gradle.taskGraph.hasTask("uploadArchives")
@@ -153,4 +154,4 @@ uploadArchives {
 		}
 	}
 }
-
+*/
