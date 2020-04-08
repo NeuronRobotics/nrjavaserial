@@ -1075,6 +1075,7 @@ public class RXTXPort extends SerialPort
                                 z.reportln(  "RXTXPort:close detected bad File Descriptor" );
                                 return;
                         }
+                        disableRs485();
                         setDTR(false);
                         setDSR(false);
                         if (debug)
@@ -2237,6 +2238,17 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 			z.reportln(  "RXTXPort:clearCommInput()");
 		return nativeClearCommInput();
 	}
+
+
+	public int enableRs485(boolean busEnableActiveLow, int delayBusEnableBeforeSendMs, int delayBusEnableAfterSendMs) {
+		return controlRs485(fd, true, busEnableActiveLow, delayBusEnableBeforeSendMs, delayBusEnableAfterSendMs);
+	}
+
+	public int disableRs485() {
+		return controlRs485(fd, false, false, 0, 0);
+	}
+
+	private native synchronized int controlRs485(int fd, boolean enable, boolean busEnableActiveLow, int delayBusEnableBeforeSendMs, int delayBusEnableAfterSendMs);
 
 /*------------------------  END OF CommAPI Extensions -----------------------*/
 }

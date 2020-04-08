@@ -32,6 +32,8 @@ ease of use and embeddability in other libraries.
 * [RFC 2217](http://tools.ietf.org/html/rfc2217) support provided by
   incorporating the [jvser library](http://github.com/archiecobbs/jvser).
 
+* RS485 support for Linux
+
 ## And a bunch of bug fixes
 
 * Fixed the memory access error that causes OS X to crash the JVM when
