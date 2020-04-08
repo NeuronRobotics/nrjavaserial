@@ -106,6 +106,10 @@ After the native code is built, the JAR is rebuilt.
 You'll need some installation of GCC. We recommend the
 [TDM-GCC](http://tdm-gcc.tdragon.net/) distribution of mingw64-w64.
 
+Compile against Java
+
+https://www.java.com/en/download/manual.jsp
+
 ## Building on OS X
 
 We're pretty big on maintaining backwards compatibility as far as reasonable.
