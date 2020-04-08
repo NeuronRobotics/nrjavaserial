@@ -108,7 +108,7 @@ You'll need some installation of GCC. We recommend the
 
 Compile against Java
 
-https://www.java.com/en/download/manual.jsp
+https://www.azul.com/downloads/zulu/zulufx/ 
 
 ## Building on OS X
 
