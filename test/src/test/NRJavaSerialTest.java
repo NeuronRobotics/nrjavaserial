@@ -56,29 +56,45 @@
 |   All trademarks belong to their respective owners.
 --------------------------------------------------------------------------*/
 package test;
-
 import java.util.Enumeration;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import gnu.io.CommPortIdentifier;
-import gnu.io.RXTXCommDriver;
 
 public class NRJavaSerialTest {
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		System.out.println("Starting Test..");
-		try{
-			Enumeration<CommPortIdentifier> ports = CommPortIdentifier.getPortIdentifiers();
-			while(ports.hasMoreElements())
-				System.out.println(ports.nextElement().getName());
-		}catch(Exception ex){
-			ex.printStackTrace();
-		}catch(Error er){
-			er.printStackTrace();
-		}
-		System.exit(0);
-	}
+    private static final Lock LOCK = new ReentrantLock();
+    private static final String PORT = "/dev/ttyUSB0";
 
+    public static void main(String[] args) throws Exception {
+        Thread thread = new Thread(NRJavaSerialTest::printPortIdentifiers);
+        thread.start();
+
+        Thread.sleep(2000L);
+
+        CommPortIdentifier id = CommPortIdentifier.getPortIdentifier(PORT);
+        id.open(NRJavaSerialTest.class.getSimpleName(), 5000);
+
+        System.out.println("Opened: " + PORT);
+
+        LOCK.lock();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void printPortIdentifiers() {
+        try {
+            for (int i=0;i<10&&!Thread.currentThread().isInterrupted();i++) {
+                Enumeration<CommPortIdentifier> ids = CommPortIdentifier.getPortIdentifiers();
+                System.out.println("--- Port Identifiers ---");
+                while (ids.hasMoreElements()) {
+                    System.out.println("name: " + ids.nextElement().getName());
+                }
+                System.out.println();
+                Thread.sleep(5000L);
+            }
+        } catch (InterruptedException e) {
+            System.out.println("Thread interrupted");
+        }
+    }
 }
