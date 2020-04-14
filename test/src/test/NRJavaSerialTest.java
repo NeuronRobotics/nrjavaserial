@@ -70,21 +70,17 @@ public class NRJavaSerialTest {
     public static void main(String[] args) throws Exception {
         Thread thread = new Thread(NRJavaSerialTest::printPortIdentifiers);
         thread.start();
-
         Thread.sleep(2000L);
-
         CommPortIdentifier id = CommPortIdentifier.getPortIdentifier(PORT);
         id.open(NRJavaSerialTest.class.getSimpleName(), 5000);
-
         System.out.println("Opened: " + PORT);
-
         LOCK.lock();
     }
 
     @SuppressWarnings("unchecked")
     private static void printPortIdentifiers() {
         try {
-            for (int i=0;i<10&&!Thread.currentThread().isInterrupted();i++) {
+            for (int i=0;i<5&&!Thread.currentThread().isInterrupted();i++) {
                 Enumeration<CommPortIdentifier> ids = CommPortIdentifier.getPortIdentifiers();
                 System.out.println("--- Port Identifiers ---");
                 while (ids.hasMoreElements()) {
@@ -96,5 +92,6 @@ public class NRJavaSerialTest {
         } catch (InterruptedException e) {
             System.out.println("Thread interrupted");
         }
+        System.exit(0);
     }
 }
