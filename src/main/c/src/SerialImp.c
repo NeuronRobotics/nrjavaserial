@@ -602,6 +602,48 @@ cf{get,set}{i,o}speed and shouldn't be provided or used.
 	(*env)->SetIntField(env, jobj, jfparity, ( jint ) jparity );
 }
 /*----------------------------------------------------------
+RXTXPort.controlRs485
+
+   accept:      fd of the preopened device,
+                boolean if the bus enable (RTS) is active low,
+                delay of RTS edge to first data edge (not supported by all serial drivers),
+                delay of RTS edge after end of transmission (not supported by all serial drivers)
+   perform:     set the rs485 config via ioctl
+   return:      return code of ioctl
+----------------------------------------------------------*/
+JNIEXPORT jint JNICALL RXTXPort(controlRs485)(
+        JNIEnv *env,
+        jobject jobj,
+        jint fd,
+        jboolean enable,
+        jboolean busEnableActiveLow,
+        jint delayRtsBeforeSendMs,
+        jint delayRtsAfterSendMs
+        )
+{
+#if defined(__linux__)
+    struct serial_rs485 rs485conf;
+    memset(&rs485conf, 0, sizeof(struct serial_rs485));
+
+    if(enable) {
+        rs485conf.flags |= SER_RS485_ENABLED;
+    }
+
+    if(busEnableActiveLow) {
+        rs485conf.flags |= SER_RS485_RTS_AFTER_SEND;
+    } else {
+        rs485conf.flags |= SER_RS485_RTS_ON_SEND;
+    }
+
+    rs485conf.delay_rts_before_send = delayRtsBeforeSendMs;
+    rs485conf.delay_rts_after_send = delayRtsAfterSendMs;
+
+    return ioctl (fd, TIOCSRS485, &rs485conf);
+#else
+    return -1;
+#endif
+}
+/*----------------------------------------------------------
 RXTXPort.open
 
    accept:      The device to open.  ie "/dev/ttyS0"
@@ -5075,9 +5117,9 @@ size_t get_java_var( JNIEnv *env, jobject jobj, char *id, char *type ) {
   return (size_t) get_java_var_long( env, jobj, id, type );
 }
 
-long get_java_var_long( JNIEnv *env, jobject jobj, char *id, char *type )
+size_t get_java_var_long( JNIEnv *env, jobject jobj, char *id, char *type )
 {
-	long result = 0;
+	size_t result = 0;
 	jclass jclazz = (*env)->GetObjectClass( env, jobj );
 	jfieldID jfd = (*env)->GetFieldID( env, jclazz, id, type );
 
@@ -5092,7 +5134,7 @@ long get_java_var_long( JNIEnv *env, jobject jobj, char *id, char *type )
 		return result;
 	}
 	if ( !strcmp( type, "J" ) ) {
-	  result = (long)( (*env)->GetLongField( env, jobj, jfd ) );
+	  result = (size_t)( (*env)->GetLongField( env, jobj, jfd ) );
 	} else {
 	  result = (size_t) ( (*env)->GetIntField( env, jobj, jfd ) );
 	}
@@ -5403,23 +5445,25 @@ int fhs_lock( const char *filename, int pid )
 	fd = open( file, O_CREAT | O_WRONLY | O_EXCL, 0666 );
 	if( fd < 0 )
 	{
-		sprintf( message,
-			"RXTX fhs_lock() Error: opening lock file: %s: %s.",
-			file, strerror(errno) );
-		report_error( message );
+
 		fd = open( file,  O_WRONLY );
 		if( fd < 0 ){
-			sprintf( message,
-				" FAILED TO OPEN: %s\n",
-				 strerror(errno) );
-			report_error( message );
+
 			return 1;
 		}
 
 		if(check_lock_pid( file, pid )==0){
-			report_error(" It is mine\n" );
+
+		}else{
+			sprintf(message, "RXTX fhs_lock() Error: opening lock file: %s: %s.", file,
+			strerror(errno));
+			report_error(message);
+			sprintf(message, " FAILED TO OPEN: %s\n", strerror(errno));
+			report_error(message);
+			report_error(" It is not mine\n");
+			report_error("\n");
 		}
-		report_error( "\n" );
+
 		close( fd );
 		return 1;
 	}

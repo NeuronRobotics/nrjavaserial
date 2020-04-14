@@ -222,6 +222,32 @@ public class NRSerialPort
         return baud;
     }
 
+    /**
+     * Enables RS485 half-duplex bus communication for Linux. The Linux kernel uses the RTS pin as bus enable. If you use a device that is configured via the Linux
+     * device tree, take care to add "uart-has-rtscts" and to configure the RTS GPIO correctly.
+     *
+     * Before enabling RS485, the serial port must be connected/opened.
+     *
+     * See also:
+     * <ul>
+     * <li>https://www.kernel.org/doc/Documentation/serial/serial-rs485.txt
+     * <li>https://www.kernel.org/doc/Documentation/devicetree/bindings/serial/serial.txt
+     * </ul>
+     *
+     * @param busEnableActiveLow
+     *            true, if the bus enable signal (RTS) shall be low during transmission
+     * @param delayBusEnableBeforeSendMs
+     *            delay of bus enable signal (RTS) edge to first data edge in ms (not supported by all serial drivers)
+     * @param delayBusEnableAfterSendMs
+     *            delay of bus enable signal (RTS) edge after end of transmission in ms (not supported by all serial drivers)
+     * @return the ioctl() return value
+     */
+    public int enableRs485(boolean busEnableActiveLow, int delayBusEnableBeforeSendMs, int delayBusEnableAfterSendMs) {
+        if(serial == null)
+            return -1;
+
+        return serial.enableRs485(busEnableActiveLow, delayBusEnableBeforeSendMs, delayBusEnableAfterSendMs);
+    }
 
     public void notifyOnDataAvailable(boolean b)
     {

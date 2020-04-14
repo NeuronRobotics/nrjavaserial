@@ -32,6 +32,8 @@ ease of use and embeddability in other libraries.
 * [RFC 2217](http://tools.ietf.org/html/rfc2217) support provided by
   incorporating the [jvser library](http://github.com/archiecobbs/jvser).
 
+* RS485 support for Linux
+
 ## And a bunch of bug fixes
 
 * Fixed the memory access error that causes OS X to crash the JVM when
@@ -44,14 +46,22 @@ ease of use and embeddability in other libraries.
 
 # Dependency Management
 
-## Maven
-
+## Maven Java 8
+```
 	<dependency>
 	  <groupId>com.neuronrobotics</groupId>
 	  <artifactId>nrjavaserial</artifactId>
-	  <version>3.15.0</version>
+	  <version>3.16.0</version>
 	</dependency>
-
+```
+## Maven Java 11+
+```
+	<dependency>
+	  <groupId>com.neuronrobotics</groupId>
+	  <artifactId>nrjavaserial</artifactId>
+	  <version>4.0.1</version>
+	</dependency>
+```	
 # Building the JAR
 
 1. Checkout the repository.
@@ -97,6 +107,13 @@ After the native code is built, the JAR is rebuilt.
 
 You'll need some installation of GCC. We recommend the
 [TDM-GCC](http://tdm-gcc.tdragon.net/) distribution of mingw64-w64.
+To get the build working you need both mingw32, and ming64 installed in separate directories.
+Please modify JDKDIR to your installation of JDK.
+
+
+Compile against Java
+
+https://cdn.azul.com/zulu/bin/zulu8.44.0.13-ca-fx-jdk8.0.242-win_x64.zip
 
 ## Building on OS X
 
@@ -106,21 +123,35 @@ SDK installed. [This StackOverflow answer](http://stackoverflow.com/a/6293605)
 provides pointers for getting the appropriate SDK installed.
 
 # How to use NRSerialPort objects
-    for(String s:NRSerialPort.getAvailableSerialPorts()){
-			System.out.println("Availible port: "+s);
+```
+import gnu.io.NRSerialPort;
+String port = "";
+for(String s:NRSerialPort.getAvailableSerialPorts()){
+	System.out.println("Availible port: "+s);
+	port=s;
+}
+
+int baudRate = 115200;
+NRSerialPort serial = new NRSerialPort(port, baudRate);
+serial.connect();
+
+DataInputStream ins = new DataInputStream(serial.getInputStream());
+DataOutputStream outs = new DataOutputStream(serial.getOutputStream());
+try{
+	//while(ins.available()==0 && !Thread.interrupted());// wait for a byte
+	while(!Thread.interrupted()) {// read all bytes
+		if(ins.available()>0) {
+			char b = ins.read();
+			//outs.write((byte)b);
+			System.out.print(b);
 		}
-    String port = "COM3";
-    int baudRate = 115200;
-    NRSerialPort serial = new NRSerialPort(port, baudRate);
-    serial.connect();
-
-    DataInputStream ins = new DataInputStream(serial.getInputStream());
-    DataOutputStream outs = new DataOutputStream(serial.getOutputStream());
-
-    byte b = ins.read();
-    outs.write(b);
-
-    serial.disconnect();
+    		Thread.sleep(5);
+	}
+}catch(Exception ex){
+	ex.printStackTrace();
+}
+serial.disconnect();
+```
 
 ## Contributors
 
@@ -151,3 +182,4 @@ Support this project with your organization. Your logo will show up here with a 
 <a href="https://opencollective.com/nrjavaserial/organization/7/website"><img src="https://opencollective.com/nrjavaserial/organization/7/avatar.svg"></a>
 <a href="https://opencollective.com/nrjavaserial/organization/8/website"><img src="https://opencollective.com/nrjavaserial/organization/8/avatar.svg"></a>
 <a href="https://opencollective.com/nrjavaserial/organization/9/website"><img src="https://opencollective.com/nrjavaserial/organization/9/avatar.svg"></a>
+
