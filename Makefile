@@ -8,7 +8,6 @@ wine:
 	make -C src/main/c windows
 	./gradlew build
 linux:
-	sudo apt-get install liblockfile-dev
 	make -C src/main/c linux
 	./gradlew build
 linux32:
