@@ -22,7 +22,7 @@ version = props."app.version"
 sourceSets {
 	test {
 		java {
-			srcDirs = ["test/java/src","examples/java/src" ]
+			srcDirs = ["test/src"]
 		}
 	}
 	main {
