@@ -5445,23 +5445,25 @@ int fhs_lock( const char *filename, int pid )
 	fd = open( file, O_CREAT | O_WRONLY | O_EXCL, 0666 );
 	if( fd < 0 )
 	{
-//		sprintf( message,
-//			"RXTX fhs_lock() Error: opening lock file: %s: %s.",
-//			file, strerror(errno) );
-//		report_error( message );
+
 		fd = open( file,  O_WRONLY );
 		if( fd < 0 ){
-//			sprintf( message,
-//				" FAILED TO OPEN: %s\n",
-//				 strerror(errno) );
-//			report_error( message );
+			sprintf( message,
+				" FAILED TO OPEN: %s\n",
+				 strerror(errno) );
+			report_error( message );
 			return 1;
 		}
 
 		if(check_lock_pid( file, pid )==0){
 //			report_error(" It is mine\n" );
+		}else{
+			sprintf(message, "RXTX fhs_lock() Error: opening lock file: %s: %s.", file,
+			strerror(errno));
+			report_error( message );
+			report_error(" It is NOT mine\n" );
 		}
-//		report_error( "\n" );
+		report_error( "\n" );
 		close( fd );
 		return 1;
 	}
