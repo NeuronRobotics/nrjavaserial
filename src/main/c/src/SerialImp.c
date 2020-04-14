@@ -4406,8 +4406,8 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
 	{
 		(*env)->ReleaseStringUTFChars(env, tty_name, name);
 		LEAVE( "\nRXTXPort:testRead no lock" );
-		report_error(name);
-		report_error( " testRead() Lock file failed\n" );
+		//report_error(name);
+		//report_error( " testRead() Lock file failed\n" );
 		return JNI_FALSE;
 	}
 
