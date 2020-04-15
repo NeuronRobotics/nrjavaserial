@@ -1,7 +1,5 @@
 package gnu.io.factory;
 
-import java.io.IOException;
-
 import gnu.io.NoSuchPortException;
 import gnu.io.PortInUseException;
 import gnu.io.SerialPort;
@@ -14,7 +12,6 @@ public interface SerialPortFactory {
 	 * @param portName The port's name to parse out whether to create a serial connection or a remote (rfc2217) connection.
 	 * @param expectedClass The {@link SerialPort} class that is expected to return.
 	 * @return The newly created and opened SerialPort.
-	 * @throws IOException
 	 * @throws PortInUseException
 	 * @throws NoSuchPortException
 	 * @throws UnsupportedCommOperationException
