@@ -26,7 +26,6 @@ public interface SerialPortFactory {
 	 * Creates a {@link SerialPort} instance out of the given <code>portName</code>.
 	 * @param portName The port's name to parse out whether to create a serial connection or a remote (rfc2217) connection.
 	 * @return The newly created and opened SerialPort.
-	 * @throws IOException
 	 * @throws PortInUseException
 	 * @throws NoSuchPortException
 	 * @throws UnsupportedCommOperationException
