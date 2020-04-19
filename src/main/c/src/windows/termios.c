@@ -631,7 +631,7 @@ serial_close()
 int serial_close( int fd )
 {
 	struct termios_list *index;
-	/* char message[80]; */
+	/* char message[160]; */
 
 	ENTER( "serial_close" );
 	if( !first_tl || !first_tl->hComm )
@@ -951,7 +951,7 @@ termios_list()
 struct termios_list *find_port( int fd )
 {
 
-	char message[80];
+	char message[160];
 	struct termios_list *index = first_tl;
 
 	ENTER( "find_port" );
@@ -1148,7 +1148,7 @@ int check_port_capabilities( struct termios_list *index )
 {
 	COMMPROP cp;
 	DCB	dcb;
-	char message[80];
+	char message[160];
 
 	ENTER( "check_port_capabilities" );
 	/* check for capabilities */
@@ -1201,7 +1201,7 @@ serial_open()
 int serial_open( const char *filename, int flags, ... )
 {
 	struct termios_list *index;
-	char message[80];
+	char message[160];
 
 	ENTER( "serial_open" );
 	if ( port_opened( filename ) )
@@ -1229,7 +1229,7 @@ int serial_open( const char *filename, int flags, ... )
 
 	if( check_port_capabilities( index ) )
 	{
-		report( "check_port_capabilites!" );
+		report( "check_port_capabilites!" );
 		serial_close( index->fd );
 		return -1;
 	}
@@ -1249,7 +1249,7 @@ int serial_open( const char *filename, int flags, ... )
 
 	if( !first_tl->hComm )
 	{
-		sprintf( message, "open():  Invalid Port Reference for %s\n",
+		sprintf( message, "open():  Invalid Port %s",
 			index->filename );
 		report( message );
 	}
@@ -1367,7 +1367,7 @@ int serial_read( int fd, void *vb, int size )
 	/* unsigned long waiting = 0; */
 	int err, vmin;
 	struct termios_list *index;
-	char message[80];
+	char message[160];
 	COMSTAT stat;
 	clock_t c;
 	unsigned char *dest = vb;
@@ -1519,7 +1519,7 @@ int serial_read( int fd, void *vb, int size )
 	/* unsigned long waiting = 0; */
 	int err, vmin;
 	struct termios_list *index;
-	char message[80];
+	char message[160];
 	COMSTAT Stat;
 	clock_t c;
 	unsigned char *dest = vb;
@@ -1689,7 +1689,7 @@ cfsetospeed()
 
 int cfsetospeed( struct termios *s_termios, speed_t speed )
 {
-	char message[80];
+	char message[160];
 	ENTER( "cfsetospeed" );
 	/* clear baudrate */
 	s_termios->c_cflag &= ~CBAUD;
@@ -1898,7 +1898,7 @@ void show_DCB( DCB myDCB )
 {
 
 #ifdef DEBUG_HOSED
-	char message[80];
+	char message[160];
 
 	sprintf( message, "DCBlength: %ld\n", myDCB.DCBlength );
 	report( message );
@@ -2022,7 +2022,7 @@ int tcgetattr( int fd, struct termios *s_termios )
 	DCB myDCB;
 	COMMTIMEOUTS timeouts;
 	struct termios_list *index;
-	char message[80];
+	char message[160];
 
 	ENTER( "tcgetattr" );
 	if ( fd <= 0 )
@@ -2466,7 +2466,7 @@ tcdrain()
 int tcdrain ( int fd )
 {
 	struct termios_list *index;
-	char message[80];
+	char message[160];
 	int old_flag;
 
 	ENTER( "tcdrain" );
@@ -2691,7 +2691,7 @@ int ioctl( int fd, int request, ... )
 	unsigned long dwStatus = 0;
 	va_list ap;
 	int *arg, ret, old_flag;
-	char message[80];
+	char message[160];
 
 #ifdef TIOCGSERIAL
 	DCB	*dcb;
@@ -3055,7 +3055,7 @@ int fcntl( int fd, int command, ... )
 	int arg, ret = 0;
 	va_list ap;
 	struct termios_list *index;
-	char message[80];
+	char message[160];
 
 	ENTER( "fcntl" );
 	if ( fd <= 0 )
@@ -3142,7 +3142,7 @@ int  serial_select( int  n,  fd_set  *readfds,  fd_set  *writefds,
 	unsigned long dwCommEvent, wait = WAIT_TIMEOUT;
 	int fd = n-1;
 	struct termios_list *index;
-	char message[80];
+	char message[160];
 	COMSTAT Stat;
 	int ret;
 
@@ -3231,7 +3231,7 @@ int  serial_select( int  n,  fd_set  *readfds,  fd_set  *writefds,
 	unsigned long nBytes, dwCommEvent, wait = WAIT_TIMEOUT;
 	int fd = n-1;
 	struct termios_list *index;
-	char message[80];
+	char message[160];
 
 	ENTER( "serial_select" );
 	if ( fd <= 0 )
