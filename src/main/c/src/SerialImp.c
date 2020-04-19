@@ -730,7 +730,6 @@ JNIEXPORT jint JNICALL RXTXPort(open)(
        See tty(4) ("man 4 tty") and ioctl(2) ("man 2 ioctl") for details.
        */
 #if defined(__linux__)
-			int cmd=FD_CLOEXEC|F_SETFL;
 			int ret;
 			//report_error("\nnative open(): Setting ownership flags");
 			ret= fcntl(fd,F_SETOWN,getpid());
@@ -741,7 +740,7 @@ JNIEXPORT jint JNICALL RXTXPort(open)(
 			//report_error( strerror(errno) );
 
 			//report_error("\nnative open(): Setting read/write flags");
-			ret= fcntl(fd,cmd,O_RDWR|O_NONBLOCK);
+			ret= fcntl(fd,F_SETFL,O_CLOEXEC|O_RDWR|O_NONBLOCK);
 			//report_error( strerror(errno) );
 #endif
        if (fd >= 0 && (ioctl(fd, TIOCEXCL) == -1))
