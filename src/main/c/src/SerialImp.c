@@ -4752,9 +4752,8 @@ JNIEXPORT jboolean JNICALL RXTXCommDriver(registerKnownPorts)(JNIEnv *env,
 		case PORT_TYPE_RS485:    break;
 		case PORT_TYPE_RAW:      break;
 		default:
-			sprintf( message, "unknown portType %d handed to \
-				native RXTXCommDriver.registerKnownPorts() \
-				 method.\n",
+			sprintf( message, "unknown portType %d to \
+				native RXTXCommDriver.registerKnownPorts()\n",
 				(int) portType
 			);
 			report( message );
