@@ -116,6 +116,9 @@
 #endif /* FLS */
 #if defined(__linux__)
 #	include <linux/types.h> /* fix for linux-2.3.4? kernels */
+#undef major
+#undef minor
+#include <sys/sysmacros.h>
 #	include <linux/serial.h>
 #	include <linux/version.h>
 #endif /* __linux__ */
@@ -5819,7 +5822,7 @@ int check_group_uucp()
 	strcat(testLockAbsFileName, testLockFileDirName);
 	strcat(testLockAbsFileName, "/");
 	strcat(testLockAbsFileName, testLockFileName);
-	if ( NULL == mkstemp(testLockAbsFileName) )
+	if ( 0 == mkstemp(testLockAbsFileName) )
 	{
 		free(testLockAbsFileName);
 		report_error("check_group_uucp(): mktemp malformed string - \
