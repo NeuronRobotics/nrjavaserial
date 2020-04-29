@@ -6,14 +6,13 @@ OSXSDKPREFIX = /Developer/SDKs/MacOSX10.5.sdk
 
 JDKLOCATION=$(HOME)/bin/java8
 
-OSXJAVAINCLUDE1 = -I/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Headers
-OSXJAVAINCLUDE2 = -I$(OSXSDKPREFIX)/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers
-OSXJAVAINCLUDE4 = -I$(OSXSDKPREFIX)/usr/include
-OSXJAVAINCLUDE5 = -I./include/OSX/
+OSXJAVAINCLUDE1=-I/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home/include 
+OSXJAVAINCLUDE4=-I/Library/Developer/CommandLineTools/SDKs/MacOSX10.14.sdk/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers/
+OSXJAVAINCLUDE5=-I./include/OSX/
 
-OSXJAVAINCLUDE = $(OSXJAVAINCLUDE1) $(OSXJAVAINCLUDE2) $(OSXJAVAINCLUDE3) $(OSXJAVAINCLUDE4) $(OSXJAVAINCLUDE5)
+OSXJAVAINCLUDE = $(OSXJAVAINCLUDE1) $(OSXJAVAINCLUDE4) $(OSXJAVAINCLUDE5)
 OSXINCLUDE=-I"./include" -I"./include/target"  $(OSXJAVAINCLUDE)
-OSXARCH = -arch i386 -arch x86_64
+OSXARCH = -arch x86_64
 CCOSX=cc $(OSXINCLUDE) $(OSXARCH) -g -O2 -D_BSD_SOURCE -c
 LINKOSX=cc $(OSXARCH) -dynamiclib -framework JavaVM -framework IOKit -framework CoreFoundation
 
