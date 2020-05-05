@@ -51,7 +51,7 @@ ease of use and embeddability in other libraries.
 	<dependency>
 	  <groupId>com.neuronrobotics</groupId>
 	  <artifactId>nrjavaserial</artifactId>
-	  <version>3.20.1</version>
+	  <version>5.0.1</version>
 	</dependency>
 ```
 
