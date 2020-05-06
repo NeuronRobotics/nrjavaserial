@@ -37,23 +37,27 @@ public class ReadTest {
 						e.printStackTrace();
 					}
 				}if(ev.getEventType()==SerialPortEvent.HARDWARE_ERROR) {
-					System.out.println("Hardware disconnected cleanly");
+					System.out.println("Clean exit of hardware");
+					serial.disconnect();
 				}
 			});
 		} catch (TooManyListenersException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-//		
+		
 //		DataOutputStream outs = new DataOutputStream(serial.getOutputStream());
 //		try{
+//			byte bytes[] = new byte[10];
 //			//while(ins.available()==0 && !Thread.interrupted());// wait for a byte
 //			while(!Thread.interrupted()) {// read all bytes
-//				if(ins.available()>0) {
-//					char b = (char) ins.read();
+//				//if(ins.available()>0) {
+//					//char b = (char) ins.read();
+//					int back = ins.read(bytes);
 //					//outs.write((byte)b);
-//					System.out.print(b);
-//				}
+//					for(int i=0;i<back;i++)
+//						System.out.print((char)bytes[i]);
+//				//}
 //		    		Thread.sleep(5);
 //			}
 //		}catch(Exception ex){
