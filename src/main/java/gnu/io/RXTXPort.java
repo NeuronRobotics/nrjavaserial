@@ -662,7 +662,11 @@ public class RXTXPort extends SerialPort
 
 		switch( event )
 		{
-			case SerialPortEvent.DATA_AVAILABLE:
+			case SerialPortEvent.HARDWARE_ERROR:
+			if( debug_events )
+				z.reportln( "HARDWARE_ERROR " +
+					monThread.Data + ")" );
+			break;case SerialPortEvent.DATA_AVAILABLE:
 				if( debug_events )
 					z.reportln( "DATA_AVAILABLE " +
 						monThread.Data + ")" );
@@ -756,6 +760,8 @@ public class RXTXPort extends SerialPort
 			case SerialPortEvent.BI:
 				if( monThread.BI ) break;
 				return(false);
+			case SerialPortEvent.HARDWARE_ERROR:
+				break;
 			default:
 				System.err.println( "unknown event: " + event);
 				return(false);
@@ -1610,13 +1616,17 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 	*/
 		public void run()
 		{
-			if (debug)
-				z.reportln( "RXTXPort:MontitorThread:run()"); 
-			monThreadisInterrupted=false;
-			eventLoop();
-                        eis = 0;
-			if (debug)
-				z.reportln( "eventLoop() returned, eis is invalid."); 
+			try {
+				if (debug)
+					z.reportln( "RXTXPort:MontitorThread:run()"); 
+				monThreadisInterrupted=false;
+				eventLoop();
+	                        eis = 0;
+				if (debug)
+					z.reportln( "eventLoop() returned, this is invalid."); 
+			}catch(Throwable ex) {
+				sendEvent(SerialPortEvent.HARDWARE_ERROR, true);
+			}
 		}
 		protected void finalize() throws Throwable 
 		{ 
