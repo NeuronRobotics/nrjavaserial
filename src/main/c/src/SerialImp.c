@@ -3690,7 +3690,7 @@ JNIEXPORT jint JNICALL RXTXPort(nativeavailable)( JNIEnv *env,
 	jobject jobj )
 {
 	int fd = get_java_var( env, jobj,"fd","I" );
-	int result;
+	int result=-1;
 /*
 	char message[80];
 
@@ -4265,6 +4265,13 @@ JNIEXPORT void JNICALL RXTXPort(eventLoop)( JNIEnv *env, jobject jobj )
 	do{
 		report_time_eventLoop( );
 		do {
+			if(RXTXPort(nativeavailable)( env, jobj )<0){
+				report("eventLoop: Hardware Missing\n");
+				finalize_threads( &eis );
+				finalize_event_info_struct( &eis );
+				LEAVE("eventLoop:error");
+				return;
+			}
 			/* nothing goes between this call and select */
 			if( eis.closing )
 			{
@@ -4304,6 +4311,7 @@ JNIEXPORT void JNICALL RXTXPort(eventLoop)( JNIEnv *env, jobject jobj )
 			}
 			i = 0;
 #endif /* WIN32 */
+
 		}  while ( eis.ret < 0 && errno == EINTR );
 		if( eis.ret >= 0 )
 		{

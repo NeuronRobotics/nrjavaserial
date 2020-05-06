@@ -86,7 +86,7 @@ public class RXTXPort extends SerialPort
 	static
 	{
 		try {
-			z = new Zystem();
+			z = new Zystem(Zystem.SILENT_MODE);
 		} catch ( Exception e ) {}
 
 		if(debug ) 

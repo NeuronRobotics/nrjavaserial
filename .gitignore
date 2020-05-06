@@ -7,3 +7,4 @@
 .settings/
 *~*
 /.gradle/
+/hs_err_pid26993.log
