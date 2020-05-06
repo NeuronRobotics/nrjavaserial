@@ -94,6 +94,10 @@ After the native code is built, the JAR is rebuilt.
 
     # Build the PPC binaries.
     $ make ppc
+    
+    # Build the FreeBSD binaries.
+    $ make freebsd32
+    $ make freebsd64
 
 
 ## Building on Windows
