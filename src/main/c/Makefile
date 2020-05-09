@@ -23,7 +23,7 @@ LININCLUDE=    -I./include -I./include/target -I$(JDKLOCATION)/include -I$(JDKLO
 CCLIN32=gcc $(LININCLUDE) -I./include/ubuntu-multilib-fix  -O3 -Wall -fmessage-length=0 -fPIC -m32 -MMD
 LINKLIN32=gcc -m32 -shared 
 
-CCLIN64=gcc $(LININCLUDE)  -O3 -Wall -fmessage-length=0 -fPIC -m64 -MMD
+CCLIN64=gcc $(LININCLUDE)  -O3 -Wall -fmessage-length=0 -fPIC -m64 -MMD 
 LINKLIN64=g++ -m64 -shared
 
 CCLINARM32=arm-linux-gnueabi-gcc $(LININCLUDE)  -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MP
