@@ -57,6 +57,7 @@
 --------------------------------------------------------------------------*/
 package gnu.io;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -64,12 +65,14 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TooManyListenersException;
 
+import gnu.io.factory.RFC2217PortCreator;
 import gnu.io.factory.RxTxPortCreator;
+import gnu.io.rfc2217.TelnetSerialPort;
 
 public class NRSerialPort
 {
 
-    private RXTXPort serial;
+    private SerialPort serial;
     private String port = null;
     private boolean connected = false;
     private int baud = 115200;
@@ -96,7 +99,10 @@ public class NRSerialPort
 
         try
         {
-        	serial = new RxTxPortCreator().createPort(port);
+        	if(port.toLowerCase().startsWith("rfc2217"))
+        		serial = new RFC2217PortCreator().createPort(port);
+        	else
+        		serial = new RxTxPortCreator().createPort(port);
             serial.setSerialPortParams(getBaud(), SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
             setConnected(true);
         }
@@ -121,13 +127,21 @@ public class NRSerialPort
 
     public InputStream getInputStream()
     {
-		return serial.getInputStream();
+		try {
+			return serial.getInputStream();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
     }
 
 
     public OutputStream getOutputStream()
     {
-		return serial.getOutputStream();
+		try {
+			return serial.getOutputStream();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
     }
 
 
@@ -245,8 +259,9 @@ public class NRSerialPort
     public int enableRs485(boolean busEnableActiveLow, int delayBusEnableBeforeSendMs, int delayBusEnableAfterSendMs) {
         if(serial == null)
             return -1;
-
-        return serial.enableRs485(busEnableActiveLow, delayBusEnableBeforeSendMs, delayBusEnableAfterSendMs);
+        if(RXTXPort.class.isInstance(serial))
+        	return ((RXTXPort) serial).enableRs485(busEnableActiveLow, delayBusEnableBeforeSendMs, delayBusEnableAfterSendMs);
+        return -1;
     }
 
     public void notifyOnDataAvailable(boolean b)
@@ -273,7 +288,19 @@ public class NRSerialPort
      */
     public RXTXPort getSerialPortInstance()
     {
-        return serial;
+     if(RXTXPort.class.isInstance(serial))
+        return (RXTXPort) serial;
+     return null;
     }
-
+    /**
+     * Gets the {@link SerialPort} instance.
+     * This will return null until {@link #connect()} is successfully called.
+     * @return The {@link SerialPort} instance or null.
+     */
+    public TelnetSerialPort getTelnetSerialPortInstance()
+    {
+     if(TelnetSerialPort.class.isInstance(serial))
+        return (TelnetSerialPort) serial;
+     return null;
+    }
 }
