@@ -84,4 +84,8 @@ public class UnsupportedCommOperationException extends Exception
 	{
 		super( str );
 	}
+	
+	public UnsupportedCommOperationException(String message, Throwable cause) {
+		super(message, cause);
+	}
 }

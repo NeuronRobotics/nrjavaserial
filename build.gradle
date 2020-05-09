@@ -1,11 +1,12 @@
+plugins {
+  id "biz.aQute.bnd.builder" version "5.0.1"
+}
+
 apply plugin: 'java'
-apply plugin: 'osgi'
 apply plugin: 'eclipse'
 apply plugin: 'maven'
 apply plugin: 'signing'
 
-sourceCompatibility = '1.6'
-targetCompatibility = '1.6'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 File buildDir = file(".");
@@ -19,7 +20,7 @@ version = props."app.version"
 sourceSets {
 	test {
 		java {
-			srcDirs = ["test/java/src","examples/java/src" ]
+			srcDirs = ["test/src"]
 		}
 	}
 	main {
@@ -32,39 +33,33 @@ sourceSets {
 
 jar.archiveName = "nrjavaserial-${props.'app.version'}.jar"
 
-task wrapper(type: Wrapper, description: 'Creates and deploys the Gradle wrapper to the current directory.') {
-	gradleVersion = '2.7'
-}
-
 repositories {
 	mavenCentral()
-	maven {
-        url "https://jcenter.bintray.com"
-    }
+	jcenter()
 }
 
 dependencies {
 	compile fileTree(dir: 'libs', includes: ['*.jar'])
 	testCompile 'junit:junit:4.12'
 	compile 'commons-net:commons-net:3.3'
-	compile 'net.java.dev.jna:jna:4.2.2'
-	compile 'net.java.dev.jna:jna-platform:4.2.2'
+	compileOnly 'net.java.dev.jna:jna:4.4.0'
+	compileOnly 'net.java.dev.jna:jna-platform:4.4.0'
 }
 
 jar {
 	jar.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-	manifest {
-		attributes(
-			"Created-By": "Neuron Robotics Cooperative",
-			"Specification-Title": props."app.name",
-			"Specification-Version": props."app.version",
-			"Specification-Vendor": "Neuron Robotics Cooperative",
-			"Implementation-Title": props."app.name",
-			"Implementation-Version" : props."app.version",
-			"Implementation-Vendor": "Neuron Robotics Cooperative",
-		)
-		instruction 'Import-Package', '*'
-	}
+
+	bnd("Created-By": "Commonwealth Robotics Cooperative",
+		"Specification-Title": props."app.name",
+		"Specification-Version": props."app.version",
+		"Specification-Vendor": "Commonwealth Robotics Cooperative",
+		"Implementation-Title": props."app.name",
+		"Implementation-Version" : props."app.version",
+		"Implementation-Vendor": "Commonwealth Robotics Cooperative",
+		"Import-Package": "com.sun.jna.platform.win32;resolution:=optional,org.apache.commons.net.telnet;resolution:=optional,!gnu.io*,*",
+		"Export-Package": "gnu.io*"
+	)
+	
 }
 
 task javadocJar(type: Jar) {
@@ -78,7 +73,7 @@ task sourcesJar(type: Jar) {
 		exclude 'native/'
 	}
 }
-
+/*
 signing {
 	required {
 		gradle.taskGraph.hasTask("uploadArchives")
@@ -119,13 +114,14 @@ uploadArchives {
 		mavenDeployer {
 			beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
-			repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-				authentication(userName: ossrhUsername, password: ossrhPassword)
-			}
+		repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+		  authentication(userName: ossrhUsername, password: ossrhPassword)
+		}
+  
+		snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+		  authentication(userName: ossrhUsername, password: ossrhPassword)
+		}
 
-			snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-				authentication(userName: ossrhUsername, password: ossrhPassword)
-			}
 
 			pom.project {
 				name 'NRJavaSerial'
@@ -157,3 +153,4 @@ uploadArchives {
 		}
 	}
 }
+*/

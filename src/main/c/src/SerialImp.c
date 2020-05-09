@@ -116,6 +116,9 @@
 #endif /* FLS */
 #if defined(__linux__)
 #	include <linux/types.h> /* fix for linux-2.3.4? kernels */
+#undef major
+#undef minor
+#include <sys/sysmacros.h>
 #	include <linux/serial.h>
 #	include <linux/version.h>
 #endif /* __linux__ */
@@ -602,6 +605,48 @@ cf{get,set}{i,o}speed and shouldn't be provided or used.
 	(*env)->SetIntField(env, jobj, jfparity, ( jint ) jparity );
 }
 /*----------------------------------------------------------
+RXTXPort.controlRs485
+
+   accept:      fd of the preopened device,
+                boolean if the bus enable (RTS) is active low,
+                delay of RTS edge to first data edge (not supported by all serial drivers),
+                delay of RTS edge after end of transmission (not supported by all serial drivers)
+   perform:     set the rs485 config via ioctl
+   return:      return code of ioctl
+----------------------------------------------------------*/
+JNIEXPORT jint JNICALL RXTXPort(controlRs485)(
+        JNIEnv *env,
+        jobject jobj,
+        jint fd,
+        jboolean enable,
+        jboolean busEnableActiveLow,
+        jint delayRtsBeforeSendMs,
+        jint delayRtsAfterSendMs
+        )
+{
+#if defined(__linux__)
+    struct serial_rs485 rs485conf;
+    memset(&rs485conf, 0, sizeof(struct serial_rs485));
+
+    if(enable) {
+        rs485conf.flags |= SER_RS485_ENABLED;
+    }
+
+    if(busEnableActiveLow) {
+        rs485conf.flags |= SER_RS485_RTS_AFTER_SEND;
+    } else {
+        rs485conf.flags |= SER_RS485_RTS_ON_SEND;
+    }
+
+    rs485conf.delay_rts_before_send = delayRtsBeforeSendMs;
+    rs485conf.delay_rts_after_send = delayRtsAfterSendMs;
+
+    return ioctl (fd, TIOCSRS485, &rs485conf);
+#else
+    return -1;
+#endif
+}
+/*----------------------------------------------------------
 RXTXPort.open
 
    accept:      The device to open.  ie "/dev/ttyS0"
@@ -688,7 +733,6 @@ JNIEXPORT jint JNICALL RXTXPort(open)(
        See tty(4) ("man 4 tty") and ioctl(2) ("man 2 ioctl") for details.
        */
 #if defined(__linux__)
-			int cmd=FD_CLOEXEC|F_SETFL;
 			int ret;
 			//report_error("\nnative open(): Setting ownership flags");
 			ret= fcntl(fd,F_SETOWN,getpid());
@@ -699,7 +743,7 @@ JNIEXPORT jint JNICALL RXTXPort(open)(
 			//report_error( strerror(errno) );
 
 			//report_error("\nnative open(): Setting read/write flags");
-			ret= fcntl(fd,cmd,O_RDWR|O_NONBLOCK);
+			ret= fcntl(fd,F_SETFL,O_CLOEXEC|O_RDWR|O_NONBLOCK);
 			//report_error( strerror(errno) );
 #endif
        if (fd >= 0 && (ioctl(fd, TIOCEXCL) == -1))
@@ -3646,7 +3690,7 @@ JNIEXPORT jint JNICALL RXTXPort(nativeavailable)( JNIEnv *env,
 	jobject jobj )
 {
 	int fd = get_java_var( env, jobj,"fd","I" );
-	int result;
+	int result=-1;
 /*
 	char message[80];
 
@@ -4221,6 +4265,13 @@ JNIEXPORT void JNICALL RXTXPort(eventLoop)( JNIEnv *env, jobject jobj )
 	do{
 		report_time_eventLoop( );
 		do {
+			if(RXTXPort(nativeavailable)( env, jobj )<0){
+				report("eventLoop: Hardware Missing\n");
+				finalize_threads( &eis );
+				finalize_event_info_struct( &eis );
+				LEAVE("eventLoop:error");
+				return;
+			}
 			/* nothing goes between this call and select */
 			if( eis.closing )
 			{
@@ -4260,6 +4311,7 @@ JNIEXPORT void JNICALL RXTXPort(eventLoop)( JNIEnv *env, jobject jobj )
 			}
 			i = 0;
 #endif /* WIN32 */
+
 		}  while ( eis.ret < 0 && errno == EINTR );
 		if( eis.ret >= 0 )
 		{
@@ -4364,8 +4416,8 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
 	{
 		(*env)->ReleaseStringUTFChars(env, tty_name, name);
 		LEAVE( "\nRXTXPort:testRead no lock" );
-		report_error(name);
-		report_error( " testRead() Lock file failed\n" );
+		//report_error(name);
+		//report_error( " testRead() Lock file failed\n" );
 		return JNI_FALSE;
 	}
 
@@ -4711,9 +4763,8 @@ JNIEXPORT jboolean JNICALL RXTXCommDriver(registerKnownPorts)(JNIEnv *env,
 		case PORT_TYPE_RS485:    break;
 		case PORT_TYPE_RAW:      break;
 		default:
-			sprintf( message, "unknown portType %d handed to \
-				native RXTXCommDriver.registerKnownPorts() \
-				 method.\n",
+			sprintf( message, "unknown portType %d to \
+				native RXTXCommDriver.registerKnownPorts()\n",
 				(int) portType
 			);
 			report( message );
@@ -5075,9 +5126,9 @@ size_t get_java_var( JNIEnv *env, jobject jobj, char *id, char *type ) {
   return (size_t) get_java_var_long( env, jobj, id, type );
 }
 
-long get_java_var_long( JNIEnv *env, jobject jobj, char *id, char *type )
+size_t get_java_var_long( JNIEnv *env, jobject jobj, char *id, char *type )
 {
-	long result = 0;
+	size_t result = 0;
 	jclass jclazz = (*env)->GetObjectClass( env, jobj );
 	jfieldID jfd = (*env)->GetFieldID( env, jclazz, id, type );
 
@@ -5092,7 +5143,7 @@ long get_java_var_long( JNIEnv *env, jobject jobj, char *id, char *type )
 		return result;
 	}
 	if ( !strcmp( type, "J" ) ) {
-	  result = (long)( (*env)->GetLongField( env, jobj, jfd ) );
+	  result = (size_t)( (*env)->GetLongField( env, jobj, jfd ) );
 	} else {
 	  result = (size_t) ( (*env)->GetIntField( env, jobj, jfd ) );
 	}
@@ -5403,10 +5454,7 @@ int fhs_lock( const char *filename, int pid )
 	fd = open( file, O_CREAT | O_WRONLY | O_EXCL, 0666 );
 	if( fd < 0 )
 	{
-		sprintf( message,
-			"RXTX fhs_lock() Error: opening lock file: %s: %s.",
-			file, strerror(errno) );
-		report_error( message );
+
 		fd = open( file,  O_WRONLY );
 		if( fd < 0 ){
 			sprintf( message,
@@ -5417,7 +5465,12 @@ int fhs_lock( const char *filename, int pid )
 		}
 
 		if(check_lock_pid( file, pid )==0){
-			report_error(" It is mine\n" );
+//			report_error(" It is mine\n" );
+		}else{
+			sprintf(message, "RXTX fhs_lock() Error: opening lock file: %s: %s.", file,
+			strerror(errno));
+			report_error( message );
+			report_error(" It is NOT mine\n" );
 		}
 		report_error( "\n" );
 		close( fd );
@@ -5777,7 +5830,7 @@ int check_group_uucp()
 	strcat(testLockAbsFileName, testLockFileDirName);
 	strcat(testLockAbsFileName, "/");
 	strcat(testLockAbsFileName, testLockFileName);
-	if ( NULL == mkstemp(testLockAbsFileName) )
+	if ( 0 == mkstemp(testLockAbsFileName) )
 	{
 		free(testLockAbsFileName);
 		report_error("check_group_uucp(): mktemp malformed string - \
