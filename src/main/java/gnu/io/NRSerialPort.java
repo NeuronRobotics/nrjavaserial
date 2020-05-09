@@ -76,6 +76,9 @@ public class NRSerialPort
     private String port = null;
     private boolean connected = false;
     private int baud = 115200;
+    private int parity = SerialPort.PARITY_NONE;
+    private int dataBits = SerialPort.DATABITS_8;
+    private int stopBits = SerialPort.STOPBITS_1;
 
     /**
      * Class Constructor for a NRSerialPort with a given port and baudrate.
@@ -83,10 +86,40 @@ public class NRSerialPort
      * @param port the port to connect to (i.e. COM6 or /dev/ttyUSB0)
      * @param baud the baudrate to use (i.e. 9600 or 115200)
      */
+
+    public NRSerialPort(String port)
+    {
+    	setPort(port);
+    }
+    
     public NRSerialPort(String port, int baud)
     {
     	setPort(port);
         setBaud(baud);
+    }
+    
+    public NRSerialPort(String port, int baud, int parity)
+    {
+    	setPort(port);
+        setBaud(baud);
+	setParity(parity);
+    }
+    
+    public NRSerialPort(String port, int baud, int parity, int dataBits)
+    {
+    	setPort(port);
+        setBaud(baud);
+	setParity(parity);
+        setDataBits(dataBits);	
+    }
+    
+    public NRSerialPort(String port, int baud, int parity, int dataBits, int stopBits)
+    {
+    	setPort(port);
+        setBaud(baud);
+	setParity(parity);
+        setDataBits(dataBits);	
+        setStopBits(stopBits);	
     }
     
     public boolean connect()
@@ -103,7 +136,7 @@ public class NRSerialPort
         		serial = new RFC2217PortCreator().createPort(port);
         	else
         		serial = new RxTxPortCreator().createPort(port);
-            serial.setSerialPortParams(getBaud(), SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+		serial.setSerialPortParams(getBaud(), getDataBits(), getStopBits(), getParity());
             setConnected(true);
         }
         catch (NativeResourceException e)
@@ -236,6 +269,36 @@ public class NRSerialPort
         return baud;
     }
 
+    public void setParity(int parity)
+    {
+	this.parity = parity;
+    }
+
+    public int getParity()
+    {
+	return this.parity;
+    }
+
+    public void setStopBits(int stopBits)
+    {
+	this.stopBits = stopBits;
+    }
+
+    public int getStopBits()
+    {
+	return this.stopBits;
+    }
+
+    public void setDataBits(int dataBits)
+    {
+	this.dataBits = dataBits;
+    }
+
+    public int getDataBits()
+    {
+	return this.dataBits;
+    }
+    
     /**
      * Enables RS485 half-duplex bus communication for Linux. The Linux kernel uses the RTS pin as bus enable. If you use a device that is configured via the Linux
      * device tree, take care to add "uart-has-rtscts" and to configure the RTS GPIO correctly.
