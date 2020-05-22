@@ -243,6 +243,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 ------------------------------------------------------------------------------*/
 	static public CommPortIdentifier getPortIdentifier(String s) throws NoSuchPortException 
 	{ 
+		CommPortIdentifier.getPortIdentifiers();
 		if(debug) System.out.println("CommPortIdentifier:getPortIdentifier(" + s +")");
 		CommPortIdentifier index;
 
@@ -284,6 +285,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 	static public CommPortIdentifier getPortIdentifier(CommPort p) 
 		throws NoSuchPortException 	
 	{ 
+		CommPortIdentifier.getPortIdentifiers();
 		if(debug) System.out.println("CommPortIdentifier:getPortIdentifier(CommPort)");
 		CommPortIdentifier c;
 		synchronized( Sync )
