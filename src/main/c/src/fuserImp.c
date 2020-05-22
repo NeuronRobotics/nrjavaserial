@@ -51,7 +51,8 @@ is provided "as is" and without any express or implied warranties.
 
 
 char returnstring[256];
-void parse_args(const char *);
+int parse_args(const char *);
+void throw_java_exception( JNIEnv *env, char *exc, char *foo, char *msg );
 typedef struct {
     const char *name;
 } SPACE_DSC;
@@ -88,7 +89,7 @@ static FILE_DSC *files = NULL;
 static FILE_DSC *last_named = NULL;
 static int all = 0,found_item = 0;
 
-static void add_file(const char *path,unsigned long device,unsigned long inode, pid_t pid,int ref)
+static int add_file(const char *path,unsigned long device,unsigned long inode, pid_t pid,int ref)
 {
     struct stat st;
     FILE_DSC *file,*next;
@@ -108,7 +109,7 @@ static void add_file(const char *path,unsigned long device,unsigned long inode, 
 	    else {
 		if (!(this = malloc(sizeof(ITEM_DSC)))) {
 		    perror("malloc");
-		    exit(1);
+		    return 1;
 		}
 		this->type = it_proc;
 		this->u.proc.pid = pid;
@@ -123,27 +124,30 @@ static void add_file(const char *path,unsigned long device,unsigned long inode, 
 		this->u.proc.uid = st.st_uid;
 	}
     }
+    return 0;
 }
 
-static void check_dir(const char *rel,pid_t pid,int type)
+static int check_dir(const char *rel,pid_t pid,int type)
 {
     DIR *dir;
     struct dirent *de;
     char path[PATH_MAX+1];
     struct stat st;
 
-    if (!(dir = opendir(rel))) return;
+    if (!(dir = opendir(rel))) return 2;
     while ( (de = readdir(dir) ) )
 	if (strcmp(de->d_name,".") && strcmp(de->d_name,"..")) {
 	    sprintf(path,"%s/%s",rel,de->d_name);
             if (stat(path,&st) >= 0)
-               add_file(path,st.st_dev,st.st_ino,pid,type);
+               if(add_file(path,st.st_dev,st.st_ino,pid,type))
+            	   return 1;
 	}
     (void) closedir(dir);
+    return 0;
 }
 
 
-extern void scan_fd(void)
+extern int scan_fd(void)
 {
     DIR *dir;
     struct dirent *de;
@@ -153,7 +157,7 @@ extern void scan_fd(void)
 
     if (!(dir = opendir(PROC_BASE))) {
 	perror(PROC_BASE);
-	exit(1);
+	return 1;
     }
     empty = 1;
     while ( ( de = readdir(dir) ) )
@@ -167,11 +171,12 @@ extern void scan_fd(void)
     (void) closedir(dir);
     if (empty) {
 	fprintf(stderr,PROC_BASE " is empty (not mounted ?)\n");
-	exit(1);
+	return 2;
     }
+    return 0;
 }
 
-extern void show_user(const char tstring[],char *rs)
+extern int show_user(const char tstring[],char *rs)
 {
     const ITEM_DSC *item;
     FILE *f;
@@ -185,17 +190,20 @@ extern void show_user(const char tstring[],char *rs)
     int uid;
     char temp[80];
 
-    parse_args(tstring);
-    scan_fd();
+    if(parse_args(tstring)){
+    	return 1;
+    }
+    if(scan_fd())
+    	return 2;
     if (seteuid(getuid()) < 0) { 
 	sprintf(rs, "%s", "Unknown Linux Application");
-	return; 
+	return 2;
     }
     getpid();
     if (!files->name || !(files->items || all))
     {
 	 sprintf(rs, "%s", "Unknown Linux Application");
-	 return; 
+	 return 3;
     }
     scan = files->name;
     strcat(returnstring," ");
@@ -245,21 +253,22 @@ extern void show_user(const char tstring[],char *rs)
 	 }
     }
     strcpy(rs,returnstring);
+    return 0;
 }
-static void enter_item(const char *name,int flags,int sig_number,dev_t dev, ino_t ino,SPACE_DSC *name_space)
+static int enter_item(const char *name,int flags,int sig_number,dev_t dev, ino_t ino,SPACE_DSC *name_space)
 {
     static FILE_DSC *last = NULL;
     FILE_DSC *new;
 
     if (!(new = malloc(sizeof(FILE_DSC)))) {
 	perror("malloc");
-	exit(1);
+	return 1;
     }
     if (last_named && !strcmp(last_named->name,name) &&
       last_named->name_space == name_space) new->name = NULL;
     else if (!(new->name = strdup(name))) {
 	    perror("strdup");
-	    exit(1);
+	    return 2;
 	}
     new->flags = flags;
     new->sig_num = sig_number;
@@ -273,8 +282,9 @@ static void enter_item(const char *name,int flags,int sig_number,dev_t dev, ino_
     last = new;
     new->named = last_named;
     if (new->name) last_named = new;
+    return 0;
 }
- void parse_args(const char *argv)
+ int parse_args(const char *argv)
 {
     SPACE_DSC *name_space;
     int flags,sig_number;
@@ -292,11 +302,12 @@ static void enter_item(const char *name,int flags,int sig_number,dev_t dev, ino_
     if (this_name_space == name_spaces) {
        if (stat(argv,&st) < 0) {
           perror(argv);
-          exit(0);
+          return 1;
        }
        if (!S_ISSOCK(st.st_mode) || (flags & FLAG_DEV))
           enter_item(argv,flags,sig_number,st.st_dev,st.st_ino,NULL);
     }
+    return 0;
 }
 
 
@@ -304,7 +315,11 @@ JNIEXPORT jstring JNICALL Java_gnu_io_CommPortIdentifier_native_1psmisc_1report_
 {
 	char returnstring[256];
 	const char *str = (*env)->GetStringUTFChars(env, arg, 0);
-        show_user(str,returnstring);
+    if(    show_user(str,returnstring)){
+    	throw_java_exception( env, "gnu/io/PortInUseException", "show_user",
+    			"psmisc_1report_1owner" );
+    	return NULL;
+    }
 	(*env)->ReleaseStringUTFChars(env, arg, str);
 	return (*env)->NewStringUTF(env, returnstring);
 }
