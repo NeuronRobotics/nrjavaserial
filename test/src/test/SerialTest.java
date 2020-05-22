@@ -8,7 +8,7 @@ public class SerialTest {
 
 	@Test
 	public void test() throws Exception {
-		NRJavaSerialTest.main(new String[0]);
+		//mNRJavaSerialTest.main(new String[0]);
 		//ReadTest.main(new String[0]);
 	}
 
