@@ -471,8 +471,7 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 			}
 			else
 			{
-				throw new gnu.io.PortInUseException(
-						native_psmisc_report_owner(PortName));
+				throw new gnu.io.PortInUseException("Unknown Owner");
 			}
 		} finally {
 			if(commport == null) {
