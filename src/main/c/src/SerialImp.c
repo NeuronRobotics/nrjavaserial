@@ -4189,8 +4189,10 @@ int initialise_event_info_struct( struct event_info_struct *eis )
 
 	eis->send_event = (*env)->GetMethodID( env, eis->jclazz, "sendEvent",
 		"(IZ)Z" );
-	if(eis->send_event == NULL)
+	if(eis->send_event == NULL){
+		report_error("initialise_event_info_struct: eis->send_event == NULL!\n");
 		goto fail;
+	}
 end:
 	FD_ZERO( &eis->rfds );
 	if (eis->fd < FD_SETSIZE && eis->fd > 0) {
@@ -4199,11 +4201,14 @@ end:
 		eis->tv_sleep.tv_usec = 100 * 1000;
 		eis->initialised = 1;
 		return( 1 );
-	} else {
+	} else if(eis->fd >= FD_SETSIZE ){
 		// you can reduce this limitation only with migration to epool or something like that.
+		report_error("initialise_event_info_struct: eis->fd >= FD_SETSIZE!\n");
+	} else if(eis->fd <= 0 ){
+		// you can reduce this limitation only with migration to epool or something like that.
+		report_error("initialise_event_info_struct: eis->fd <= 0!\n");
 	}
 fail:
-	report_error("initialise_event_info_struct: initialise failed!\n");
 	finalize_event_info_struct( eis );
 	return( 0 );
 }
