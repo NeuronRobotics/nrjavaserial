@@ -84,7 +84,6 @@ public class NRSerialPort
      * Class Constructor for a NRSerialPort with a given port and baudrate.
      * 
      * @param port the port to connect to (i.e. COM6 or /dev/ttyUSB0)
-     * @param baud the baudrate to use (i.e. 9600 or 115200)
      */
 
     public NRSerialPort(String port)
