@@ -35,7 +35,7 @@ repositories {
 
 dependencies {
 	compile fileTree(dir: 'libs', includes: ['*.jar'])
-	testCompile 'junit:junit:4.12'
+	testImplementation('org.junit.jupiter:junit-jupiter:5.6.2')
 	compile 'commons-net:commons-net:3.3'
 	compileOnly 'net.java.dev.jna:jna:4.4.0'
 	compileOnly 'net.java.dev.jna:jna-platform:4.4.0'
@@ -55,6 +55,13 @@ jar {
 		"Export-Package": "gnu.io*"
 	)
 	
+}
+
+test {
+	useJUnitPlatform()
+	testLogging {
+		events "passed", "skipped", "failed"
+	}
 }
 
 task javadocJar(type: Jar) {
