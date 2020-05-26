@@ -18,11 +18,6 @@ archivesBaseName = "nrjavaserial"
 version = props."app.version"
 
 sourceSets {
-	test {
-		java {
-			srcDirs = ["test/src"]
-		}
-	}
 	main {
 		resources {
 			srcDirs = ["src/main/resources", "src/main/c/resources"]
