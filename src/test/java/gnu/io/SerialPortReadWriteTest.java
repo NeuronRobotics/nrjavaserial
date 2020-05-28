@@ -336,7 +336,7 @@ class SerialPortReadWriteTest
 	 *
 	 * @param buffer the buffer to fill
 	 */
-	private static void fillBuffer(byte[] buffer)
+	static void fillBuffer(byte[] buffer)
 	{
 		for (int i = 0; i < buffer.length; ++i)
 		{
