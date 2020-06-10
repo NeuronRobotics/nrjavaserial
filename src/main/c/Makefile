@@ -1,290 +1,297 @@
-# If your system has the OS X 10.5 SDK installed, we want to build against it in
-# order to generate native libraries compatible with 10.5 and up.
+# Native library compilation.
 #
-# See https://stackoverflow.com/questions/5378518/ for installation help.
-OSXSDKPREFIX = /Developer/SDKs/MacOSX10.5.sdk
+# The suggested package names assume you're running Debian 10 (buster) or a
+# close relative (e.g., Ubuntu) on an amd64 build host.
+#
+# For each supported platform, this file defines which objects need to be
+# built, how the resulting library binary should be organized in the source
+# tree, and compiler and linker executables and flags. Due to the mind-boggling
+# complexity of writing interesting dynamic Make rules, the actual build is
+# delegated to a sub-Make task.
+#
+# To define compilation for a new platform, the following target-specific
+# variables must be exported:
+#
+# * platform: The subdirectory within `resources/native/` which will hold the
+#             library binary.
+# * variant: A suffix inserted into the filename of the library between its
+#            regular name and its extension. E.g., if the usual name of the
+#            library is “libNRJavaSerial.so”, for variant “foo”, the filename
+#            produced will be “libNRJavaSerialfoo.so”. This is useful for ARM
+#            platforms, where there are multiple variants on the same core
+#            32-bit architecture.
+# * lib_type: The type of library (so, dylib, dll). Used to construct the
+#             library filename.
+#
+# Additionally, the following variables will already have sensible definitions
+# for compilation targetting the build host, but some of which will probably
+# require overriding for cross-compilation:
+#
+# * CC and LD: Command names for the compiler and linker, respectively.
+# * CFLAGS and LDFLAGS: Flags for the compiler and linker, respectively.
+# * objects: The names of the object files to be compiled and linked together
+#            to form the library. A 1-to-1 relationship between object names
+#            (`foo.o`) and source file names (`foo.c`) is assumed. Most
+#            platforms build from the same source set, but sometimes additional
+#            code is necessary (e.g., on Windows).
+#
+# Your target must also invoke the `natives.mk` sub-makefile directly.
+# Unfortunately, this must be done per-target: it cannot be done as a phony
+# rule, because Make will invoke each target at most once per run. If you split
+# the invocation into such a rule:
+#
+# .PHONY: natives
+# natives:
+# 	$(MAKE) -f natives.mk
+#
+# ...it will only be invoked for the first target which depends on it.
+#
+# See the existing targets for examples of all of this. The Windows and macOS
+# targets are good examples, because they require overrides for just about
+# everything.
 
-JDKLOCATION=$(HOME)/bin/java8
+# We need to know the location of a Java installation to include the JNI
+# headers. We'd rather pull from the JAVA_HOME environment variable, but it's
+# very often not set. In cases where it's absent, this included Makefile will
+# attempt to discover the Java home path.
+include JAVA_HOME.mk
 
-OSXJAVAINCLUDE1=-I/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home/include 
-OSXJAVAINCLUDE4=-I/Library/Developer/CommandLineTools/SDKs/MacOSX10.14.sdk/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers/
-OSXJAVAINCLUDE5=-I./include/OSX/
+include platform.mk
 
-OSXJAVAINCLUDE = $(OSXJAVAINCLUDE1) $(OSXJAVAINCLUDE4) $(OSXJAVAINCLUDE5)
-OSXINCLUDE=-I"./include" -I"./include/target"  $(OSXJAVAINCLUDE)
-OSXARCH = -arch x86_64
-CCOSX=cc $(OSXINCLUDE) $(OSXARCH) -g -O2 -D_BSD_SOURCE -c
-LINKOSX=cc $(OSXARCH) -dynamiclib -framework JavaVM -framework IOKit -framework CoreFoundation
+# In all cases, we want to include the system JNI headers, our own headers,
+# crank the optimization level, and compile position-independent code so that
+# it will work as a library (dlopen(3) et al. can load it into any memory).
+export CFLAGS ?= -I$(JAVA_HOME)/include -I./include -I./include/target \
+                   -O3 -fPIC -c \
+                   -Wall
+# We want to use the compiler frontend to invoke the linker, too.
+export LD = $(CC)
+# We want to link objects into a shared library.
+export LDFLAGS ?= -fPIC -shared
 
+export objects := fixup.o fuserImp.o SerialImp.o
+export lib_type := so
 
-LINOBJ=build/fixup.o build/fuserImp.o build/SerialImp.o
-LININCLUDE=    -I./include -I./include/target -I$(JDKLOCATION)/include -I$(JDKLOCATION)/include/linux
+define NO_TARGET_PLATFORM_SPECIFIED
+You must specify a target platform to build its natives:
 
-CCLIN32=gcc $(LININCLUDE) -I./include/ubuntu-multilib-fix  -O3 -Wall -fmessage-length=0 -fPIC -m32 -MMD
-LINKLIN32=gcc -m32 -shared 
+    make linux|osx|freebsd|windows
 
-CCLIN64=gcc $(LININCLUDE)  -O3 -Wall -fmessage-length=0 -fPIC -m64 -MMD 
-LINKLIN64=g++ -m64 -shared
-
-CCLINARM32=arm-linux-gnueabi-gcc $(LININCLUDE)  -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MP
-LINKLINARM32=arm-linux-gnueabi-g++ -shared -fPIC -nostdlib -Lcross-compile-libs/ARM_32
-
-CCLINARM32_HF=arm-linux-gnueabihf-gcc $(LININCLUDE)  -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MP
-LINKLINARM32_HF=arm-linux-gnueabihf-g++ -shared -fPIC -nostdlib -Lcross-compile-libs/ARM_32
-
-CCLINARM64=aarch64-linux-gnu-gcc $(LININCLUDE)  -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MP
-LINKLINARM64=aarch64-linux-gnu-g++ -shared -fPIC -nostdlib -Lcross-compile-libs/ARM_64
-
-CCLINANDROID=/home/opt/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/arm-linux-androideabi/bin/gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MMD -MP
-LINKLINANDROID=/home/opt/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/arm-linux-androideabi/bin/g++ -shared
-
-#powerpc
-CCLINPPC=/usr/local/powerpc-none-linux-gnuspe/bin/powerpc-none-linux-gnuspe-gcc $(LININCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MMD -MP
-LINKLINPPC=/usr/local/powerpc-none-linux-gnuspe/bin/powerpc-none-linux-gnuspe-g++ -shared
-
-BSDOBJ=build/fixup.o build/fuserImp.o build/SerialImp.o
-BSDINCLUDE=-I"./include" -I"./include/target" -I/usr/local/openjdk8/include/ -I/usr/local/openjdk8/include/freebsd/
-
-CCBSD32=cc $(BSDINCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -m32 -MMD
-LINKBSD32=c++ -m32 -shared
-
-
-CCBSD64=cc $(BSDINCLUDE) -O3 -Wall -c -fmessage-length=0 -fPIC -m64 -MMD
-LINKBSD64=c++ -m64 -shared
-
-
-#Wine Windows
-WINLINKOPT = -shared  -Wl,--add-stdcall-alias -DBUILD_DLL
-WINCCOPT = -O3 -Wall -DBUILD_DLL -fPIC 
-JDKDIR = C:/jvm/include
-
-WININCLUDE32=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\TDM-GCC-64\include" -I"$(JDKDIR)" -I"$(JDKDIR)/win32"
-CCWIN32 = wine "C:\TDM-GCC-64\bin\gcc.exe" $(WININCLUDE32) -m32 $(WINCCOPT)
-LINKWIN32 =wine "C:\TDM-GCC-64\bin\gcc.exe" -m32  $(WINLINKOPT)
-
-WININCLUDE64=-I".\include" -I".\include\target" -I".\include\windows" -I"C:\TDM-GCC-64\include" -I"$(JDKDIR)" -I"$(JDKDIR)/win32"
-CCWIN64 = wine "C:\TDM-GCC-64\bin\gcc.exe" $(WININCLUDE64) -m64 $(WINCCOPT)
-LINKWIN64 =wine "C:\TDM-GCC-64\bin\gcc.exe" $(WINLINKOPT)
-
-
-
-#Native Windows
-# MINGW32 = C:\MinGW32
-# MINGW64 = C:\MinGW64
-MINGW32 = C:\TDM-GCC-64
-MINGW64 = C:\TDM-GCC-64
-
-WININCLUDE32N=-I".\include" -I".\include\target" -I".\include\windows" -I"$(MINGW32)\include" -I"$(JDKDIR)" -I"$(JDKDIR)/win32"
-CCWIN32N = "$(MINGW32)\bin\gcc.exe" $(WININCLUDE32N) -m32 $(WINCCOPT)
-LINKWIN32N ="$(MINGW32)\bin\gcc.exe" -m32 $(WINLINKOPT)
-
-WININCLUDE64N=-I".\include" -I".\include\target" -I".\include\windows" -I"$(MINGW64)\include" -I"$(JDKDIR)" -I"$(JDKDIR)/win32"
-CCWIN64N = "$(MINGW64)\bin\gcc.exe" $(WININCLUDE64N) -m64 $(WINCCOPT)
-LINKWIN64N ="$(MINGW64)\bin\gcc.exe" $(WINLINKOPT)
+The “linux” target encompasses both x86 and ARM platforms. To install
+cross-compilation toolchains to target these platforms and Windows from an
+amd64 build host running Debian or a derivative, build the “crosstools” target
+as root
+endef
 
 all:
-	echo "Specify a system: make linux, make windows, make osx"
-dirs:
-	if (test -d build); then rm -rf build;mkdir build;else mkdir build; fi
-	if (test -d resources/native);\
-	 then echo Native output directories seem to exist.;else\
-	 mkdir -p resources/native/linux/x86_32/;\
-	 mkdir -p resources/native/linux/x86_64/;\
-	 mkdir -p resources/native/linux/ARM_32/; \
-	 mkdir -p resources/native/linux/ARM_64/; \
-	 mkdir -p resources/native/linux/ARM_ANDROID/; \
-	 mkdir -p resources/native/linux/PPC/; \
-	 mkdir -p resources/native/windows/x86_32/; \
-	 mkdir -p resources/native/windows/x86_64/; \
-	 mkdir -p resources/native/osx/; \
-	 fi
-	if (test -d resources/native/freebsd);\
-	 then echo "FreeBSD native dir exists"; else\
-	 mkdir -p resources/native/freebsd/x86_64/; \
-	 mkdir -p resources/native/freebsd/x86_32/; \
-	fi
+	$(error $(NO_TARGET_PLATFORM_SPECIFIED))
 
-windowsLocal:
-	$(CCWIN64N) -c src/windows/init.c -o build/init.o
-	$(CCWIN64N) -c src/windows/termios.c -o build/termios.o
-	$(CCWIN64N) -c src/fixup.c -o build/fixup.o
-	$(CCWIN64N) -c src/fuserImp.c -o build/fuserImp.o
-	$(CCWIN64N) -c src/SerialImp.c -o build/SerialImp.o
-	$(LINKWIN64N) -o"resources/native/windows/x86_64/libNRJavaSerial.dll" build/SerialImp.o build/fuserImp.o build/fixup.o build/termios.o build/init.o
+crosstools:
+	apt install --install-recommends \
+	            gcc-i686-linux-gnu \
+	            gcc-arm-linux-gnueabi \
+	            gcc-arm-linux-gnueabihf \
+	            gcc-aarch64-linux-gnu \
+	            gcc-mingw-w64 \
+	            gcc-powerpc-linux-gnu
 
-	$(CCWIN32N) -c src/windows/init.c -o build/init.o
-	$(CCWIN32N) -c src/windows/termios.c -o build/termios.o
-	$(CCWIN32N) -c src/fixup.c -o build/fixup.o
-	$(CCWIN32N) -c src/fuserImp.c -o build/fuserImp.o
-	$(CCWIN32N) -c src/SerialImp.c -o build/SerialImp.o
-	$(LINKWIN32N) -o"resources/native/windows/x86_32/libNRJavaSerial.dll" build/SerialImp.o build/fuserImp.o build/fixup.o build/termios.o build/init.o
+# Does not include Android, because Android toolchains are large, not commonly
+# available, and the resulting library is not typically desired.
+linux: linux32 linux64 arm ppc
+LINUX_CFLAGS := -I$(JAVA_HOME)/include/linux
+# Source fortification (-D_FORTIFY_SOURCE) are great, but some of the runtime
+# checks are only available in newer versions of glibc. Disabling this for
+# deployment versions lets us maintain compatibility with much older systems
+# (from glibc 2.15 down to glibc 2.7).
+ifndef DEBUG
+LINUX_CFLAGS += -U_FORTIFY_SOURCE
+endif
 
-windows:windows64 windows32
-	echo "Windows compile OK!"
-windows64:dirs
-	export WINEPREFIX=$(HOME)/.wine/
-	
-	$(CCWIN64) -c  src/windows/init.c -o build/init.o
-	$(CCWIN64)  -c src/windows/termios.c -o build/termios.o
-	$(CCWIN64)  -c src/fixup.c -o build/fixup.o
-	$(CCWIN64)  -c src/fuserImp.c -o build/fuserImp.o
-	$(CCWIN64)  -c src/SerialImp.c -o build/SerialImp.o
-	$(LINKWIN64) -o"resources/native/windows/x86_64/libNRJavaSerial.dll" build/SerialImp.o build/fuserImp.o build/fixup.o build/termios.o build/init.o
+# Requires gcc-i686-linux-gnu.
+linux32: export CC := i686-linux-gnu-gcc
+linux32: export CFLAGS += $(LINUX_CFLAGS) -m32
+linux32: export LDFLAGS += -m32
+linux32: export platform := linux/x86_32
+linux32:
+	$(MAKE) -f natives.mk
 
-	rm build/*
-windows32:dirs
-	export WINEPREFIX=$(HOME)/.wine/
-	
-	$(CCWIN32)  -c src/windows/init.c -o build/init.o
-	$(CCWIN32)  -c src/windows/termios.c -o build/termios.o
-	$(CCWIN32)  -c src/fixup.c -o build/fixup.o
-	$(CCWIN32)  -c src/fuserImp.c -o build/fuserImp.o
-	$(CCWIN32)  -c src/SerialImp.c -o build/SerialImp.o
-	$(LINKWIN32) -o"resources/native/windows/x86_32/libNRJavaSerial.dll" build/SerialImp.o build/fuserImp.o build/fixup.o build/termios.o build/init.o
+# Requires gcc.
+linux64: export CFLAGS += $(LINUX_CFLAGS) -m64
+linux64: export platform := linux/x86_64
+linux64:
+	$(MAKE) -f natives.mk
 
-	rm build/*
-linux:linux32 linux64 arm 
-	echo all Linux ok!
-linux32:dirs
-	$(CCLIN32) -c  src/fixup.c -o build/fixup.o
-	$(CCLIN32) -c  src/fuserImp.c -o build/fuserImp.o
-	$(CCLIN32) -c src/SerialImp.c -o build/SerialImp.o
-	#rm "resources/native/linux/x86_32/libNRJavaSerial.so"
-	$(LINKLIN32) -o"resources/native/linux/x86_32/libNRJavaSerial.so" $(LINOBJ) 
-	rm build/*
-linux64:dirs
-	$(CCLIN64)  -c src/fixup.c -o build/fixup.o
-	$(CCLIN64)  -c src/fuserImp.c -o build/fuserImp.o
-	$(CCLIN64)  -c src/SerialImp.c -o build/SerialImp.o
-	#rm "resources/native/linux/x86_64/libNRJavaSerial.so"
-	$(LINKLIN64) -o"resources/native/linux/x86_64/libNRJavaSerial.so" $(LINOBJ) 
-	rm build/*
-freebsd:freebsd32 freebsd64
-	echo all FreeBSD ok!
-freebsd32:dirs
-	$(CCBSD32) src/fixup.c -o build/fixup.o
-	$(CCBSD32) src/fuserImp.c -o build/fuserImp.o
-	$(CCBSD32) src/SerialImp.c -o build/SerialImp.o
-	#rm "resources/native/freebsd/x86_32/libNRJavaSerial.so"
-	$(LINKBSD32) -o"resources/native/freebsd/x86_32/libNRJavaSerial.so" $(LINOBJ)
-	rm build/*
-freebsd64:dirs
-	$(CCBSD64) src/fixup.c -o build/fixup.o
-	$(CCBSD64) src/fuserImp.c -o build/fuserImp.o
-	$(CCBSD64) src/SerialImp.c -o build/SerialImp.o
-	#rm "resources/native/freebsd/x86_64/libNRJavaSerial.so"
-	$(LINKBSD64) -o"resources/native/freebsd/x86_64/libNRJavaSerial.so" $(LINOBJ)
-	rm build/*
+arm: arm32v5 \
+     arm32v6 arm32v6HF \
+     arm32v7 arm32v7HF \
+     arm32v8 arm32v8HF arm64v8
 
-.PHONY: arm
-arm:
-	$(MAKE) arm64v8
-	$(MAKE) arm32v8
-	$(MAKE) arm32v8HF
-	$(MAKE) arm32v7
-	$(MAKE) arm32v7HF
-	$(MAKE) arm32v6
-	$(MAKE) arm32v6HF
-	$(MAKE) arm32v5
-	@echo all ARM ok!
+# Requires gcc-arm-linux-gnueabi.
+arm32v5: export CC := arm-linux-gnueabi-gcc
+arm32v5: export CFLAGS += $(LINUX_CFLAGS) -march=armv5t
+arm32v5: export LDFLAGS += -march=armv5t
+arm32v5: export platform := linux/ARM_32
+arm32v5: export variant := v5
+arm32v5:
+	$(MAKE) -f natives.mk
 
-arm64v8:dirs
-	$(CCLINARM64) -march=armv8-a src/fixup.c -o build/fixup.o
-	$(CCLINARM64) -march=armv8-a src/fuserImp.c -o build/fuserImp.o
-	$(CCLINARM64) -march=armv8-a src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM64) -march=armv8-a -o"resources/native/linux/ARM_64/libNRJavaSerialv8.so" $(LINOBJ) 
-	rm build/*
+# Requires gcc-arm-linux-gnueabi.
+arm32v6: export CC := arm-linux-gnueabi-gcc
+arm32v6: export CFLAGS += $(LINUX_CFLAGS) -march=armv6
+arm32v6: export LDFLAGS += -march=armv6
+arm32v6: export platform := linux/ARM_32
+arm32v6: export variant := v6
+arm32v6:
+	$(MAKE) -f natives.mk
 
-arm32v8:dirs
-	$(CCLINARM32) -march=armv8-a src/fixup.c -o build/fixup.o
-	$(CCLINARM32) -march=armv8-a src/fuserImp.c -o build/fuserImp.o
-	$(CCLINARM32) -march=armv8-a src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM32) -march=armv8-a -o"resources/native/linux/ARM_32/libNRJavaSerialv8.so" $(LINOBJ) 
-	rm build/*
+# Requires gcc-arm-linux-gnueabihf.
+arm32v6HF: export CC := arm-linux-gnueabihf-gcc
+arm32v6HF: export CFLAGS += $(LINUX_CFLAGS) -march=armv6 -mfpu=vfp -marm
+arm32v6HF: export LDFLAGS += -march=armv6 -mfpu=vfp -marm
+arm32v6HF: export platform := linux/ARM_32
+arm32v6HF: export variant := v6_HF
+arm32v6HF:
+	$(MAKE) -f natives.mk
 
-arm32v8HF:dirs
-	$(CCLINARM32_HF) -march=armv8-a src/fixup.c -o build/fixup.o
-	$(CCLINARM32_HF) -march=armv8-a src/fuserImp.c -o build/fuserImp.o
-	$(CCLINARM32_HF) -march=armv8-a src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM32_HF) -march=armv8-a -o"resources/native/linux/ARM_32/libNRJavaSerialv8_HF.so" $(LINOBJ) 
-	rm build/*
+# Requires gcc-arm-linux-gnueabi.
+arm32v7: export CC := arm-linux-gnueabi-gcc
+arm32v7: export CFLAGS += $(LINUX_CFLAGS) -march=armv7-a
+arm32v7: export LDFLAGS += -march=armv7-a
+arm32v7: export platform := linux/ARM_32
+arm32v7: export variant := v7
+arm32v7:
+	$(MAKE) -f natives.mk
 
-arm32v7:dirs
-	$(CCLINARM32) -march=armv7-a src/fixup.c -o build/fixup.o
-	$(CCLINARM32) -march=armv7-a src/fuserImp.c -o build/fuserImp.o
-	$(CCLINARM32) -march=armv7-a src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM32) -march=armv7-a -o"resources/native/linux/ARM_32/libNRJavaSerialv7.so" $(LINOBJ) 
-	rm build/*
+# Requires gcc-arm-linux-gnueabihf.
+arm32v7HF: export CC := arm-linux-gnueabihf-gcc
+arm32v7HF: export CFLAGS += $(LINUX_CFLAGS) -march=armv7-a
+arm32v7HF: export LDFLAGS += -march=armv7-a
+arm32v7HF: export platform := linux/ARM_32
+arm32v7HF: export variant := v7_HF
+arm32v7HF:
+	$(MAKE) -f natives.mk
 
-arm32v7HF:dirs
-	$(CCLINARM32_HF) -march=armv7-a src/fixup.c -o build/fixup.o
-	$(CCLINARM32_HF) -march=armv7-a src/fuserImp.c -o build/fuserImp.o
-	$(CCLINARM32_HF) -march=armv7-a src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM32_HF) -march=armv7-a -o"resources/native/linux/ARM_32/libNRJavaSerialv7_HF.so" $(LINOBJ) 
-	rm build/*
+# Requires gcc-arm-linux-gnueabi.
+arm32v8: export CC := arm-linux-gnueabi-gcc
+arm32v8: export CFLAGS += $(LINUX_CFLAGS) -march=armv8-a
+arm32v8: export LDFLAGS += -march=armv8-a
+arm32v8: export platform := linux/ARM_32
+arm32v8: export variant := v8
+arm32v8:
+	$(MAKE) -f natives.mk
 
-arm32v6:dirs
-	$(CCLINARM32) -march=armv6 src/fixup.c -o build/fixup.o
-	$(CCLINARM32) -march=armv6 src/fuserImp.c -o build/fuserImp.o
-	$(CCLINARM32) -march=armv6 src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM32) -march=armv6 -o"resources/native/linux/ARM_32/libNRJavaSerialv6.so" $(LINOBJ) 
-	rm build/*
+# Requires gcc-arm-linux-gnueabihf.
+arm32v8HF: export CC := arm-linux-gnueabihf-gcc
+arm32v8HF: export CFLAGS += $(LINUX_CFLAGS) -march=armv8-a
+arm32v8HF: export LDFLAGS += -march=armv8-a
+arm32v8HF: export platform := linux/ARM_32
+arm32v8HF: export variant := v8_HF
+arm32v8HF:
+	$(MAKE) -f natives.mk
 
-arm32v6HF:dirs
-	$(CCLINARM32_HF) -march=armv6 -mfpu=vfp -marm src/fixup.c -o build/fixup.o
-	$(CCLINARM32_HF) -march=armv6 -mfpu=vfp -marm src/fuserImp.c -o build/fuserImp.o
-	$(CCLINARM32_HF) -march=armv6 -mfpu=vfp -marm src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM32_HF) -march=armv6 -mfpu=vfp -marm -o"resources/native/linux/ARM_32/libNRJavaSerialv6_HF.so" $(LINOBJ) 
-	rm build/*
+# Requires gcc-aarch64-linux-gnu.
+arm64v8: export CC := aarch64-linux-gnu-gcc
+arm64v8: export CFLAGS += $(LINUX_CFLAGS) -march=armv8-a
+arm64v8: export LDFLAGS += -march=armv8-a
+arm64v8: export platform := linux/ARM_64
+arm64v8: export variant := v8
+arm64v8:
+	$(MAKE) -f natives.mk
 
-arm32v5:dirs
-	$(CCLINARM32) -march=armv5t src/fixup.c -o build/fixup.o
-	$(CCLINARM32) -march=armv5t src/fuserImp.c -o build/fuserImp.o
-	$(CCLINARM32) -march=armv5t src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINARM32) -march=armv5t -o"resources/native/linux/ARM_32/libNRJavaSerialv5.so" $(LINOBJ) 
-	rm build/*
+# Requires an Android NDK be installed, and its tools be on your PATH.
+#
+# This rule has not been tested.
+android: export CC := arm-linux-androideabi-gcc
+android: export CFLAGS += $(LINUX_CFLAGS)
+android: export platform := linux/ARM_ANDROID
+android:
+	$(MAKE) -f natives.mk
 
-ppc:dirs
-	$(CCLINPPC) src/fixup.c -o build/fixup.o
-	$(CCLINPPC) src/fuserImp.c -o build/fuserImp.o
-	$(CCLINPPC) src/SerialImp.c -o build/SerialImp.o
-	$(LINKLINPPC) -o"resources/native/linux/PPC/libNRJavaSerial.so" $(LINOBJ)
-	rm build/*
+# Requires gcc-powerpc-linux-gnu.
+ppc: export CC := powerpc-linux-gnu-gcc
+ppc: export CFLAGS += $(LINUX_CFLAGS)
+ppc: export platform := linux/PPC
+ppc:
+	$(MAKE) -f natives.mk
 
-osx:dirs
-	if (test -d include/OSX/CoreFoundation/);\
-	then\
-		echo "CoreFoundation framework symlink exists.";\
-	else\
-		rm include/OSX/CoreFoundation;\
-		ln -s $(OSXSDKPREFIX)/System/Library/Frameworks/CoreFoundation.framework/Headers/ include/OSX/CoreFoundation; \
-	fi
+# Requires a macOS host.
+osx: export CFLAGS += -I$(JAVA_HOME)/include/darwin -arch x86_64
+osx: export LDFLAGS := -arch x86_64 -dynamiclib -framework JavaVM -framework IOKit -framework CoreFoundation
+osx: export objects := fuserImp.o SerialImp.o
+osx: export platform := osx
+osx: export lib_type := jnilib
+osx:
+	$(MAKE) -f natives.mk
 
-	if (test -d include/OSX/CoreServices/);\
-	then\
-		echo "CoreServices framework symlink exists.";\
-	else\
-		rm include/OSX/CoreServices;\
-		ln -s $(OSXSDKPREFIX)/System/Library/Frameworks/CoreServices.framework/Headers/ include/OSX/CoreServices; \
-	fi
+freebsd: freebsd32 freebsd64
 
-	if (test -d include/OSX/CarbonCore/);\
-	then\
-		echo "CarbonCore framework symlink exists.";\
-	else\
-		rm include/OSX/CarbonCore;\
-		ln -s $(OSXSDKPREFIX)/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/Headers include/OSX/CarbonCore; \
-	fi
+# Requires a FreeBSD host.
+freebsd32: export CFLAGS += -I$(JAVA_HOME)/include/freebsd -m32
+freebsd32: export LDFLAGS += -m32
+freebsd32: export platform := freebsd/x86_32
+freebsd32:
+	$(MAKE) -f natives.mk
 
-	if (test -d include/OSX/IOKit/);\
-	then\
-		echo "IOKit framework symlink exists";\
-	else\
-		rm include/OSX/IOKit;\
-		ln -s $(OSXSDKPREFIX)/System/Library/Frameworks/IOKit.framework/Headers include/OSX/IOKit; \
-	fi
+# Requires a FreeBSD host.
+freebsd64: export CFLAGS += -I$(JAVA_HOME)/include/freebsd -m64
+freebsd64: export LDFLAGS += -m64
+freebsd64: export platform := freebsd/x86_64
+freebsd64:
+	$(MAKE) -f natives.mk
 
-	$(CCOSX) src/fuserImp.c -o build/fuserImp.o
-	$(CCOSX) src/SerialImp.c -o build/SerialImp.o
-	$(LINKOSX) -o "./resources/native/osx/libNRJavaSerial.jnilib" build/SerialImp.o build/fuserImp.o
-	rm -rf build
+windows: windows32 windows64
+# Don't embed the build timestamp into DLLs so the output is the same from one
+# compile to the next for the same input source.
+# https://blog.beuc.net/posts/Practical_basics_of_reproducible_builds_2/
+WINDOWS_LDFLAGS := -Wl,--add-stdcall-alias -Wl,--no-insert-timestamp
+
+# Requires gcc-mingw-w64-i686 (included in gcc-mingw-w64). On Windows, this,
+# along with mingw32-make, is most easily acquired in the form of TDM-GCC:
+# https://jmeubank.github.io/tdm-gcc/.
+ifeq ($(OS),Windows_NT)
+# On Windows, TDM-GCC includes one GCC binary which can produce both 32- and
+# 64-bit binaries.
+windows32: export CC := x86_64-w64-mingw32-gcc
+else
+# Elsewhere, Mingw-w64 ships a separate GCC frontend for each target
+# architecture.
+windows32: export CC := i686-w64-mingw32-gcc
+endif
+# We include the only relevant Windows-specific Java header in the repository
+# and compile against that path, instead of $(JAVA_HOME)/include/win32, because
+# we can cross-compile the Windows natives from other platforms via Mingw-w64,
+# and other platform JDK installations will only have their own headers.
+windows32: export CFLAGS += -I./include/windows -I./include/windows/win32 -m32
+windows32: export LDFLAGS += $(WINDOWS_LDFLAGS) -m32
+windows32: export objects += init.o termios.o
+windows32: export platform := windows/x86_32
+windows32: export lib_type := dll
+windows32:
+	$(MAKE) -f natives.mk
+
+# Requires gcc-mingw-w64-x86-64 (included in gcc-mingw-w64).
+windows64: export CC := x86_64-w64-mingw32-gcc
+windows64: export CFLAGS += -I./include/windows -I./include/windows/win32 -m64
+windows64: export LDFLAGS += $(WINDOWS_LDFLAGS) -m64
+windows64: export objects += init.o termios.o
+windows64: export platform := windows/x86_64
+windows64: export lib_type := dll
+windows64:
+	$(MAKE) -f natives.mk
+
+.PHONY: clean
+clean: | clean-intermediaries
+	$(warning The “clean” target only removes intermediary build objects. \
+	          Because not all of the native libraries can be cross-compiled, \
+	          you probably only want to delete the ones for your current \
+	          platform. To remove those, along with the intermediary build \
+	          objects, invoke the appropriate “clean-platform” target: make \
+	          clean-linux|clean-osx|clean-freebsd|clean-windows.)
+
+.PHONY: clean-%
+clean-%: | clean-intermediaries
+	$(call rm,resources/native/$*)
+
+.PHONY: clean-intermediaries
+clean-intermediaries:
+	$(call rm,build)

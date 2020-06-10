@@ -66,53 +66,72 @@ ease of use and embeddability in other libraries.
 2. Build with Gradle.
 
         $ cd nrjavaserial
-        $ gradle build
+        $ ./gradlew build
 
 The resulting JAR will be found in the `build/libs/` directory.
 
-# Building Native Code
+# Building the native libraries
 
-Native code is built using the Makefile found in the root of the repository.
-After the native code is built, the JAR is rebuilt.
+The native libraries are written in C,
+and are built with Make.
+The source,
+including the master makefile,
+lives in `src/main/c`.
+The makefile in the project root
+will delegate to this makefile,
+and rebuild the JAR afterwards.
+
+You'll also need a copy of the JNI development headers
+for your system.
+The easiest way to get these is to install a copy of the JDK.
+The headers are located in `JAVA_HOME/include`.
+The build process will attempt to automatically determine
+the location of your Java installation;
+however, to ensure a predictable build process,
+you should set the `JAVA_HOME` environment variable
+to the path of your Java installation directory.
+
+    # Install cross-compilation toolchains for all of the supported Linux
+    # architectures and Windows onto an amd64 Linux build host running
+    # Debian 10 or a modern derivative.
+    $ sudo make -C src/main/c crosstools
 
     # Build both the 32- and 64-bit Windows binaries.
-    $ mingw32-make windows
+    $ make windows
 
-    # Build the windows binaries on Linux via Wine.
-    $ make wine
+    # Build Linux binaries for 32- and 64-bit x86, 32-bit ARMv5/v6/v7/v8,
+    # 64-bit ARMv8, and 32-bit PPC.
+    $ make linux
 
-    # Build both the 32- and 64-bit Linux x86 binaries.
-    $make linux
-
-    # Build 32- or 64-bit Linux binaries, respectively.
+    # Build only 32- or 64-bit x86 Linux binaries, respectively.
     $ make linux32
     $ make linux64
 
-    # Build the binaries for all the supported ARM flavors (requires arm-linux-geabi-* packages)
+    # Build binaries for all the supported ARM flavors.
     $ make arm
-
-    # Build the OSX binaries.
-    $ make osx
 
     # Build the PPC binaries.
     $ make ppc
-    
-    # Build the FreeBSD binaries.
+
+    # Build 64-bit x86 macOS binaries. This requires a macOS build host.
+    $ make osx
+
+    # Build 32- and 64-bit x86 FreeBSD binaries, or just for 32/64-bit,
+    # respectively. This requires a FreeBSD build host.
+    $ make freebsd
     $ make freebsd32
     $ make freebsd64
 
-
 ## Building on Windows
 
-You'll need some installation of GCC. We recommend the
-[TDM-GCC](http://tdm-gcc.tdragon.net/) distribution of mingw64-w64.
-To get the build working you need both mingw32, and ming64 installed in separate directories.
-Please modify JDKDIR to your installation of JDK.
+You'll need some installation of GCC.
+We recommend the [TDM-GCC] distribution of Mingw64-w64.
+Following its default installation process
+should result in its `bin/` directory being added to your path;
+if you can pop open a command prompt and run `x86_64-w64-mingw32-gcc`,
+you're good to go.
 
-
-Compile against Java
-
-https://cdn.azul.com/zulu/bin/zulu8.44.0.13-ca-fx-jdk8.0.242-win_x64.zip
+[TDM-GCC]: https://jmeubank.github.io/tdm-gcc/
 
 ## Building on OS X
 
