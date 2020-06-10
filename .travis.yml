@@ -1,14 +1,70 @@
-dist: trusty
+language: java
+os: linux
+dist: bionic
 
-# Travis CI build matrix.  Each entry below will trigger an extra, parallel build on Travis.
-matrix:
+jobs:
   include:
+    - name: Native library compilation for Linux (x86/ARM/PPC) and Windows
+      jdk: openjdk8
 
-  - language: java
-    os: linux
-    jdk: openjdk11
-    # Override ./gradlew and use gradle instead to overcome errors
-    install: ./gradlew assemble
-    script: ./gradlew check
+      install:
+        - sudo make -C src/main/c crosstools
+      script:
+        - make -C src/main/c clean-linux clean-windows
+        - make -C src/main/c -j linux windows
 
+      addons:
+        apt:
+          update: true
 
+        artifacts:
+          paths:
+            # git ls-files includes files which have been staged for deletion,
+            # so that's not terribly useful.
+            #
+            # Builds should be repeatable (i.e., for the same compiler and
+            # source versions, the resulting library will be byte-for-byte
+            # identical), so we want to do artifact archival based on the git
+            # status. That way, the archive will only contain unique artifacts.
+            - "$(git status --porcelain src/main/c/resources/native | grep -v '^ D' | cut -c 4- | tr '\n' ':')"
+          target_paths:
+            - /$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER
+
+    - name: Native library compilation for macOS
+      os: osx
+      # The XCode 9.3 image is the one recommended for use with JDK 1.8.
+      osx_image: xcode9.3
+      # Travis doesn't support switching JDKs in macOS images, and fails with
+      # an obscure error if the “jdk” property is set:
+      # https://travis-ci.community/t/issue-fail-to-build-jdk8-on-osx-using-xcode9-3-image/1294
+      # Unfortunately, this will occur even when the “jdk” property is set as a
+      # top-level default. And setting the property here to empty or “null”
+      # does not unset the default value. So the JDK must be explicitly
+      # specified for all other jobs which need it in order to leave it
+      # explicitly blank here.
+      jdk:
+
+      install:
+      script:
+        - make -C src/main/c clean-osx
+        - make -C src/main/c -j osx
+
+      addons:
+        artifacts:
+          paths:
+            - "$(git status --porcelain src/main/c/resources/native | grep -v '^ D' | cut -c 4- | tr '\n' ':')"
+          target_paths:
+            - /$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER
+
+    - name: Java library compilation
+      jdk: openjdk8
+
+      # Note that the artifact produced by this job does _not_ include the
+      # native libraries produced by the other two jobs; it reuses whatever
+      # native libraries were previously committed.
+      addons:
+        artifacts:
+          paths:
+            - "$(git ls-files -o build/libs | tr '\n' ':')"
+          target_paths:
+            - /$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER
