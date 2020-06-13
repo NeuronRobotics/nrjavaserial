@@ -290,8 +290,8 @@ clean: | clean-intermediaries
 
 .PHONY: clean-%
 clean-%: | clean-intermediaries
-	$(call rm,resources/native/$*)
+	$(call rmdir_r,resources/native/$*)
 
 .PHONY: clean-intermediaries
 clean-intermediaries:
-	$(call rm,build)
+	$(call rmdir_r,build)

@@ -16,9 +16,14 @@ gradlew-build = gradlew.bat build
 # MKDIR neither understands nor requires the “-p” flag, but is one of the few
 # Windows CLI utilities which relies on Windows path separators (“\”).
 mkdir = mkdir $(subst /,\,$(1))
-rm = rmtree $(1)
+# So is RMDIR. Note that even though RMDIR /S does remove files under a
+# directory, it still can't be called interchangeably on a file or directory
+# (unlike `rm -R`).
+rmdir_r = -rmdir /s /q $(subst /,\,$(1))
 else
 gradlew-build = ./gradlew build
 mkdir = mkdir -p $(1)
-rm = rm -Rf $(1)
+# Named rmdir_r – not rm_r – to indicate that it should only be used to operate
+# on directories due to limitations of the Windows variant of the command.
+rmdir_r = rm -Rf $(1)
 endif
