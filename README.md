@@ -18,7 +18,9 @@ ease of use and embeddability in other libraries.
 
 * Arm Cortex support (Gumstix).
 
-* Android Support (requires a rooted phone to access the serial hardware).
+* Android (3.x or lower, requires a rooted phone to access the serial hardware).
+
+    This feature is depricated by changes in Android permissions moving forward with 4.x
 
 * Single Makefile compile which simplifies the compilation of project binaries.
 
