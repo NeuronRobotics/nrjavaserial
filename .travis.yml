@@ -56,6 +56,45 @@ jobs:
           target_paths:
             - /$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER
 
+    - name: Native library compilation for FreeBSD
+      # Docker use based on https://stackoverflow.com/a/41940240/640170.
+      services:
+        - docker
+      before_install:
+        - docker pull empterdose/freebsd-cross-build:9.3
+        - >
+          docker run --interactive \
+                     --tty \
+                     --detach \
+                     --user $(id --user):$(id --group) \
+                     --name build \
+                     --env JAVA_HOME=$JAVA_HOME \
+                     --volume $(pwd)/src/main/c:/workdir \
+                     --volume $JAVA_HOME:$JAVA_HOME:ro \
+                     empterdose/freebsd-cross-build:9.3
+
+      install:
+        # This feels extremely dirty, but the only native header we care about
+        # is `jni_md.h`, and it is exactly identical between Linux and FreeBSD
+        # (at least in OpenJDK 8).
+        #
+        # Note that we're modifying the Java installation on the build host.
+        # The effect will be seen in the container, because the Java
+        # installation directory is bind-mounted into it. We do this to avoid
+        # wasting time installing Java inside the container.
+        - sudo ln -s $JAVA_HOME/include/linux $JAVA_HOME/include/freebsd
+      script:
+        - docker exec build make clean-freebsd
+        - docker exec build settarget i386-freebsd9 make -j freebsd32
+        - docker exec build settarget x86_64-freebsd9 make -j freebsd64
+
+      addons:
+        artifacts:
+          paths:
+            - "$(git status --porcelain src/main/c/resources/native | grep -v '^ D' | cut -c 4- | tr '\n' ':')"
+          target_paths:
+            - /$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER
+
     - name: Java library compilation
       jdk: openjdk8
 
