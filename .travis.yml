@@ -4,7 +4,8 @@ dist: bionic
 
 jobs:
   include:
-    - name: Native library compilation for Linux (x86/ARM/PPC) and Windows
+    - stage: Native library compilation
+      name: Linux (x86/ARM/PPC) and Windows
       jdk: openjdk8
 
       install:
@@ -16,6 +17,8 @@ jobs:
       addons:
         apt:
           update: true
+          packages:
+            # The “crostools” Make target installs the necessary packages.
 
         artifacts:
           paths:
@@ -30,7 +33,7 @@ jobs:
           target_paths:
             - /$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER
 
-    - name: Native library compilation for macOS
+    - name: macOS
       os: osx
       # The XCode 9.3 image is the one recommended for use with JDK 1.8.
       osx_image: xcode9.3
@@ -56,7 +59,7 @@ jobs:
           target_paths:
             - /$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER
 
-    - name: Native library compilation for FreeBSD
+    - name: FreeBSD
       # Docker use based on https://stackoverflow.com/a/41940240/640170.
       services:
         - docker
@@ -95,13 +98,31 @@ jobs:
           target_paths:
             - /$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER
 
-    - name: Java library compilation
+    - stage: Java library compilation
+      name: Java
       jdk: openjdk8
 
-      # Note that the artifact produced by this job does _not_ include the
-      # native libraries produced by the other two jobs; it reuses whatever
-      # native libraries were previously committed.
+      # If any of the prior jobs produced new native libraries, this will pull
+      # them into the current source tree so they get included in the JAR.
+      before_install:
+        - >
+          if [ -n "$ARTIFACTS_REGION" ] && [ -n "$ARTIFACTS_BUCKET" ];
+          then
+              aws s3 cp --recursive \
+                        --no-sign-request \
+                        --region $ARTIFACTS_REGION \
+                        s3://$ARTIFACTS_BUCKET/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER/src \
+                        src;
+          else
+              echo "Artifact region and bucket not configured; skipping downloading artifacts from preceding jobs." 1>&2;
+          fi
+
       addons:
+        apt:
+          update: true
+          packages:
+            - awscli
+
         artifacts:
           paths:
             - "$(git ls-files -o build/libs | tr '\n' ':')"
