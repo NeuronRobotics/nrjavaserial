@@ -6,7 +6,11 @@ import java.util.TreeSet;
 
 import gnu.io.SerialPort;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class SerialPortRegistry {
+	private static final Logger log = LoggerFactory.getLogger(SerialPortRegistry.class);
 
 	private Collection<SerialPortCreator<? extends SerialPort>> portCreators;
 	
@@ -57,7 +61,7 @@ public class SerialPortRegistry {
 				if(creator.isApplicable(portName, expectedClass))
 					return (SerialPortCreator<T>) creator;
 			} catch(Exception e) {
-				System.err.println("Error for SerialPortCreator#isApplicable: " + creator.getClass()+"; " + creator.getProtocol() +" -> " + e.getMessage());
+				log.error("Error for SerialPortCreator#isApplicable: " + creator.getClass()+"; " + creator.getProtocol() + " ->", e);
 			}
 		}
 		return null;

@@ -73,6 +73,9 @@ import org.apache.commons.net.telnet.TelnetClient;
 import org.apache.commons.net.telnet.TelnetInputListener;
 import org.apache.commons.net.telnet.TerminalTypeOptionHandler;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static gnu.io.rfc2217.RFC2217.CONTROL_BREAK_OFF;
 import static gnu.io.rfc2217.RFC2217.CONTROL_BREAK_ON;
 import static gnu.io.rfc2217.RFC2217.CONTROL_DTR_OFF;
@@ -150,6 +153,7 @@ import static gnu.io.rfc2217.RFC2217.STOPSIZE_2;
  * @see <a href="http://tools.ietf.org/html/rfc2217">RFC 2217</a>
  */
 public class TelnetSerialPort extends SerialPort {
+    private static final Logger log = LoggerFactory.getLogger(TelnetSerialPort.class);
 
     private static final int DEFAULT_BAUD_RATE = 9600;
 
@@ -896,7 +900,7 @@ public class TelnetSerialPort extends SerialPort {
         try {
             currentListener.serialEvent(event);
         } catch (Exception e) {
-        	System.err.println(this.name + ": exception from listener " + listener + ": " + e.getMessage());
+        	log.error(this.name + ": exception from listener " + listener + ":", e);
         }
     }
 
@@ -908,7 +912,7 @@ public class TelnetSerialPort extends SerialPort {
         try {
             this.telnetClient.sendSubnegotiation(command.getBytes());
         } catch (IOException e) {
-        	System.err.println(this.name + ": exception sending subcommand: " + e.getMessage());
+        	log.error(this.name + ": exception sending subcommand:", e);
         }
     }
 

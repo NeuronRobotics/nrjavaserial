@@ -59,8 +59,13 @@ package gnu.io;
 
 import java.io.RandomAccessFile;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class Zystem
 {
+	private static final Logger log = LoggerFactory.getLogger(Zystem.class);
+
 	public static final int SILENT_MODE	= 0;
 	public static final int FILE_MODE	= 1;
 	public static final int NET_MODE	= 2;
@@ -208,7 +213,7 @@ public class Zystem
 			w.writeBytes( s );
 			w.close();
 		} catch ( Exception e ) {
-			System.out.println("Debug output file write failed");
+			log.error("Debug output file write failed", e);
 		}
 	}
 
@@ -220,7 +225,7 @@ public class Zystem
 		}
 		else if ( mode == PRINT_MODE )
 		{
-			System.out.println( s );
+			log.info( s );
 			return( true );
 		}
 		else if ( mode == MEX_MODE )
@@ -256,7 +261,7 @@ public class Zystem
 		}
 		else if ( mode == PRINT_MODE )
 		{
-			System.out.println( );
+			log.info( "" );
 			return( true );
 		}
 		else if ( mode == MEX_MODE )
@@ -288,7 +293,7 @@ public class Zystem
 		}
 		else if ( mode == PRINT_MODE )
 		{
-			System.out.println( s );
+			log.info( s );
 			return( true );
 		}
 		else if ( mode == MEX_MODE )
