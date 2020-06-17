@@ -356,15 +356,6 @@ printf("%8li sec : %8li usec\n", enow.tv_sec - snow.tv_sec, enow.tv_sec - snow.t
 #define report_time_end( ) {}
 #endif /* DEBUG_TIMING && ! WIN32 */
 
-/* #define TRACE */
-#ifdef TRACE
-#define ENTER(x) report("entering "x" \n");
-#define LEAVE(x) report("leaving "x" \n");
-#else
-#define ENTER(x)
-#define LEAVE(x)
-#endif /* TRACE */
-
 /* allow people to override the directories */
 /* #define USER_LOCK_DIRECTORY "/home/tjarvi/1.5/build" */
 #ifdef USER_LOCK_DIRECTORY
@@ -477,10 +468,6 @@ size_t get_java_var( JNIEnv *, jobject, char *, char * );
 jboolean is_interrupted( struct event_info_struct * );
 int send_event(struct event_info_struct *, jint, int );
 void dump_termios(char *,struct termios *);
-void report_verbose(char *);
-void report_error(char *);
-void report_warning(char *);
-void report(char *);
 void throw_java_exception( JNIEnv *, char *, char *, char * );
 int lock_device( const char * );
 void unlock_device( const char * );

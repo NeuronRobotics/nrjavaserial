@@ -153,6 +153,7 @@
 extern int errno;
 
 #include "SerialImp.h"
+#include "slf4j.h"
 
 JavaVM *javaVM = NULL;
 
@@ -260,6 +261,8 @@ JNIEXPORT void JNICALL RXTXPort(Initialize)(
 	jclass jclazz
 	)
 {
+	slf4j_setup_static(env, jclazz);
+
 #if defined(DEBUG) && defined(__linux__) && defined(UTS_RELEASE)
 	struct utsname name;
 	char message[80];
@@ -624,6 +627,8 @@ JNIEXPORT jint JNICALL RXTXPort(controlRs485)(
         jint delayRtsAfterSendMs
         )
 {
+	slf4j_setup_instance(env, jobj);
+
 #if defined(__linux__)
     struct serial_rs485 rs485conf;
     memset(&rs485conf, 0, sizeof(struct serial_rs485));
@@ -664,6 +669,8 @@ JNIEXPORT jint JNICALL RXTXPort(open)(
 	jstring jstr
 	)
 {
+	slf4j_setup_instance(env, jobj);
+
 	int fd;
 	int  pid = -1;
 	char message[80];
@@ -786,6 +793,8 @@ RXTXPort.nativeClose
 JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
 	jobject jobj,jstring jstr )
 {
+	slf4j_setup_instance(env, jobj);
+
 	int result, pid;
 	int fd = get_java_var( env, jobj,"fd","I" );
 	const char *filename = (*env)->GetStringUTFChars( env, jstr, 0 );
@@ -977,6 +986,8 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeSetSerialPortParams)(
 	JNIEnv *env, jobject jobj, jint speed, jint dataBits, jint stopBits,
 	jint parity )
 {
+	slf4j_setup_instance(env, jobj);
+
 	int fd = get_java_var( env, jobj,"fd","I" );
 	int cspeed = translate_speed( env, speed );
 
@@ -1191,6 +1202,8 @@ int translate_stop_bits( JNIEnv *env, tcflag_t *cflag, jint stopBits )
 }
 JNIEXPORT jint JNICALL RXTXPort(nativeGetFlowControlMode)(JNIEnv *env, jobject jobj, jint fd)
 {
+	slf4j_setup_instance(env, jobj);
+
 	struct termios ttyset;
 	int ret = 0;
 
@@ -1212,6 +1225,8 @@ JNIEXPORT jint JNICALL RXTXPort(nativeGetFlowControlMode)(JNIEnv *env, jobject j
 }
 JNIEXPORT jint JNICALL RXTXPort(nativeGetParity)(JNIEnv *env, jobject jobj, jint fd)
 {
+	slf4j_setup_instance(env, jobj);
+
 	struct termios ttyset;
 
 	if( tcgetattr( fd, &ttyset ) < 0 )
@@ -1509,6 +1524,8 @@ RXTXPort.writeByte
 JNIEXPORT void JNICALL RXTXPort(writeByte)( JNIEnv *env,
 	jobject jobj, jint ji, jboolean interrupted )
 {
+	slf4j_setup_instance(env, jobj);
+
 #ifndef TIOCSERGETLSR
 	struct event_info_struct *index = master_index;
 #endif
@@ -1581,6 +1598,8 @@ JNIEXPORT void JNICALL RXTXPort(writeArray)( JNIEnv *env,
 	jobject jobj, jbyteArray jbarray, jint offset, jint count,
 		jboolean interrupted )
 {
+	slf4j_setup_instance(env, jobj);
+
 #ifndef TIOCSERGETLSR
 	struct event_info_struct *index = master_index;
 #endif /* TIOCSERGETLSR */
@@ -1681,6 +1700,8 @@ RXTXPort.nativeDrain
 JNIEXPORT jboolean JNICALL RXTXPort(nativeDrain)( JNIEnv *env,
 	jobject jobj, jboolean interrupted )
 {
+	slf4j_setup_instance(env, jobj);
+
 	int fd = get_java_var( env, jobj,"fd","I" );
 	struct event_info_struct *eis = ( struct event_info_struct * ) get_java_var_long( env, jobj, "eis", "J" );
 	int result, count=0;
@@ -1733,6 +1754,8 @@ RXTXPort.sendBreak
 JNIEXPORT void JNICALL RXTXPort(sendBreak)( JNIEnv *env,
 	jobject jobj, jint duration )
 {
+	slf4j_setup_instance(env, jobj);
+
 	int fd = get_java_var( env, jobj,"fd","I" );
 	report_time_start( );
 	ENTER( "RXTXPort:sendBreak()" );
@@ -1754,6 +1777,8 @@ JNIEXPORT jint JNICALL RXTXPort(NativegetReceiveTimeout)(
 	jobject jobj
 	)
 {
+	slf4j_setup_instance(env, jobj);
+
 	int fd = get_java_var( env, jobj,"fd","I" );
 	struct termios ttyset;
 
@@ -1781,6 +1806,8 @@ JNIEXPORT jboolean JNICALL RXTXPort(NativeisReceiveTimeoutEnabled)(
 	jobject jobj
 	)
 {
+	slf4j_setup_instance(env, jobj);
+
 	int fd = get_java_var( env, jobj,"fd","I" );
 	struct termios ttyset;
 	ENTER( "RXTXPort:NativeisRecieveTimeoutEnabled()" );
@@ -1807,6 +1834,8 @@ RXTXPort.isDSR
 JNIEXPORT jboolean JNICALL RXTXPort(isDSR)( JNIEnv *env,
 	jobject jobj )
 {
+	slf4j_setup_instance(env, jobj);
+
 	unsigned int result = 0;
 	int fd = get_java_var( env, jobj,"fd","I" );
 	char message[80];
@@ -1837,6 +1866,8 @@ RXTXPort.isCD
 JNIEXPORT jboolean JNICALL RXTXPort(isCD)( JNIEnv *env,
 	jobject jobj )
 {
+	slf4j_setup_instance(env, jobj);
+
 	unsigned int result = 0;
 	int fd = get_java_var( env, jobj,"fd","I" );
 	char message[80];
@@ -1862,6 +1893,8 @@ RXTXPort.isCTS
 JNIEXPORT jboolean JNICALL RXTXPort(isCTS)( JNIEnv *env,
 	jobject jobj )
 {
+	slf4j_setup_instance(env, jobj);
+
 	unsigned int result = 0;
 	int fd = get_java_var( env, jobj,"fd","I" );
 	char message[80];
@@ -1888,6 +1921,8 @@ RXTXPort.isRI
 JNIEXPORT jboolean JNICALL RXTXPort(isRI)( JNIEnv *env,
 	jobject jobj )
 {
+	slf4j_setup_instance(env, jobj);
+
 	unsigned int result = 0;
 	int fd = get_java_var( env, jobj,"fd","I" );
 	char message[80];
@@ -1914,6 +1949,8 @@ RXTXPort.isRTS
 JNIEXPORT jboolean JNICALL RXTXPort(isRTS)( JNIEnv *env,
 	jobject jobj )
 {
+	slf4j_setup_instance(env, jobj);
+
 	unsigned int result = 0;
 	int fd = get_java_var( env, jobj,"fd","I" );
 	char message[80];
@@ -1941,6 +1978,8 @@ RXTXPort.setRTS
 JNIEXPORT void JNICALL RXTXPort(setRTS)( JNIEnv *env,
 	jobject jobj, jboolean state )
 {
+	slf4j_setup_instance(env, jobj);
+
 	unsigned int result = 0;
 	int fd = get_java_var( env, jobj,"fd","I" );
 	char message[80];
@@ -1970,6 +2009,8 @@ RXTXPort.setDSR
 JNIEXPORT void JNICALL RXTXPort(setDSR)( JNIEnv *env,
 	jobject jobj, jboolean state )
 {
+	slf4j_setup_instance(env, jobj);
+
 	unsigned int result = 0;
 	int fd = get_java_var( env, jobj,"fd","I" );
 	char message[80];
@@ -2000,6 +2041,8 @@ RXTXPort.isDTR
 JNIEXPORT jboolean JNICALL RXTXPort(isDTR)( JNIEnv *env,
 	jobject jobj )
 {
+	slf4j_setup_instance(env, jobj);
+
 	unsigned int result = 0;
 	int fd = get_java_var( env, jobj,"fd","I" );
 	char message[80];
@@ -2026,6 +2069,8 @@ RXTXPort.setDTR
 JNIEXPORT void JNICALL RXTXPort(setDTR)( JNIEnv *env,
 	jobject jobj, jboolean state )
 {
+	slf4j_setup_instance(env, jobj);
+
 	unsigned int result = 0;
 	int fd = get_java_var( env, jobj,"fd","I" );
 	char message[80];
@@ -2113,6 +2158,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeSetBaudBase)(
 	jint BaudBase
 )
 {
+	slf4j_setup_instance(env, jobj);
 
 #if defined(TIOCGSERIAL)
 
@@ -2159,6 +2205,7 @@ JNIEXPORT jint JNICALL RXTXPort(nativeGetBaudBase)(
 	jobject jobj
 )
 {
+	slf4j_setup_instance(env, jobj);
 
 #if defined(TIOCGSERIAL)
 
@@ -2199,6 +2246,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeSetDivisor)(
 	jint Divisor
 )
 {
+	slf4j_setup_instance(env, jobj);
 
 #if defined(TIOCGSERIAL)
 
@@ -2243,6 +2291,7 @@ JNIEXPORT jint JNICALL RXTXPort(nativeGetDivisor)(
 	jobject jobj
 )
 {
+	slf4j_setup_instance(env, jobj);
 
 #if defined(TIOCGSERIAL)
 
@@ -2285,6 +2334,8 @@ RXTXPort.nativeStaticSetDSR
 JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticSetDSR) (JNIEnv *env,
 	jclass jclazz, jstring jstr, jboolean flag)
 {
+	slf4j_setup_static(env, jclazz);
+
 	int fd;
 	int  pid = -1;
 	int result;
@@ -2351,6 +2402,8 @@ RXTXPort.nativeStaticSetRTS
 JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticSetRTS) (JNIEnv *env,
 	jclass jclazz, jstring jstr, jboolean flag)
 {
+	slf4j_setup_static(env, jclazz);
+
 	int fd;
 	int  pid = -1;
 	int result;
@@ -2417,6 +2470,8 @@ RXTXPort.nativeStaticSetSerialPortParams
 JNIEXPORT void JNICALL RXTXPort(nativeStaticSetSerialPortParams) (JNIEnv *env,
 	jclass jclazz, jstring jstr, jint baudrate, jint dataBits, jint stopBits, jint parity )
 {
+	slf4j_setup_static(env, jclazz);
+
 	int fd;
 	int  pid = -1;
 	const char *filename = (*env)->GetStringUTFChars( env, jstr, 0 );
@@ -2501,6 +2556,8 @@ RXTXPort.nativeStaticSetDTR
 JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticSetDTR) (JNIEnv *env,
 	jclass jclazz, jstring jstr, jboolean flag)
 {
+	slf4j_setup_static(env, jclazz);
+
 	int fd;
 	int  pid = -1;
 	const char *filename = (*env)->GetStringUTFChars( env, jstr, 0 );
@@ -2562,6 +2619,8 @@ RXTXPort.nativeStaticIsRTS
 JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticIsRTS)( JNIEnv *env,
 	jobject jobj, jstring jstr )
 {
+	slf4j_setup_instance(env, jobj);
+
 	unsigned int result = 0;
 	const char *filename = (*env)->GetStringUTFChars( env, jstr, 0 );
 	int fd = find_preopened_ports( filename );
@@ -2594,6 +2653,8 @@ RXTXPort.nativeStaticIsDSR
 JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticIsDSR)( JNIEnv *env,
 	jobject jobj, jstring jstr )
 {
+	slf4j_setup_instance(env, jobj);
+
 	unsigned int result = 0;
 	const char *filename = (*env)->GetStringUTFChars( env, jstr, 0 );
 	int fd = find_preopened_ports( filename );
@@ -2626,6 +2687,8 @@ RXTXPort.nativeStaticIsDTR
 JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticIsDTR)( JNIEnv *env,
 	jobject jobj, jstring jstr )
 {
+	slf4j_setup_instance(env, jobj);
+
 	unsigned int result = 0;
 	const char *filename = (*env)->GetStringUTFChars( env, jstr, 0 );
 	int fd = find_preopened_ports( filename );
@@ -2658,6 +2721,8 @@ RXTXPort.nativeStaticIsCD
 JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticIsCD)( JNIEnv *env,
 	jobject jobj, jstring jstr )
 {
+	slf4j_setup_instance(env, jobj);
+
 	unsigned int result = 0;
 	const char *filename = (*env)->GetStringUTFChars( env, jstr, 0 );
 	int fd = find_preopened_ports( filename );
@@ -2690,6 +2755,8 @@ RXTXPort.nativeStaticIsCTS
 JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticIsCTS)( JNIEnv *env,
 	jobject jobj, jstring jstr )
 {
+	slf4j_setup_instance(env, jobj);
+
 	unsigned int result = 0;
 	const char *filename = (*env)->GetStringUTFChars( env, jstr, 0 );
 	int fd = find_preopened_ports( filename );
@@ -2722,6 +2789,8 @@ RXTXPort.nativeStaticIsRI
 JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticIsRI)( JNIEnv *env,
 	jobject jobj, jstring jstr )
 {
+	slf4j_setup_instance(env, jobj);
+
 	unsigned int result = 0;
 	const char *filename = (*env)->GetStringUTFChars( env, jstr, 0 );
 	int fd = find_preopened_ports( filename );
@@ -2752,6 +2821,8 @@ RXTXPort.nativeStaticGetBaudRate
 ----------------------------------------------------------*/
 JNIEXPORT jint JNICALL RXTXPort(nativeStaticGetBaudRate)( JNIEnv *env, jobject jobj, jstring jstr )
 {
+	slf4j_setup_instance(env, jobj);
+
 	const char *filename = (*env)->GetStringUTFChars( env, jstr, 0 );
 	int fd = find_preopened_ports( filename );
 	struct termios ttyset;
@@ -2804,6 +2875,8 @@ RXTXPort.nativeStaticGetDataBits
 ----------------------------------------------------------*/
 JNIEXPORT jint JNICALL RXTXPort(nativeStaticGetDataBits)( JNIEnv *env, jobject jobj, jstring jstr )
 {
+	slf4j_setup_instance(env, jobj);
+
 	const char *filename = (*env)->GetStringUTFChars( env, jstr, 0 );
 	int fd = find_preopened_ports( filename );
 	struct termios ttyset;
@@ -2839,6 +2912,8 @@ RXTXPort.nativeStaticGetParity
 ----------------------------------------------------------*/
 JNIEXPORT jint JNICALL RXTXPort(nativeStaticGetParity)( JNIEnv *env, jobject jobj, jstring jstr )
 {
+	slf4j_setup_instance(env, jobj);
+
 	const char *filename = (*env)->GetStringUTFChars( env, jstr, 0 );
 	int fd = find_preopened_ports( filename );
 	struct termios ttyset;
@@ -2881,6 +2956,8 @@ RXTXPort.nativeStaticGetStopBits
 ----------------------------------------------------------*/
 JNIEXPORT jint JNICALL RXTXPort(nativeStaticGetStopBits)( JNIEnv *env, jobject jobj, jstring jstr )
 {
+	slf4j_setup_instance(env, jobj);
+
 	const char *filename = (*env)->GetStringUTFChars( env, jstr, 0 );
 	int fd = find_preopened_ports( filename );
 	struct termios ttyset;
@@ -2929,6 +3006,8 @@ RXTXPort.nativeGetParityErrorChar
 JNIEXPORT jbyte JNICALL RXTXPort(nativeGetParityErrorChar)( JNIEnv *env,
 	jobject jobj )
 {
+	slf4j_setup_instance(env, jobj);
+
 	unsigned int result = 0;
 
 	ENTER( "nativeGetParityErrorChar" );
@@ -2959,6 +3038,8 @@ RXTXPort.nativeGetEndOfInputChar
 JNIEXPORT jbyte JNICALL RXTXPort(nativeGetEndOfInputChar)( JNIEnv *env,
 	jobject jobj )
 {
+	slf4j_setup_instance(env, jobj);
+
 	int fd = get_java_var( env, jobj,"fd","I" );
 	struct termios ttyset;
 
@@ -2989,6 +3070,7 @@ RXTXPort.nativeSetParityErrorChar
 JNIEXPORT jboolean JNICALL RXTXPort(nativeSetParityErrorChar)( JNIEnv *env,
 	jobject jobj, jbyte value )
 	{
+	slf4j_setup_instance(env, jobj);
 
 #ifdef WIN32
 		int fd = get_java_var( env, jobj,"fd","I" );
@@ -3029,6 +3111,8 @@ RXTXPort.nativeSetEndOfInputChar
 JNIEXPORT jboolean JNICALL RXTXPort(nativeSetEndOfInputChar)( JNIEnv *env,
 	jobject jobj, jbyte value )
 {
+	slf4j_setup_instance(env, jobj);
+
 	int fd = get_java_var( env, jobj,"fd","I" );
 	struct termios ttyset;
 
@@ -3340,6 +3424,8 @@ NativeEnableReceiveTimeoutThreshold
 JNIEXPORT void JNICALL RXTXPort(NativeEnableReceiveTimeoutThreshold)(
 	JNIEnv *env, jobject jobj, jint vtime, jint threshold, jint buffer)
 {
+	slf4j_setup_instance(env, jobj);
+
 	int fd = get_java_var( env, jobj,"fd","I" );
 	struct termios ttyset;
 	int timeout;
@@ -3506,6 +3592,8 @@ until min(m,n) bytes are available
 JNIEXPORT jint JNICALL RXTXPort(readByte)( JNIEnv *env,
 	jobject jobj )
 {
+	slf4j_setup_instance(env, jobj);
+
 	int bytes;
 	unsigned char buffer[ 1 ];
 	int fd = get_java_var( env, jobj,"fd","I" );
@@ -3547,6 +3635,8 @@ RXTXPort.readArray
 JNIEXPORT jint JNICALL RXTXPort(readArray)( JNIEnv *env,
 	jobject jobj, jbyteArray jbarray, jint offset, jint length )
 {
+	slf4j_setup_instance(env, jobj);
+
 	int bytes;
 	jbyte *body;
 	/* char msg[80]; */
@@ -3599,6 +3689,8 @@ RXTXPort.nativeClearCommInput
 JNIEXPORT jboolean JNICALL RXTXPort(nativeClearCommInput)( JNIEnv *env,
 	jobject jobj )
 {
+	slf4j_setup_instance(env, jobj);
+
 	int fd = get_java_var( env, jobj, "fd", "I" );
 	if ( tcflush( fd, TCIFLUSH ) )
 		return( JNI_FALSE );
@@ -3624,6 +3716,8 @@ JNIEXPORT jint JNICALL RXTXPort(readTerminatedArray)( JNIEnv *env,
 	jobject jobj, jbyteArray jbarray, jint offset, jint length,
 	jbyteArray jterminator )
 {
+	slf4j_setup_instance(env, jobj);
+
 	int bytes, total = 0;
 	jbyte *body, *terminator;
 	/* char msg[80]; */
@@ -3689,6 +3783,8 @@ RXTXPort.nativeavailable
 JNIEXPORT jint JNICALL RXTXPort(nativeavailable)( JNIEnv *env,
 	jobject jobj )
 {
+	slf4j_setup_instance(env, jobj);
+
 	int fd = get_java_var( env, jobj,"fd","I" );
 	int result=-1;
 /*
@@ -3755,6 +3851,8 @@ RXTXPort.setflowcontrol
 JNIEXPORT void JNICALL RXTXPort(setflowcontrol)( JNIEnv *env,
 	jobject jobj, jint flowmode )
 {
+	slf4j_setup_instance(env, jobj);
+
 	struct termios ttyset;
 	int fd = get_java_var( env, jobj,"fd","I" );
 
@@ -4254,6 +4352,8 @@ RXTXPort.eventLoop
 ----------------------------------------------------------*/
 JNIEXPORT void JNICALL RXTXPort(eventLoop)( JNIEnv *env, jobject jobj )
 {
+	slf4j_setup_instance(env, jobj);
+
 #ifdef WIN32
 	int i = 0;
 #endif /* WIN32 */
@@ -4366,6 +4466,8 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
 	jint port_type
 )
 {
+	slf4j_setup_instance(env, jobj);
+
 	char *name =(char *) (*env)->GetStringUTFChars(env, tty_name, 0);
 	int ret = JNI_TRUE;
 #ifndef WIN32
@@ -4746,6 +4848,8 @@ registerKnownSerialPorts(JNIEnv *env, jobject jobj, jint portType) /* dima */
 JNIEXPORT jboolean JNICALL RXTXCommDriver(registerKnownPorts)(JNIEnv *env,
     jobject jobj, jint portType)
 {
+	slf4j_setup_instance(env, jobj);
+
 	enum {PORT_TYPE_SERIAL = 1,
 		PORT_TYPE_PARALLEL,
 		PORT_TYPE_I2C,
@@ -4789,6 +4893,8 @@ JNIEXPORT jboolean JNICALL RXTXCommDriver(registerKnownPorts)(JNIEnv *env,
 JNIEXPORT jboolean  JNICALL RXTXCommDriver(isPortPrefixValid)(JNIEnv *env,
 	jobject jobj, jstring tty_name)
 {
+	slf4j_setup_instance(env, jobj);
+
 	jboolean result;
 	static struct stat mystat;
 	char teststring[256];
@@ -4860,6 +4966,8 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(isPortPrefixValid)(JNIEnv *env,
 JNIEXPORT jstring  JNICALL RXTXCommDriver(getDeviceDirectory)(JNIEnv *env,
 	jobject jobj)
 {
+	slf4j_setup_instance(env, jobj);
+
 	ENTER( "RXTXCommDriver:getDeviceDirectory" );
 	return (*env)->NewStringUTF(env, DEVICEDIR);
 	LEAVE( "RXTXCommDriver:getDeviceDirectory" );
@@ -4877,6 +4985,7 @@ JNIEXPORT jstring  JNICALL RXTXCommDriver(getDeviceDirectory)(JNIEnv *env,
 JNIEXPORT void JNICALL RXTXPort(setInputBufferSize)(JNIEnv *env,
 	jobject jobj,  jint size )
 {
+	slf4j_setup_instance(env, jobj);
 	report( "setInputBufferSize is not implemented\n" );
 }
 
@@ -4892,6 +5001,7 @@ JNIEXPORT void JNICALL RXTXPort(setInputBufferSize)(JNIEnv *env,
 JNIEXPORT jint JNICALL RXTXPort(getInputBufferSize)(JNIEnv *env,
 	jobject jobj)
 {
+	slf4j_setup_instance(env, jobj);
 	report( "getInputBufferSize is not implemented\n" );
 	return(1);
 }
@@ -4908,6 +5018,7 @@ JNIEXPORT jint JNICALL RXTXPort(getInputBufferSize)(JNIEnv *env,
 JNIEXPORT void JNICALL RXTXPort(setOutputBufferSize)(JNIEnv *env,
 	jobject jobj, jint size )
 {
+	slf4j_setup_instance(env, jobj);
 	report( "setOutputBufferSize is not implemented\n" );
 }
 
@@ -4923,6 +5034,7 @@ JNIEXPORT void JNICALL RXTXPort(setOutputBufferSize)(JNIEnv *env,
 JNIEXPORT jint JNICALL RXTXPort(getOutputBufferSize)(JNIEnv *env,
 	jobject jobj)
 {
+	slf4j_setup_instance(env, jobj);
 	report( "getOutputBufferSize is not implemented\n" );
 	return(1);
 }
@@ -4942,6 +5054,8 @@ JNIEXPORT jint JNICALL RXTXPort(getOutputBufferSize)(JNIEnv *env,
 JNIEXPORT void JNICALL RXTXPort(interruptEventLoop)(JNIEnv *env,
 	jobject jobj)
 {
+	slf4j_setup_instance(env, jobj);
+
 	struct event_info_struct *index = master_index;
 	int fd = get_java_var( env, jobj, "fd", "I" );
 	int searching = 1;
@@ -5050,6 +5164,8 @@ JNIEXPORT void JNICALL RXTXPort(nativeSetEventFlag)( JNIEnv *env,
 							jint event,
 							jboolean flag )
 {
+	slf4j_setup_instance(env, jobj);
+
 	struct event_info_struct *index = master_index;
 
 	if( !index )
@@ -5194,65 +5310,6 @@ void throw_java_exception( JNIEnv *env, char *exc, char *foo, char *msg )
 /* ct7 * Added DeleteLocalRef */
 	(*env)->DeleteLocalRef( env, clazz );
 	LEAVE( "throw_java_exception" );
-}
-
-/*----------------------------------------------------------
- report_warning
-
-   accept:      string to send to report as an message
-   perform:     send the string to stderr or however it needs to be reported.
-   return:      none
-   exceptions:  none
-   comments:
-----------------------------------------------------------*/
-void report_warning(char *msg)
-{
-	fprintf(stderr, "%s", msg);
-}
-
-/*----------------------------------------------------------
- report_verbose
-
-   accept:      string to send to report as an verbose message
-   perform:     send the string to stderr or however it needs to be reported.
-   return:      none
-   exceptions:  none
-   comments:
-----------------------------------------------------------*/
-void report_verbose(char *msg)
-{
-#ifdef DEBUG_VERBOSE
-	fprintf(stderr, "%s", msg);
-#endif /* DEBUG_VERBOSE */
-}
-/*----------------------------------------------------------
- report_error
-
-   accept:      string to send to report as an error
-   perform:     send the string to stderr or however it needs to be reported.
-   return:      none
-   exceptions:  none
-   comments:
-----------------------------------------------------------*/
-void report_error(char *msg)
-{
-	fprintf(stderr, "%s", msg);
-}
-
-/*----------------------------------------------------------
- report
-
-   accept:      string to send to stderr
-   perform:     if DEBUG is defined send the string to stderr.
-   return:      none
-   exceptions:  none
-   comments:
-----------------------------------------------------------*/
-void report(char *msg)
-{
-#ifdef DEBUG
-	fprintf(stderr, "%s", msg);
-#endif /* DEBUG */
 }
 
 #ifndef WIN32
@@ -6229,7 +6286,6 @@ JNI_OnLoad
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *java_vm, void *reserved)
 {
 	javaVM = java_vm;
-	report_verbose("JNI_OnLoad called.\n");
 	return JNI_VERSION_1_2;  /* JNI API used */
 }
 
@@ -6247,7 +6303,6 @@ JNI_OnUnload
 JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved)
 {
 	/* never called it appears */
-	printf("Experimental:  JNI_OnUnload called.\n");
 }
 
 #ifdef asdf

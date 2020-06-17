@@ -69,7 +69,7 @@ export LD = $(CC)
 # We want to link objects into a shared library.
 export LDFLAGS ?= -fPIC -shared
 
-export objects := fixup.o fuserImp.o SerialImp.o
+export objects := fixup.o fuserImp.o SerialImp.o slf4j.o
 export lib_type := so
 
 define NO_TARGET_PLATFORM_SPECIFIED
@@ -217,7 +217,7 @@ ppc:
 # Requires a macOS host.
 osx: export CFLAGS += -I$(JAVA_HOME)/include/darwin -arch x86_64
 osx: export LDFLAGS := -arch x86_64 -dynamiclib -framework JavaVM -framework IOKit -framework CoreFoundation
-osx: export objects := fuserImp.o SerialImp.o
+osx: export objects := fuserImp.o SerialImp.o slf4j.o
 osx: export platform := osx
 osx: export lib_type := jnilib
 osx:

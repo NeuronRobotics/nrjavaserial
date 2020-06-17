@@ -1,10 +1,3 @@
-#ifdef TRENT_IS_HERE
-#define TRACE
-#define DEBUG
-#endif /* TRENT_IS_HERE */
-extern void report( char * );
-extern void report_warning( char * );
-extern void report_error( char * );
 /*-------------------------------------------------------------------------
 |   RXTX License v 2.1 - LGPL v 2.1 + Linking Over Controlled Interface.
 |   RXTX is a native interface to serial ports in java.
@@ -68,6 +61,7 @@ extern void report_error( char * );
 #include <errno.h>
 #include <time.h>
 #include "win32termios.h"
+#include "slf4j.h"
 
 /*
  * odd malloc.h error with lcc compiler
