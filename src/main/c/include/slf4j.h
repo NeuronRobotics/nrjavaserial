@@ -60,6 +60,17 @@
  * \file slf4j.h
  *
  * \brief Functions to enable JNI code to log via SLF4J.
+ *
+ * At the very beginning of every JNI function, call whichever of the
+ * slf4j_setup_instance() or slf4j_setup_static() macros is appropriate. That
+ * will configure the logging context for you, and schedule automatic cleanup
+ * to occur when leaving the function. To log, call slf4j_log().
+ *
+ * report_error(), report_warning(), report(), and report_verbose() are
+ * compatibility macros to introduce SLF4J logging without having to modify
+ * every logging call throughout the native code, but their names don't reflect
+ * the logging levels provided by SLF4J, and there's no “info” level. Probably
+ * best to avoid them in new code.
  */
 
 #ifndef SLF4J_H
@@ -117,13 +128,16 @@ typedef enum LogLevel
  */
 #define report_verbose(msg) slf4j_log(LOG_TRACE, msg)
 
+/** \brief Logging context information. Nothing useful to the user here. */
+typedef struct Slf4jContext Slf4jContext;
+
 /**
  * \brief Log a message through SLF4J from within the scope of a JNI call.
  *
  * On entering a JNI method, the user _must_ call either slf4j_setup_instance()
  * or slf4j_setup_static() before any logging calls. This includes logging
  * calls performed by other functions called by the JNI function, so it's best
- * to always call the appropriate setup function even if you don't think you're
+ * to always call the appropriate setup macro even if you don't think you're
  * going to be doing any logging yourself.
  *
  * \param [in] level the level at which to log
@@ -133,15 +147,44 @@ void slf4j_log(LogLevel level, const char *msg);
 
 /**
  * \brief Reconfigure the SLF4J logging context for the current thread based on
- * the given Java object instance.
- *
- * Determines the class of the given object, then calls slf4j_setup_static().
- * See the documentation of that function for details.
+ * the given Java object instance, and registers automatic cleanup of the
+ * context to occur when leaving the current function.
  *
  * \param [in] env the JNI environment
  * \param [in] obj an object whose class has a static logger instance
  */
-void slf4j_setup_instance(JNIEnv *env, jobject jobj);
+#define slf4j_setup_instance(env, jobj) \
+	Slf4jContext *slf4j__context \
+		__attribute__ ((__cleanup__(slf4j_teardown))) = \
+		slf4j__setup_instance(env, jobj); \
+	(void) slf4j__context
+
+/**
+ * \brief Reconfigure the SLF4J logging context for the current thread based on
+ * the given Java class, and registers automatic cleanup of the context to
+ * occur when leaving the current function.
+ *
+ * \param [in] env the JNI environment
+ * \param [in] obj an object whose class has a static logger instance
+ */
+#define slf4j_setup_static(env, jclazz) \
+	Slf4jContext *slf4j__context \
+		__attribute__ ((__cleanup__(slf4j_teardown))) = \
+		slf4j__setup_static(env, jclazz); \
+	(void) slf4j__context
+
+/**
+ * \brief Reconfigure the SLF4J logging context for the current thread based on
+ * the given Java object instance.
+ *
+ * Determines the class of the given object, then calls slf4j__setup_static().
+ * See the documentation of that function for details.
+ *
+ * \param [in] env the JNI environment
+ * \param [in] obj an object whose class has a static logger instance
+ * \return the logging context information for the current thread
+ */
+Slf4jContext *slf4j__setup_instance(JNIEnv *env, jobject jobj);
 
 /**
  * \brief Reconfigure the SLF4J logging context for the current thread based on
@@ -156,11 +199,17 @@ void slf4j_setup_instance(JNIEnv *env, jobject jobj);
  * until overwritten by a subsequent call to slf4j_setup_instance() or
  * slf4j_setup_static(), or until it is explicitly wiped by slf4j_teardown().
  *
+ * This function should usually only be called via the slf4j_setup_instance()
+ * or slf4j_setup_static() macros. Those macros will register a cleanup
+ * function (via the GCC `__cleanup__` attribute), ensuring that logging
+ * context information never leaks across multiple JNI calls.
+ *
  * \param [in] env the JNI environment
  * \param [in] jclazz a Java class which has a static logger instance
+ * \return the logging context information for the current thread
  * \see slf4j_teardown() for information on when and where it should be called
  */
-void slf4j_setup_static(JNIEnv *env, jclass jclazz);
+Slf4jContext *slf4j__setup_static(JNIEnv *env, jclass jclazz);
 
 /**
  * \brief Tears down/forgets the SLF4J logging context for the current thread.
@@ -171,7 +220,17 @@ void slf4j_setup_static(JNIEnv *env, jclass jclazz);
  * might run outside of the scope of a JNI call, and which may try to call
  * slf4j_log(), then just as you call one of the two setup functions when
  * entering every JNI method, you should call this before leaving them.
+ *
+ * The `context` argument is not used. In all cases, teardown is performed
+ * based on a thread-local context variable internal to the implementation. The
+ * parameter exists only so that this function can be used in concert with the
+ * GCC `__cleanup__` attribute: so that, in conjunction with the return value
+ * of slf4j__setup_instance() or slf4j__setup_static(), the logging context can
+ * be cleaned up automatically – as arranged by the slf4j_setup_instance() and
+ * slf4j_setup_static() macros.
+ *
+ * \param [in] context the expected context
  */
-void slf4j_teardown();
+void slf4j_teardown(Slf4jContext **context);
 
 #endif /* SLF4J_H */

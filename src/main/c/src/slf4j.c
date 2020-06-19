@@ -64,17 +64,23 @@
 /** \brief The maximum length of a log message. */
 #define MESSAGE_MAX 4096
 
-typedef struct Slf4jContext
+struct Slf4jContext
 {
 	JNIEnv *env;
 	jobject log;
-} Slf4jContext;
+	/* We want to treat logging contexts like a stack. A JNI function which
+	 * calls back into Java which calls back into JNI will (if it properly
+	 * calls slf4j__setup_instance()/slf4j__setup_static()) initialize a new
+	 * logging context; we don't want to lose the previous one when we pop back
+	 * up the call stack into the original JNI context. */
+	struct Slf4jContext *prev;
+};
 
-static __thread Slf4jContext context = {0};
+static __thread Slf4jContext *thread_context = NULL;
 
 void slf4j_log(LogLevel level, const char *msg)
 {
-	if (context.env == NULL)
+	if (thread_context == NULL)
 	{
 		/* No context? No logging. */
 		return;
@@ -118,37 +124,61 @@ void slf4j_log(LogLevel level, const char *msg)
 	}
 
 	char *trimmedMessage = strndup(msg, messageLength);
-	jstring jmsg = (*context.env)->NewStringUTF(
-		context.env,
+	jstring jmsg = (*thread_context->env)->NewStringUTF(
+		thread_context->env,
 		trimmedMessage);
 	free(trimmedMessage);
 
-	jclass logger = (*context.env)->FindClass(context.env, "org/slf4j/Logger");
-	jmethodID logMethod = (*context.env)->GetMethodID(
-		context.env,
+	jclass logger = (*thread_context->env)->FindClass(
+		thread_context->env,
+		"org/slf4j/Logger");
+	jmethodID logMethod = (*thread_context->env)->GetMethodID(
+		thread_context->env,
 		logger,
 		methodName,
 		"(Ljava/lang/String;)V");
 
-	(*context.env)->CallVoidMethod(context.env, context.log, logMethod, jmsg);
+	(*thread_context->env)->CallVoidMethod(
+		thread_context->env,
+		thread_context->log,
+		logMethod,
+		jmsg);
 }
 
-void slf4j_setup_instance(JNIEnv *env, jobject jobj)
+Slf4jContext *slf4j__setup_instance(JNIEnv *env, jobject jobj)
 {
 	jclass jclazz = (*env)->GetObjectClass(env, jobj);
-	slf4j_setup_static(env, jclazz);
+	return slf4j__setup_static(env, jclazz);
 }
 
-void slf4j_setup_static(JNIEnv *env, jclass jclazz)
+Slf4jContext *slf4j__setup_static(JNIEnv *env, jclass jclazz)
 {
 	jfieldID logId = (*env)->GetStaticFieldID(env, jclazz, "log", "Lorg/slf4j/Logger;");
 	jobject log = (*env)->GetStaticObjectField(env, jclazz, logId);
 
-	context.env = env;
-	context.log = log;
+	Slf4jContext *context = malloc(sizeof(Slf4jContext));
+	if (context == NULL)
+	{
+		return NULL;
+	}
+	memset(context, 0, sizeof(Slf4jContext));
+
+	context->env = env;
+	context->log = log;
+	context->prev = thread_context;
+
+	thread_context = context;
+	return thread_context;
 }
 
-void slf4j_teardown()
+void slf4j_teardown(Slf4jContext **context)
 {
-	memset(&context, 0, sizeof(Slf4jContext));
+	if (thread_context == NULL)
+	{
+		return;
+	}
+
+	Slf4jContext *context = thread_context;
+	thread_context = thread_context->prev;
+	free(context);
 }
