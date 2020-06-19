@@ -31,7 +31,7 @@ jobs:
             # status. That way, the archive will only contain unique artifacts.
             - "$(git status --porcelain src/main/c/resources/native | grep -v '^ D' | cut -c 4- | tr '\n' ':')"
           target_paths:
-            - /$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER
+            - /$TRAVIS_REPO_SLUG/$TRAVIS_BRANCH/$TRAVIS_BUILD_NUMBER
 
     - name: macOS
       os: osx
@@ -57,7 +57,7 @@ jobs:
           paths:
             - "$(git status --porcelain src/main/c/resources/native | grep -v '^ D' | cut -c 4- | tr '\n' ':')"
           target_paths:
-            - /$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER
+            - /$TRAVIS_REPO_SLUG/$TRAVIS_BRANCH/$TRAVIS_BUILD_NUMBER
 
     - name: FreeBSD
       # Docker use based on https://stackoverflow.com/a/41940240/640170.
@@ -96,7 +96,7 @@ jobs:
           paths:
             - "$(git status --porcelain src/main/c/resources/native | grep -v '^ D' | cut -c 4- | tr '\n' ':')"
           target_paths:
-            - /$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER
+            - /$TRAVIS_REPO_SLUG/$TRAVIS_BRANCH/$TRAVIS_BUILD_NUMBER
 
     - stage: Java library compilation
       name: Java
@@ -111,7 +111,7 @@ jobs:
               aws s3 cp --recursive \
                         --no-sign-request \
                         --region $ARTIFACTS_REGION \
-                        s3://$ARTIFACTS_BUCKET/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER/src \
+                        s3://$ARTIFACTS_BUCKET/$TRAVIS_REPO_SLUG/$TRAVIS_BRANCH/$TRAVIS_BUILD_NUMBER/src \
                         src;
           else
               echo "Artifact region and bucket not configured; skipping downloading artifacts from preceding jobs." 1>&2;
@@ -127,4 +127,4 @@ jobs:
           paths:
             - "$(git ls-files -o build/libs | tr '\n' ':')"
           target_paths:
-            - /$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER
+            - /$TRAVIS_REPO_SLUG/$TRAVIS_BRANCH/$TRAVIS_BUILD_NUMBER
