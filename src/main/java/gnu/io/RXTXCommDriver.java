@@ -65,6 +65,8 @@ package gnu.io;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -457,9 +459,11 @@ public class RXTXCommDriver implements CommDriver
 		          String key = (String) it.next();
 		          System.setProperty(key, p.getProperty(key));
 		     }
-		    }catch(Exception e){
-				log.error("The file: gnu.io.rxtx.properties doesn't exists.", e);
-			}//end catch
+		} catch (FileNotFoundException e) {
+			log.debug("The file gnu.io.rxtx.properties doesn't exist.");
+		} catch (IOException e) {
+			log.error("Error opening file gnu.io.rxtx.properties:", e);
+		}
 
 		log.debug("checking for system-known ports of type "+PortType);
 		log.debug("checking registry for ports of type "+PortType);
