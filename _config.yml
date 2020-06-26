@@ -1,0 +1,9 @@
+title: NRJavaSerial
+description:
+permalink: /posts/:year/:month/:day/:title:output_ext
+
+repository: NeuronRobotics/nrjavaserial
+
+theme: minima
+plugins:
+  - jekyll-feed
