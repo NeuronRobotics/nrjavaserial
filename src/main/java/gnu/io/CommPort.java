@@ -120,12 +120,10 @@ public abstract class CommPort extends Object {
 
 	public String getName()
 	{
-		log.trace("CommPort:getName()");
 		return( name );
 	}
 	public String toString()
 	{
-		log.trace("CommPort:toString()");
 		return( name );
 	}
 }

@@ -59,9 +59,6 @@ package  gnu.io;
 
 import java.util.Enumeration;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
 * @author Trent Jarvi
 * @version %I%, %G%
@@ -72,13 +69,7 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("unchecked")
 class CommPortEnumerator implements Enumeration
 {
-	private static final Logger log = LoggerFactory.getLogger(CommPortEnumerator.class);
-
 	private CommPortIdentifier index;
-	static
-	{
-		log.trace("CommPortEnumerator:{}");
-	}
 
 	CommPortEnumerator()
 	{
@@ -93,7 +84,6 @@ class CommPortEnumerator implements Enumeration
 ------------------------------------------------------------------------------*/
 	public Object nextElement()
 	{
-		log.trace("CommPortEnumerator:nextElement()");
 		synchronized (CommPortIdentifier.Sync)
 		{
 			if(index != null) index = index.next;
@@ -111,7 +101,6 @@ class CommPortEnumerator implements Enumeration
 ------------------------------------------------------------------------------*/
 	public boolean hasMoreElements()
 	{
-		log.trace("CommPortEnumerator:hasMoreElements() " + String.valueOf(CommPortIdentifier.CommPortIndex != null));
 		synchronized (CommPortIdentifier.Sync)
 		{
 			if(index != null) return index.next == null ? false : true;

@@ -129,7 +129,7 @@ public class NRSerialPort
     {
         if (isConnected())
         {
-            log.error(port + " is already connected.");
+            log.warn(port + " is already connected.");
             return true;
         }
 

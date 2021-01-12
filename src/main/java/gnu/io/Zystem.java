@@ -225,7 +225,7 @@ public class Zystem
 		}
 		else if ( mode == PRINT_MODE )
 		{
-			log.info( s );
+			log.debug( s );
 			return( true );
 		}
 		else if ( mode == MEX_MODE )
@@ -261,7 +261,7 @@ public class Zystem
 		}
 		else if ( mode == PRINT_MODE )
 		{
-			log.info( "" );
+			log.debug( "" );
 			return( true );
 		}
 		else if ( mode == MEX_MODE )
@@ -293,7 +293,7 @@ public class Zystem
 		}
 		else if ( mode == PRINT_MODE )
 		{
-			log.info( s );
+			log.debug( s );
 			return( true );
 		}
 		else if ( mode == MEX_MODE )
