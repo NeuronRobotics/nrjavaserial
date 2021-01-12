@@ -171,7 +171,7 @@ Slf4jContext *slf4j__setup_static(JNIEnv *env, jclass jclazz)
 	return thread_context;
 }
 
-void slf4j_teardown(Slf4jContext **context)
+void slf4j_teardown(Slf4jContext **unused)
 {
 	if (thread_context == NULL)
 	{
