@@ -768,7 +768,7 @@ JNIEXPORT jint JNICALL RXTXPort(open)(
 	if( configure_port( fd ) ) goto fail;
 	(*env)->ReleaseStringUTFChars( env, jstr, filename );
 	sprintf( message, "open: fd returned is %i\n", fd );
-	report( message );
+	report_verbose( message );
 	LEAVE( "RXTXPort:open" );
 	report_time_end( );
 	return (jint)fd;
@@ -814,7 +814,7 @@ JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
 		report_warning("nativeClose(): Close not detecting thread pid");
 		return;
 	}
-	report("<nativeClose: pid\n");
+	report_verbose("nativeClose: pid\n");
 
 	/*
 		UNLOCK is one of three functions defined in SerialImp.h
@@ -827,15 +827,14 @@ JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
 	ENTER( "RXTXPort:nativeClose" );
 	if (fd > 0)
 	{
-		//report_warning("nativeClose: discarding remaining data (tcflush)\n");
-		report("nativeClose: discarding remaining data (tcflush)\n");
+		report_verbose("nativeClose: discarding remaining data (tcflush)\n");
 		/* discard any incoming+outgoing data not yet read/sent */
 		tcflush(fd, TCIOFLUSH);
 		int x=0;
  		do {
 
  			//report_warning("nativeClose: Attempting to close\n");
-			report("nativeClose:  calling close\n");
+			report_verbose("nativeClose:  calling close\n");
 			result=localClose(fd);
 			//report_warning("nativeClose: Close OK\n");
 			x++;
@@ -852,9 +851,9 @@ JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
 		//report_warning("nativeClose(): Close not detecting File Descriptor");
 	}
 	//report_warning("nativeClose() Attempt OK\n");
-	report("nativeClose: Delete jclazz\n");
+	report_verbose("nativeClose: Delete jclazz\n");
 	(*env)->DeleteLocalRef( env, jclazz );
-	report("nativeClose: release filename\n");
+	report_verbose("nativeClose: release filename\n");
 	(*env)->ReleaseStringUTFChars( env, jstr, filename );
 	LEAVE( "RXTXPort:nativeClose" );
 	report_time_end( );
@@ -1494,11 +1493,11 @@ int init_threads( struct event_info_struct *eis )
 	eis->drain_tid = tid;
 	eis->drain_loop_running = 1;
 #endif /* TIOCSERGETLSR */
-	report("init_threads: get eis\n");
+	report_verbose("init_threads: get eis\n");
 	jeis  = (*eis->env)->GetFieldID( eis->env, eis->jclazz, "eis", "J" );
-	report("init_threads: set eis\n");
+	report_verbose("init_threads: set eis\n");
 	(*eis->env)->SetLongField(eis->env, *eis->jobj, jeis, ( size_t ) eis );
-	report("init_threads:  stop\n");
+	report_verbose("init_threads:  stop\n");
 	report_time_end( );
 	return( 1 );
 }
@@ -1637,7 +1636,7 @@ JNIEXPORT void JNICALL RXTXPort(writeArray)( JNIEnv *env,
 		if(result >0){
 			total += result;
 		}
-		report("writeArray()\n");
+		report_verbose("writeArray()\n");
 	}  while ( ( total < count ) && (result < 0 && errno==EINTR ) );
 	if( result < 0 )
 	{
@@ -2023,7 +2022,7 @@ JNIEXPORT void JNICALL RXTXPort(setDSR)( JNIEnv *env,
 	else result &= ~TIOCM_DSR;
 	ioctl( fd, TIOCMSET, &result );
 	sprintf( message, "setDSR( %i )\n", state );
-	report( message );
+	report_verbose( message );
 	LEAVE( "RXTXPort:setDSR()" );
 	return;
 }
@@ -2081,7 +2080,7 @@ JNIEXPORT void JNICALL RXTXPort(setDTR)( JNIEnv *env,
 	else result &= ~TIOCM_DTR;
 	ioctl( fd, TIOCMSET, &result );
 	sprintf( message, "setDTR( %i )\n", state );
-	report( message );
+	report_verbose( message );
 	LEAVE( "RXTXPort:setDTR" );
 	return;
 }
@@ -3983,7 +3982,7 @@ int has_line_status_register_access( int fd )
 		return(1);
 	}
 #endif /* TIOCSERGETLSR */
-	report( "has_line_status_register_acess: Port does not support TIOCSERGETLSR\n" );
+	report_verbose( "has_line_status_register_acess: Port does not support TIOCSERGETLSR\n" );
 	return( 0 );
 }
 
@@ -4380,7 +4379,7 @@ JNIEXPORT void JNICALL RXTXPort(eventLoop)( JNIEnv *env, jobject jobj )
 			/* nothing goes between this call and select */
 			if( eis.closing )
 			{
-				report("eventLoop: got interrupt\n");
+				report_verbose("eventLoop interrupted");
 				finalize_threads( &eis );
 				finalize_event_info_struct( &eis );
 				LEAVE("eventLoop");
@@ -5117,7 +5116,7 @@ JNIEXPORT void JNICALL RXTXPort(interruptEventLoop)(JNIEnv *env,
 	}
 	index->closing = 1;
 #endif
-	report("interruptEventLoop: interrupted\n");
+	report_verbose("InterruptEventLoop interrupted");
 }
 
 /*----------------------------------------------------------
