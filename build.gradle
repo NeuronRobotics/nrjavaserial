@@ -1,5 +1,6 @@
 plugins {
-  id "biz.aQute.bnd.builder" version "5.0.1"
+	id "biz.aQute.bnd.builder" version "5.0.1"
+	id "com.diffplug.spotless" version "5.9.0"
 }
 
 apply plugin: 'java'
@@ -59,7 +60,7 @@ jar {
 		"Import-Package": "com.sun.jna.platform.win32;resolution:=optional,org.apache.commons.net.telnet;resolution:=optional,!gnu.io*,*",
 		"Export-Package": "gnu.io*"
 	)
-	
+
 }
 
 task javadocJar(type: Jar) {
@@ -71,6 +72,22 @@ task sourcesJar(type: Jar) {
 	classifier = 'sources'
 	from (sourceSets.main.allSource) {
 		exclude 'native/'
+	}
+}
+
+spotless {
+	format 'misc', {
+		target '*.gradle'
+
+		trimTrailingWhitespace()
+		indentWithTabs()
+		endWithNewline()
+	}
+
+	java {
+		importOrder()
+		removeUnusedImports()
+		eclipse()
 	}
 }
 /*
