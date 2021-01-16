@@ -123,7 +123,10 @@ void slf4j_log(LogLevel level, const char *msg)
 		messageLength = MESSAGE_MAX;
 	}
 
-	char *trimmedMessage = strndup(msg, messageLength);
+	char *trimmedMessage = malloc(messageLength + 1);
+	memcpy(trimmedMessage, msg, messageLength);
+	trimmedMessage[messageLength] = '\0';
+
 	jstring jmsg = (*thread_context->env)->NewStringUTF(
 		thread_context->env,
 		trimmedMessage);
