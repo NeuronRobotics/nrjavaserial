@@ -243,7 +243,9 @@ windows: windows32 windows64
 # Don't embed the build timestamp into DLLs so the output is the same from one
 # compile to the next for the same input source.
 # https://blog.beuc.net/posts/Practical_basics_of_reproducible_builds_2/
-WINDOWS_LDFLAGS := -Wl,--add-stdcall-alias -Wl,--no-insert-timestamp
+WINDOWS_LDFLAGS := -static-libgcc \
+                   -Wl,--add-stdcall-alias \
+                   -Wl,--no-insert-timestamp
 
 # Requires gcc-mingw-w64-i686 (included in gcc-mingw-w64). On Windows, this,
 # along with mingw32-make, is most easily acquired in the form of TDM-GCC:
