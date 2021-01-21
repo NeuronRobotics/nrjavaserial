@@ -13,7 +13,7 @@ jobs:
         working-directory: src/main/c
 
     steps:
-      - name: Checkout the code
+      - name: Checkout the target branch
         uses: actions/checkout@v2
       - name: Setup Java
         uses: actions/setup-java@v1
@@ -58,7 +58,7 @@ jobs:
         working-directory: src/main/c
 
     steps:
-      - name: Checkout the code
+      - name: Checkout the target branch
         uses: actions/checkout@v2
       - name: Setup Java
         uses: actions/setup-java@v1
@@ -89,7 +89,7 @@ jobs:
         working-directory: src/main/c
 
     steps:
-      - name: Checkout the code
+      - name: Checkout the target branch
         uses: actions/checkout@v2
       - name: Setup Java
         # This feels extremely dirty, but the only native header we care about
@@ -121,7 +121,15 @@ jobs:
       - natives-freebsd
 
     steps:
-      - name: Checkout the code
+      # We use Spotless in “ratchet mode” to incrementally enforce code
+      # formatting throughout the project. In order to ensure feature branches
+      # don't regress formatting when compared with the master branch, we need
+      # to have a local copy of the master branch for comparison.
+      - name: Checkout the master branch
+        uses: actions/checkout@v2
+        with:
+          ref: master
+      - name: Checkout the target branch
         uses: actions/checkout@v2
       - name: Setup Java
         uses: actions/setup-java@v1
