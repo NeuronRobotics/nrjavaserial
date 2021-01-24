@@ -57,10 +57,9 @@
 --------------------------------------------------------------------------*/
 package gnu.io;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.IOException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,60 +69,49 @@ import org.slf4j.LoggerFactory;
 * @since JDK1.0
 */
 
-
 /**
-  * CommPort
-  */
+ * CommPort
+ */
 public abstract class CommPort extends Object {
 	private static final Logger log = LoggerFactory.getLogger(CommPort.class);
 
 	protected String name;
 
-	public abstract void enableReceiveFraming( int f ) 
-		throws UnsupportedCommOperationException;
+	public abstract void enableReceiveFraming(int f) throws UnsupportedCommOperationException;
 	public abstract void disableReceiveFraming();
 	public abstract boolean isReceiveFramingEnabled();
 	public abstract int getReceiveFramingByte();
 	public abstract void disableReceiveTimeout();
-	public abstract void enableReceiveTimeout( int time )
-		throws UnsupportedCommOperationException;
+	public abstract void enableReceiveTimeout(int time) throws UnsupportedCommOperationException;
 	public abstract boolean isReceiveTimeoutEnabled();
 	public abstract int getReceiveTimeout();
-	public abstract void enableReceiveThreshold( int thresh )
-		throws UnsupportedCommOperationException;
+	public abstract void enableReceiveThreshold(int thresh) throws UnsupportedCommOperationException;
 	public abstract void disableReceiveThreshold();
 	public abstract int getReceiveThreshold();
 	public abstract boolean isReceiveThresholdEnabled();
-	public abstract void setInputBufferSize( int size );
+	public abstract void setInputBufferSize(int size);
 	public abstract int getInputBufferSize();
-	public abstract void setOutputBufferSize( int size );
+	public abstract void setOutputBufferSize(int size);
 	public abstract int getOutputBufferSize();
 	@SuppressWarnings("static-access")
-	public void close() 
-	{
+	public void close() {
 		log.trace("CommPort:close()");
 
-		try
-		{
-			CommPortIdentifier cp = 
-				CommPortIdentifier.getPortIdentifier(this);
-			if ( cp != null )
+		try {
+			CommPortIdentifier cp = CommPortIdentifier.getPortIdentifier(this);
+			if (cp != null)
 				cp.getPortIdentifier(this).internalClosePort();
-		}
-		catch (NoSuchPortException e)
-		{
+		} catch (NoSuchPortException e) {
 		}
 	};
 
 	public abstract InputStream getInputStream() throws IOException;
 	public abstract OutputStream getOutputStream() throws IOException;
 
-	public String getName()
-	{
-		return( name );
+	public String getName() {
+		return (name);
 	}
-	public String toString()
-	{
-		return( name );
+	public String toString() {
+		return (name);
 	}
 }

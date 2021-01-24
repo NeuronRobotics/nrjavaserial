@@ -61,7 +61,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,27 +69,28 @@ public class NativeResource {
 
 	private boolean loaded = false;
 	public synchronized void load(String libraryName) throws NativeResourceException {
-		if(loaded) {
+		if (loaded) {
 			return;
 		}
 		loaded = true;
-		if(System.getProperty(libraryName + ".userlib") != null) {
+		if (System.getProperty(libraryName + ".userlib") != null) {
 			try {
-				if(System.getProperty(libraryName + ".userlib").equalsIgnoreCase("sys")) {
+				if (System.getProperty(libraryName + ".userlib").equalsIgnoreCase("sys")) {
 					System.loadLibrary(libraryName);
 				} else {
 					System.load(System.getProperty(libraryName + ".userlib"));
 				}
 				return;
-			} catch (Exception e){
-				throw new NativeResourceException("Unable to load native resource from given path: " + e.getLocalizedMessage());
+			} catch (Exception e) {
+				throw new NativeResourceException(
+						"Unable to load native resource from given path: " + e.getLocalizedMessage());
 			}
 		}
 		loadLib(libraryName);
 	}
 
-	private void inJarLoad(String name)throws UnsatisfiedLinkError, NativeResourceException{
-		//start by assuming the library can be loaded from the jar
+	private void inJarLoad(String name) throws UnsatisfiedLinkError, NativeResourceException {
+		// start by assuming the library can be loaded from the jar
 		InputStream resourceSource = locateResource(name);
 		File resourceLocation = prepResourceLocation(name);
 		try {
@@ -102,56 +102,58 @@ public class NativeResource {
 		testNativeCode();
 	}
 
-	private static final String[] ARM32_LIBS = {"libNRJavaSerialv8_HF","libNRJavaSerialv8","libNRJavaSerialv7_HF","libNRJavaSerialv7","libNRJavaSerialv6_HF","libNRJavaSerialv6","libNRJavaSerialv5"};
+	private static final String[] ARM32_LIBS = {"libNRJavaSerialv8_HF", "libNRJavaSerialv8", "libNRJavaSerialv7_HF",
+			"libNRJavaSerialv7", "libNRJavaSerialv6_HF", "libNRJavaSerialv6", "libNRJavaSerialv5"};
 	private static final String[] ARM64_LIBS = {"libNRJavaSerialv8"};
 
 	private void loadLib(String name) throws NativeResourceException {
 		try {
-			if(OSUtil.isARM()) {
-				for(String libName : OSUtil.is64Bit() ? ARM64_LIBS : ARM32_LIBS) {
+			if (OSUtil.isARM()) {
+				for (String libName : OSUtil.is64Bit() ? ARM64_LIBS : ARM32_LIBS) {
 					try {
 						inJarLoad(libName);
 						log.debug("Loaded native ARM library: {}", libName);
 						return;
-					}catch(UnsatisfiedLinkError e) {
+					} catch (UnsatisfiedLinkError e) {
 						// nothing
 					}
 				}
 				log.error("No library found for ARM");
-			}else {
+			} else {
 				inJarLoad(name);
 				log.debug("Loaded native library: {}", name);
 			}
 			return;
 		} catch (UnsatisfiedLinkError ex) {
-			if(OSUtil.isOSX() || OSUtil.isLinux()){
-				try{
+			if (OSUtil.isOSX() || OSUtil.isLinux()) {
+				try {
 					inJarLoad("libNRJavaSerial_legacy");
 					log.debug("Normal lib failed, using legacy..OK!");
 					return;
-				}catch(UnsatisfiedLinkError er){
+				} catch (UnsatisfiedLinkError er) {
 					log.error("Failed to load library", er);
 				}
-			}else{
+			} else {
 				log.error("Failed to load library", ex);
 			}
-			try{
-				//check to see if the library is available in standard locations
-				String libName = name.substring(name.indexOf("lib")+3);
+			try {
+				// check to see if the library is available in standard locations
+				String libName = name.substring(name.indexOf("lib") + 3);
 				System.loadLibrary(libName);
 				testNativeCode();
 				log.debug("Loaded native library fallback: {}", name);
 				return;
-			}catch(UnsatisfiedLinkError e){
-				try{
+			} catch (UnsatisfiedLinkError e) {
+				try {
 					name = "rxtxSerial";
-					//last ditch effort to load
+					// last ditch effort to load
 					System.loadLibrary(name);
 					testNativeCode();
 					log.debug("Loaded native library RXTX: {}", name);
 					return;
-				}catch(UnsatisfiedLinkError err){
-					log.error("Failed to load all possible JNI local and from: {}", System.getProperty("java.library.path"));
+				} catch (UnsatisfiedLinkError err) {
+					log.error("Failed to load all possible JNI local and from: {}",
+							System.getProperty("java.library.path"));
 					throw new NativeResourceException("Unable to load deployed native resource");
 				}
 			}
@@ -159,66 +161,65 @@ public class NativeResource {
 		}
 	}
 
-	private void testNativeCode()throws UnsatisfiedLinkError {
+	private void testNativeCode() throws UnsatisfiedLinkError {
 		CommPortIdentifier.getPortIdentifiers();
 	}
 
 	private InputStream locateResource(String name) {
 		name += OSUtil.getExtension();
-		String file="";
-		if(OSUtil.isOSX()) {
-			file="/native/osx/" + name;
-		}else if(OSUtil.isWindows()) {
-			if(OSUtil.is64Bit()){
-				file="/native/windows/x86_64/" + name;
-			}else {
-				file="/native/windows/x86_32/" + name;
+		String file = "";
+		if (OSUtil.isOSX()) {
+			file = "/native/osx/" + name;
+		} else if (OSUtil.isWindows()) {
+			if (OSUtil.is64Bit()) {
+				file = "/native/windows/x86_64/" + name;
+			} else {
+				file = "/native/windows/x86_32/" + name;
 			}
-		}else if(OSUtil.isLinux()) {
-			if(OSUtil.isARM()) {
-				if(OSUtil.is64Bit()) {
-					file="/native/linux/ARM_64/" + name;
-				}else {
-					file="/native/linux/ARM_32/" + name;
+		} else if (OSUtil.isLinux()) {
+			if (OSUtil.isARM()) {
+				if (OSUtil.is64Bit()) {
+					file = "/native/linux/ARM_64/" + name;
+				} else {
+					file = "/native/linux/ARM_32/" + name;
 				}
-			}else if(OSUtil.isPPC()) {
+			} else if (OSUtil.isPPC()) {
 				file = "/native/linux/PPC/" + name;
-			}else {
-				if(OSUtil.is64Bit()) {
-					file="/native/linux/x86_64/" + name;
-				}else {
-					file="/native/linux/x86_32/" + name;
+			} else {
+				if (OSUtil.is64Bit()) {
+					file = "/native/linux/x86_64/" + name;
+				} else {
+					file = "/native/linux/x86_32/" + name;
 				}
 			}
-		}else if(OSUtil.isFreeBSD()) {
-			if(OSUtil.is64Bit()) {
-				file="/native/freebsd/x86_64/" + name;
-			}else {
-				file="/native/freebsd/x86_32/" + name;
+		} else if (OSUtil.isFreeBSD()) {
+			if (OSUtil.is64Bit()) {
+				file = "/native/freebsd/x86_64/" + name;
+			} else {
+				file = "/native/freebsd/x86_32/" + name;
 			}
-		}else{
-			log.error("Can't load native file: "+name+" for os arch: "+OSUtil.getOsArch());
+		} else {
+			log.error("Can't load native file: " + name + " for os arch: " + OSUtil.getOsArch());
 			return null;
 		}
-		log.trace("Loading "+file);
+		log.trace("Loading " + file);
 		return getClass().getResourceAsStream(file);
 	}
 
 	private void loadResource(File resource) {
-		if(!resource.canRead()) {
-			throw new RuntimeException("Cant open JNI file: "+resource.getAbsolutePath());
+		if (!resource.canRead()) {
+			throw new RuntimeException("Cant open JNI file: " + resource.getAbsolutePath());
 		}
-		log.trace("Loading: "+resource.getAbsolutePath());
+		log.trace("Loading: " + resource.getAbsolutePath());
 		try {
 			System.load(resource.getAbsolutePath());
-		} catch(UnsatisfiedLinkError e){
+		} catch (UnsatisfiedLinkError e) {
 			throw e;
 		}
 	}
 
 	private void copyResource(InputStream io, File file) throws IOException {
 		FileOutputStream fos = new FileOutputStream(file);
-
 
 		byte[] buf = new byte[256];
 		int read = 0;
@@ -231,7 +232,7 @@ public class NativeResource {
 
 	private File prepResourceLocation(String fileName) throws NativeResourceException {
 		String tmpDir = System.getProperty("java.io.tmpdir");
-		//String tmpDir = "M:\\";
+		// String tmpDir = "M:\\";
 		if ((tmpDir == null) || (tmpDir.length() == 0)) {
 			tmpDir = "tmp";
 		}
@@ -243,7 +244,7 @@ public class NativeResource {
 		File fd = null;
 		File dir = null;
 
-		for(int i = 0; i < 10; i++) {
+		for (int i = 0; i < 10; i++) {
 			dir = new File(tmpDir, displayName + "_" + user + "_" + (i));
 			if (dir.exists()) {
 				if (!dir.isDirectory()) {
@@ -290,16 +291,17 @@ public class NativeResource {
 			break;
 		}
 
-		if(fd == null || !fd.canRead()) {
+		if (fd == null || !fd.canRead()) {
 			throw new NativeResourceException("Unable to deploy native resource");
 		}
-		log.trace("Local file: "+fd.getAbsolutePath());
+		log.trace("Local file: " + fd.getAbsolutePath());
 		return fd;
 	}
 
 	private static class OSUtil {
 		public static boolean is64Bit() {
-			return getOsArch().startsWith("x86_64") || getOsArch().startsWith("amd64")  || getOsArch().startsWith("aarch64");
+			return getOsArch().startsWith("x86_64") || getOsArch().startsWith("amd64")
+					|| getOsArch().startsWith("aarch64");
 		}
 		public static boolean isARM() {
 			return getOsArch().startsWith("arm") || getOsArch().startsWith("aarch");
@@ -308,7 +310,8 @@ public class NativeResource {
 			return getOsArch().toLowerCase().contains("ppc");
 		}
 		public static boolean isWindows() {
-			return getOsName().toLowerCase().startsWith("windows") ||getOsName().toLowerCase().startsWith("microsoft") || getOsName().toLowerCase().startsWith("ms");
+			return getOsName().toLowerCase().startsWith("windows") || getOsName().toLowerCase().startsWith("microsoft")
+					|| getOsName().toLowerCase().startsWith("ms");
 		}
 
 		public static boolean isLinux() {
@@ -324,15 +327,15 @@ public class NativeResource {
 		}
 
 		public static String getExtension() {
-			if(isWindows()) {
+			if (isWindows()) {
 				return ".dll";
 			}
 
-			if(isLinux() || isFreeBSD()) {
+			if (isLinux() || isFreeBSD()) {
 				return ".so";
 			}
 
-			if(isOSX()) {
+			if (isOSX()) {
 				return ".jnilib";
 			}
 

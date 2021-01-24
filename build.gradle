@@ -91,6 +91,7 @@ spotless {
 	java {
 		importOrder()
 		removeUnusedImports()
+		endWithNewline()
 		eclipse()
 	}
 }

@@ -55,57 +55,53 @@
 |   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 |   All trademarks belong to their respective owners.
 --------------------------------------------------------------------------*/
-package  gnu.io;
+package gnu.io;
 
 import java.util.Enumeration;
 
 /**
-* @author Trent Jarvi
-* @version %I%, %G%
-* @since JDK1.0
-*/
-
+ * @author Trent Jarvi
+ * @version %I%, %G%
+ * @since JDK1.0
+ */
 
 @SuppressWarnings("unchecked")
-class CommPortEnumerator implements Enumeration
-{
+class CommPortEnumerator implements Enumeration {
 	private CommPortIdentifier index;
 
-	CommPortEnumerator()
-	{
+	CommPortEnumerator() {
 	}
-/*------------------------------------------------------------------------------
-        nextElement()
-        accept:
-        perform:
-        return:
-        exceptions:
-        comments:
-------------------------------------------------------------------------------*/
-	public Object nextElement()
-	{
-		synchronized (CommPortIdentifier.Sync)
-		{
-			if(index != null) index = index.next;
-			else index=CommPortIdentifier.CommPortIndex;
-			return(index);
+	/*------------------------------------------------------------------------------
+	    nextElement()
+	    accept:
+	    perform:
+	    return:
+	    exceptions:
+	    comments:
+	------------------------------------------------------------------------------*/
+	public Object nextElement() {
+		synchronized (CommPortIdentifier.Sync) {
+			if (index != null)
+				index = index.next;
+			else
+				index = CommPortIdentifier.CommPortIndex;
+			return (index);
 		}
 	}
-/*------------------------------------------------------------------------------
-        hasMoreElements()
-        accept:
-        perform:
-        return:
-        exceptions:
-        comments:
-------------------------------------------------------------------------------*/
-	public boolean hasMoreElements()
-	{
-		synchronized (CommPortIdentifier.Sync)
-		{
-			if(index != null) return index.next == null ? false : true;
-			else return CommPortIdentifier.CommPortIndex == null ?
-				false : true;
+	/*------------------------------------------------------------------------------
+	    hasMoreElements()
+	    accept:
+	    perform:
+	    return:
+	    exceptions:
+	    comments:
+	------------------------------------------------------------------------------*/
+	public boolean hasMoreElements() {
+		synchronized (CommPortIdentifier.Sync) {
+			if (index != null)
+				return index.next == null ? false : true;
+			else
+				return CommPortIdentifier.CommPortIndex == null ? false : true;
 		}
 	}
 }
