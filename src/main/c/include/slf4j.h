@@ -91,11 +91,6 @@ typedef enum LogLevel
 	LOG_LEVELS
 } LogLevel;
 
-/** \brief Trace-level log to denote entering a function. */
-#define ENTER(x) slf4j_log(LOG_TRACE, "entering " x)
-/** \brief Trace-level log to denote leaving a function. */
-#define LEAVE(x) slf4j_log(LOG_TRACE, "leaving " x)
-
 /**
  * \brief Log a ERROR-level message through SLF4J.
  *

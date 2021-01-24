@@ -56,45 +56,44 @@
 |   All trademarks belong to their respective owners.
 --------------------------------------------------------------------------*/
 package test;
+
+import gnu.io.CommPortIdentifier;
 import java.util.Enumeration;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import gnu.io.CommPortIdentifier;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class NRJavaSerialTest {
-    private static final Logger log = LoggerFactory.getLogger(NRJavaSerialTest.class);
+	private static final Logger log = LoggerFactory.getLogger(NRJavaSerialTest.class);
 
-    private static final Lock LOCK = new ReentrantLock();
-    private static final String PORT = "/dev/ttyUSB0";
+	private static final Lock LOCK = new ReentrantLock();
+	private static final String PORT = "/dev/ttyUSB0";
 
-    public static void main(String[] args) throws Exception {
-        Thread thread = new Thread(NRJavaSerialTest::printPortIdentifiers);
-        thread.start();
-        Thread.sleep(2000L);
-        CommPortIdentifier id = CommPortIdentifier.getPortIdentifier(PORT);
-        id.open(NRJavaSerialTest.class.getSimpleName(), 5000);
-        log.info("Opened: " + PORT);
-        LOCK.lock();
-    }
+	public static void main(String[] args) throws Exception {
+		Thread thread = new Thread(NRJavaSerialTest::printPortIdentifiers);
+		thread.start();
+		Thread.sleep(2000L);
+		CommPortIdentifier id = CommPortIdentifier.getPortIdentifier(PORT);
+		id.open(NRJavaSerialTest.class.getSimpleName(), 5000);
+		log.info("Opened: " + PORT);
+		LOCK.lock();
+	}
 
-    @SuppressWarnings("unchecked")
-    private static void printPortIdentifiers() {
-        try {
-            for (int i=0;i<5&&!Thread.currentThread().isInterrupted();i++) {
-                Enumeration<CommPortIdentifier> ids = CommPortIdentifier.getPortIdentifiers();
-                log.info("--- Port Identifiers ---");
-                while (ids.hasMoreElements()) {
-                    log.info("name: " + ids.nextElement().getName());
-                }
-                Thread.sleep(5000L);
-            }
-        } catch (InterruptedException e) {
-            log.error("Thread interrupted");
-        }
-        System.exit(0);
-    }
+	@SuppressWarnings("unchecked")
+	private static void printPortIdentifiers() {
+		try {
+			for (int i = 0; i < 5 && !Thread.currentThread().isInterrupted(); i++) {
+				Enumeration<CommPortIdentifier> ids = CommPortIdentifier.getPortIdentifiers();
+				log.info("--- Port Identifiers ---");
+				while (ids.hasMoreElements()) {
+					log.info("name: " + ids.nextElement().getName());
+				}
+				Thread.sleep(5000L);
+			}
+		} catch (InterruptedException e) {
+			log.error("Thread interrupted");
+		}
+		System.exit(0);
+	}
 }

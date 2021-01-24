@@ -294,68 +294,6 @@ Trent
 #	define SELECT select
 #endif /* WIN32 */
 
-#if defined(DEBUG_TIMING) && ! defined(WIN32) /* WIN32 does not have gettimeofday() */
-struct timeval snow, enow, seloop, eeloop;
-#ifdef __APPLE__
-#define report_time_eventLoop( ) { \
-	if ( seloop.tv_sec == eeloop.tv_sec && seloop.tv_usec == eeloop.tv_usec ) \
-	{ \
-		gettimeofday(&eeloop, NULL); \
-		seloop.tv_sec = eeloop.tv_sec; \
-		seloop.tv_usec = eeloop.tv_usec; \
-		printf("%8li sec : %8i usec\n", eeloop.tv_sec - seloop.tv_sec, eeloop.tv_usec - seloop.tv_usec); \
-	} \
-}
-#define report_time( ) \
-{ \
-	struct timeval now; \
-	gettimeofday(&now, NULL); \
-	printf("%8s : %5i : %8li sec : %8i usec\n", __TIME__, __LINE__, now.tv_sec, now.tv_usec); \
-}
-#define report_time_start( ) \
-{ \
-	gettimeofday(&snow, NULL); \
-	printf("%8s : %5i : %8li sec : %8i usec", __TIME__, __LINE__, snow.tv_sec, snow.tv_usec); \
-}
-#define report_time_end( ) \
-{ \
-	gettimeofday(&enow, NULL); \
-	printf("%8li sec : %8i usec\n", enow.tv_sec - snow.tv_sec, enow.tv_sec - snow.tv_sec?snow.tv_usec-enow.tv_usec:enow.tv_usec - snow.tv_usec); \
-}
-#else /* ! __APPLE__ */
-#define report_time_eventLoop( ) { \
-if ( seloop.tv_sec == eeloop.tv_sec && seloop.tv_usec == eeloop.tv_usec ) \
-{ \
-gettimeofday(&eeloop, NULL); \
-seloop.tv_sec = eeloop.tv_sec; \
-seloop.tv_usec = eeloop.tv_usec; \
-printf("%8li sec : %8li usec\n", eeloop.tv_sec - seloop.tv_sec, eeloop.tv_usec - seloop.tv_usec); \
-} \
-}
-#define report_time( ) \
-{ \
-struct timeval now; \
-gettimeofday(&now, NULL); \
-printf("%8s : %5i : %8li sec : %8li usec\n", __TIME__, __LINE__, now.tv_sec, now.tv_usec); \
-}
-#define report_time_start( ) \
-{ \
-gettimeofday(&snow, NULL); \
-printf("%8s : %5i : %8li sec : %8li usec", __TIME__, __LINE__, snow.tv_sec, snow.tv_usec); \
-}
-#define report_time_end( ) \
-{ \
-gettimeofday(&enow, NULL); \
-printf("%8li sec : %8li usec\n", enow.tv_sec - snow.tv_sec, enow.tv_sec - snow.tv_sec?snow.tv_usec-enow.tv_usec:enow.tv_usec - snow.tv_usec); \
-}
-#endif  /* __APPLE__ */
-#else /* ! DEBUG_TIMING || WIN32 */
-#define report_time_eventLoop( ){};
-#define report_time( ) {}
-#define report_time_start( ) {}
-#define report_time_end( ) {}
-#endif /* DEBUG_TIMING && ! WIN32 */
-
 /* allow people to override the directories */
 /* #define USER_LOCK_DIRECTORY "/home/tjarvi/1.5/build" */
 #ifdef USER_LOCK_DIRECTORY

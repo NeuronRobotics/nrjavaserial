@@ -57,6 +57,9 @@
 --------------------------------------------------------------------------*/
 package gnu.io;
 
+import gnu.io.factory.RFC2217PortCreator;
+import gnu.io.factory.RxTxPortCreator;
+import gnu.io.rfc2217.TelnetSerialPort;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -64,308 +67,257 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TooManyListenersException;
-
-import gnu.io.factory.RFC2217PortCreator;
-import gnu.io.factory.RxTxPortCreator;
-import gnu.io.rfc2217.TelnetSerialPort;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NRSerialPort
-{
-    private static final Logger log = LoggerFactory.getLogger(NRSerialPort.class);
+public class NRSerialPort {
+	private static final Logger log = LoggerFactory.getLogger(NRSerialPort.class);
 
-    private SerialPort serial;
-    private String port = null;
-    private boolean connected = false;
-    private int baud = 115200;
-    private int parity = SerialPort.PARITY_NONE;
-    private int dataBits = SerialPort.DATABITS_8;
-    private int stopBits = SerialPort.STOPBITS_1;
+	private SerialPort serial;
+	private String port = null;
+	private boolean connected = false;
+	private int baud = 115200;
+	private int parity = SerialPort.PARITY_NONE;
+	private int dataBits = SerialPort.DATABITS_8;
+	private int stopBits = SerialPort.STOPBITS_1;
 
-    /**
-     * Class Constructor for a NRSerialPort with a given port and baudrate.
-     * 
-     * @param port the port to connect to (i.e. COM6 or /dev/ttyUSB0)
-     */
+	/**
+	 * Class Constructor for a NRSerialPort with a given port and baudrate.
+	 * 
+	 * @param port
+	 *            the port to connect to (i.e. COM6 or /dev/ttyUSB0)
+	 */
 
-    public NRSerialPort(String port)
-    {
-    	setPort(port);
-    }
-    
-    public NRSerialPort(String port, int baud)
-    {
-    	setPort(port);
-        setBaud(baud);
-    }
-    
-    public NRSerialPort(String port, int baud, int parity)
-    {
-    	setPort(port);
-        setBaud(baud);
-	setParity(parity);
-    }
-    
-    public NRSerialPort(String port, int baud, int parity, int dataBits)
-    {
-    	setPort(port);
-        setBaud(baud);
-	setParity(parity);
-        setDataBits(dataBits);	
-    }
-    
-    public NRSerialPort(String port, int baud, int parity, int dataBits, int stopBits)
-    {
-    	setPort(port);
-        setBaud(baud);
-	setParity(parity);
-        setDataBits(dataBits);	
-        setStopBits(stopBits);	
-    }
-    
-    public boolean connect()
-    {
-        if (isConnected())
-        {
-            log.warn(port + " is already connected.");
-            return true;
-        }
+	public NRSerialPort(String port) {
+		setPort(port);
+	}
 
-        try
-        {
-        	if(port.toLowerCase().startsWith("rfc2217"))
-        		serial = new RFC2217PortCreator().createPort(port);
-        	else
-        		serial = new RxTxPortCreator().createPort(port);
-		serial.setSerialPortParams(getBaud(), getDataBits(), getStopBits(), getParity());
-            setConnected(true);
-        }
-        catch (NativeResourceException e)
-        {
-            throw new NativeResourceException(e.getMessage());
-        }
-        catch (Exception e)
-        {
-            log.error("Failed to connect on port: " + port, e);
-            setConnected(false);
-        }
+	public NRSerialPort(String port, int baud) {
+		setPort(port);
+		setBaud(baud);
+	}
 
-        if (isConnected())
-        {
-            serial.notifyOnDataAvailable(true);
-        }
-        return isConnected();
-    }
+	public NRSerialPort(String port, int baud, int parity) {
+		setPort(port);
+		setBaud(baud);
+		setParity(parity);
+	}
 
+	public NRSerialPort(String port, int baud, int parity, int dataBits) {
+		setPort(port);
+		setBaud(baud);
+		setParity(parity);
+		setDataBits(dataBits);
+	}
 
-    public InputStream getInputStream()
-    {
+	public NRSerialPort(String port, int baud, int parity, int dataBits, int stopBits) {
+		setPort(port);
+		setBaud(baud);
+		setParity(parity);
+		setDataBits(dataBits);
+		setStopBits(stopBits);
+	}
+
+	public boolean connect() {
+		if (isConnected()) {
+			log.warn(port + " is already connected.");
+			return true;
+		}
+
+		try {
+			if (port.toLowerCase().startsWith("rfc2217"))
+				serial = new RFC2217PortCreator().createPort(port);
+			else
+				serial = new RxTxPortCreator().createPort(port);
+			serial.setSerialPortParams(getBaud(), getDataBits(), getStopBits(), getParity());
+			setConnected(true);
+		} catch (NativeResourceException e) {
+			throw new NativeResourceException(e.getMessage());
+		} catch (Exception e) {
+			log.error("Failed to connect on port: " + port, e);
+			setConnected(false);
+		}
+
+		if (isConnected()) {
+			serial.notifyOnDataAvailable(true);
+		}
+		return isConnected();
+	}
+
+	public InputStream getInputStream() {
 		try {
 			return serial.getInputStream();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-    }
+	}
 
-
-    public OutputStream getOutputStream()
-    {
+	public OutputStream getOutputStream() {
 		try {
 			return serial.getOutputStream();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-    }
+	}
 
+	/**
+	 * Set the port to use (i.e. COM6 or /dev/ttyUSB0)
+	 * 
+	 * @param port
+	 *            the serial port to use
+	 */
+	private void setPort(String port) {
+		this.port = port;
+	}
 
-    /**
-     * Set the port to use (i.e. COM6 or /dev/ttyUSB0)
-     * 
-     * @param port the serial port to use
-     */
-    private void setPort(String port)
-    {
-        this.port = port;
-    }
+	public void disconnect() {
+		try {
+			try {
+				getInputStream().close();
+				getOutputStream().close();
+				serial.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+				throw new RuntimeException(e);
+			}
+			serial = null;
+			setConnected(false);
+		} catch (UnsatisfiedLinkError e) {
+			throw new NativeResourceException(e.getMessage());
+		}
+	}
 
+	public static Set<String> getAvailableSerialPorts() {
+		Set<String> available = new HashSet<String>();
+		try {
+			RXTXCommDriver d = new RXTXCommDriver();
+			Set<String> av = d.getPortIdentifiers();
+			ArrayList<String> strs = new ArrayList<String>();
+			for (String s : av) {
+				strs.add(0, s);
+			}
+			for (String s : strs) {
+				available.add(s);
+			}
+		} catch (UnsatisfiedLinkError e) {
+			e.printStackTrace();
+			throw new NativeResourceException(e.getMessage());
+		}
 
-    public void disconnect()
-    {
-        try
-        {
-            try
-            {
-                getInputStream().close();
-                getOutputStream().close();
-                serial.close();
-            }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
-            serial = null;
-            setConnected(false);
-        }
-        catch (UnsatisfiedLinkError e)
-        {
-            throw new NativeResourceException(e.getMessage());
-        }
-    }
+		return available;
+	}
 
+	public boolean isConnected() {
+		return connected;
+	}
 
-    public static Set<String> getAvailableSerialPorts()
-    {
-        Set<String> available = new HashSet<String>();
-        try
-        {
-            RXTXCommDriver d = new RXTXCommDriver();
-            Set<String> av = d.getPortIdentifiers();
-            ArrayList<String> strs = new ArrayList<String>();
-            for (String s : av)
-            {
-                strs.add(0, s);
-            }
-            for (String s : strs)
-            {
-                available.add(s);
-            }
-        }
-        catch (UnsatisfiedLinkError e)
-        {
-            e.printStackTrace();
-            throw new NativeResourceException(e.getMessage());
-        }
+	public void setConnected(boolean connected) {
+		if (this.connected == connected)
+			return;
+		this.connected = connected;
+	}
 
-        return available;
-    }
+	public void setBaud(int baud) {
 
+		this.baud = baud;
+		return;
 
-    public boolean isConnected()
-    {
-        return connected;
-    }
+	}
 
+	public int getBaud() {
+		return baud;
+	}
 
-    public void setConnected(boolean connected)
-    {
-        if (this.connected == connected)
-            return;
-        this.connected = connected;
-    }
+	public void setParity(int parity) {
+		this.parity = parity;
+	}
 
+	public int getParity() {
+		return this.parity;
+	}
 
-    public void setBaud(int baud)
-    {
+	public void setStopBits(int stopBits) {
+		this.stopBits = stopBits;
+	}
 
-        this.baud = baud;
-        return;
+	public int getStopBits() {
+		return this.stopBits;
+	}
 
-    }
+	public void setDataBits(int dataBits) {
+		this.dataBits = dataBits;
+	}
 
+	public int getDataBits() {
+		return this.dataBits;
+	}
 
-    public int getBaud()
-    {
-        return baud;
-    }
+	/**
+	 * Enables RS485 half-duplex bus communication for Linux. The Linux kernel uses
+	 * the RTS pin as bus enable. If you use a device that is configured via the
+	 * Linux device tree, take care to add "uart-has-rtscts" and to configure the
+	 * RTS GPIO correctly.
+	 *
+	 * Before enabling RS485, the serial port must be connected/opened.
+	 *
+	 * See also:
+	 * <ul>
+	 * <li>https://www.kernel.org/doc/Documentation/serial/serial-rs485.txt
+	 * <li>https://www.kernel.org/doc/Documentation/devicetree/bindings/serial/serial.txt
+	 * </ul>
+	 *
+	 * @param busEnableActiveLow
+	 *            true, if the bus enable signal (RTS) shall be low during
+	 *            transmission
+	 * @param delayBusEnableBeforeSendMs
+	 *            delay of bus enable signal (RTS) edge to first data edge in ms
+	 *            (not supported by all serial drivers)
+	 * @param delayBusEnableAfterSendMs
+	 *            delay of bus enable signal (RTS) edge after end of transmission in
+	 *            ms (not supported by all serial drivers)
+	 * @return the ioctl() return value
+	 */
+	public int enableRs485(boolean busEnableActiveLow, int delayBusEnableBeforeSendMs, int delayBusEnableAfterSendMs) {
+		if (serial == null)
+			return -1;
+		if (RXTXPort.class.isInstance(serial))
+			return ((RXTXPort) serial).enableRs485(busEnableActiveLow, delayBusEnableBeforeSendMs,
+					delayBusEnableAfterSendMs);
+		return -1;
+	}
 
-    public void setParity(int parity)
-    {
-	this.parity = parity;
-    }
+	public void notifyOnDataAvailable(boolean b) {
+		serial.notifyOnDataAvailable(b);
+	}
 
-    public int getParity()
-    {
-	return this.parity;
-    }
+	public void addEventListener(SerialPortEventListener lsnr) throws TooManyListenersException {
+		serial.addEventListener(lsnr);
+	}
 
-    public void setStopBits(int stopBits)
-    {
-	this.stopBits = stopBits;
-    }
+	public void removeEventListener() {
+		serial.removeEventListener();
+	}
 
-    public int getStopBits()
-    {
-	return this.stopBits;
-    }
-
-    public void setDataBits(int dataBits)
-    {
-	this.dataBits = dataBits;
-    }
-
-    public int getDataBits()
-    {
-	return this.dataBits;
-    }
-    
-    /**
-     * Enables RS485 half-duplex bus communication for Linux. The Linux kernel uses the RTS pin as bus enable. If you use a device that is configured via the Linux
-     * device tree, take care to add "uart-has-rtscts" and to configure the RTS GPIO correctly.
-     *
-     * Before enabling RS485, the serial port must be connected/opened.
-     *
-     * See also:
-     * <ul>
-     * <li>https://www.kernel.org/doc/Documentation/serial/serial-rs485.txt
-     * <li>https://www.kernel.org/doc/Documentation/devicetree/bindings/serial/serial.txt
-     * </ul>
-     *
-     * @param busEnableActiveLow
-     *            true, if the bus enable signal (RTS) shall be low during transmission
-     * @param delayBusEnableBeforeSendMs
-     *            delay of bus enable signal (RTS) edge to first data edge in ms (not supported by all serial drivers)
-     * @param delayBusEnableAfterSendMs
-     *            delay of bus enable signal (RTS) edge after end of transmission in ms (not supported by all serial drivers)
-     * @return the ioctl() return value
-     */
-    public int enableRs485(boolean busEnableActiveLow, int delayBusEnableBeforeSendMs, int delayBusEnableAfterSendMs) {
-        if(serial == null)
-            return -1;
-        if(RXTXPort.class.isInstance(serial))
-        	return ((RXTXPort) serial).enableRs485(busEnableActiveLow, delayBusEnableBeforeSendMs, delayBusEnableAfterSendMs);
-        return -1;
-    }
-
-    public void notifyOnDataAvailable(boolean b)
-    {
-        serial.notifyOnDataAvailable(b);
-    }
-
-
-    public void addEventListener(SerialPortEventListener lsnr) throws TooManyListenersException
-    {
-        serial.addEventListener(lsnr);
-    }
-
-
-    public void removeEventListener()
-    {
-        serial.removeEventListener();
-    }
-
-    /**
-     * Gets the {@link SerialPort} instance.
-     * This will return null until {@link #connect()} is successfully called.
-     * @return The {@link SerialPort} instance or null.
-     */
-    public RXTXPort getSerialPortInstance()
-    {
-     if(RXTXPort.class.isInstance(serial))
-        return (RXTXPort) serial;
-     return null;
-    }
-    /**
-     * Gets the {@link SerialPort} instance.
-     * This will return null until {@link #connect()} is successfully called.
-     * @return The {@link SerialPort} instance or null.
-     */
-    public TelnetSerialPort getTelnetSerialPortInstance()
-    {
-     if(TelnetSerialPort.class.isInstance(serial))
-        return (TelnetSerialPort) serial;
-     return null;
-    }
+	/**
+	 * Gets the {@link SerialPort} instance. This will return null until
+	 * {@link #connect()} is successfully called.
+	 * 
+	 * @return The {@link SerialPort} instance or null.
+	 */
+	public RXTXPort getSerialPortInstance() {
+		if (RXTXPort.class.isInstance(serial))
+			return (RXTXPort) serial;
+		return null;
+	}
+	/**
+	 * Gets the {@link SerialPort} instance. This will return null until
+	 * {@link #connect()} is successfully called.
+	 * 
+	 * @return The {@link SerialPort} instance or null.
+	 */
+	public TelnetSerialPort getTelnetSerialPortInstance() {
+		if (TelnetSerialPort.class.isInstance(serial))
+			return (TelnetSerialPort) serial;
+		return null;
+	}
 }
