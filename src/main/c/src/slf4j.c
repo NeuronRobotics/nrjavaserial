@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
 |   RXTX License v 2.1 - LGPL v 2.1 + Linking Over Controlled Interface.
 |   RXTX is a native interface to serial ports in java.
-|   Copyright 1997-2007 by Trent Jarvi tjarvi@qbang.org and others who
+|   Copyright 1997-2009 by Trent Jarvi tjarvi@qbang.org and others who
 |   actually wrote it.  See individual source files for more information.
 |
 |   A copy of the LGPL v 2.1 may be found at
@@ -27,7 +27,7 @@
 |   any confusion about linking to RXTX.   We want to allow in part what
 |   section 5, paragraph 2 of the LGPL does not permit in the special
 |   case of linking over a controlled interface.  The intent is to add a
-|   Java Specification Request or standards body defined interface in the 
+|   Java Specification Request or standards body defined interface in the
 |   future as another exception but one is not currently available.
 |
 |   http://www.fsf.org/licenses/gpl-faq.html#LinkingOverControlledInterface
@@ -55,57 +55,133 @@
 |   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 |   All trademarks belong to their respective owners.
 --------------------------------------------------------------------------*/
-package  gnu.io;
 
-import java.util.Enumeration;
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+#include "slf4j.h"
 
-/**
-* @author Trent Jarvi
-* @version %I%, %G%
-* @since JDK1.0
-*/
+/** \brief The maximum length of a log message. */
+#define MESSAGE_MAX 4096
 
-
-@SuppressWarnings("unchecked")
-class CommPortEnumerator implements Enumeration
+struct Slf4jContext
 {
-	private CommPortIdentifier index;
+	JNIEnv *env;
+	jobject log;
+	/* We want to treat logging contexts like a stack. A JNI function which
+	 * calls back into Java which calls back into JNI will (if it properly
+	 * calls slf4j__setup_instance()/slf4j__setup_static()) initialize a new
+	 * logging context; we don't want to lose the previous one when we pop back
+	 * up the call stack into the original JNI context. */
+	struct Slf4jContext *prev;
+};
 
-	CommPortEnumerator()
+static __thread Slf4jContext *thread_context = NULL;
+
+void slf4j_log(LogLevel level, const char *msg)
+{
+	if (thread_context == NULL)
 	{
+		/* No context? No logging. */
+		return;
 	}
-/*------------------------------------------------------------------------------
-        nextElement()
-        accept:
-        perform:
-        return:
-        exceptions:
-        comments:
-------------------------------------------------------------------------------*/
-	public Object nextElement()
+
+	const char *methodName;
+	switch (level)
 	{
-		synchronized (CommPortIdentifier.Sync)
-		{
-			if(index != null) index = index.next;
-			else index=CommPortIdentifier.CommPortIndex;
-			return(index);
-		}
+	case LOG_ERROR:
+		methodName = "error";
+		break;
+	case LOG_WARN:
+		methodName = "warn";
+		break;
+	case LOG_INFO:
+		methodName = "info";
+		break;
+	case LOG_DEBUG:
+		methodName = "debug";
+		break;
+	case LOG_TRACE:
+	default:
+		methodName = "trace";
+		break;
 	}
-/*------------------------------------------------------------------------------
-        hasMoreElements()
-        accept:
-        perform:
-        return:
-        exceptions:
-        comments:
-------------------------------------------------------------------------------*/
-	public boolean hasMoreElements()
+
+	/* The report() functions used to just conditionally printf whatever was
+	 * handed to them, so all of those invocations pass strings with trailing
+	 * newlines. We'll trim any trailing whitespace before passing to SLF4J. */
+	int messageLength = strlen(msg);
+	while (isspace(msg[messageLength - 1]))
 	{
-		synchronized (CommPortIdentifier.Sync)
-		{
-			if(index != null) return index.next == null ? false : true;
-			else return CommPortIdentifier.CommPortIndex == null ?
-				false : true;
-		}
+		--messageLength;
 	}
+
+	/* A log message 4K in length is likely already an error. Anything longer
+	 * is _definitely_ an error. */
+	if (messageLength > MESSAGE_MAX)
+	{
+		messageLength = MESSAGE_MAX;
+	}
+
+	char *trimmedMessage = malloc(messageLength + 1);
+	memcpy(trimmedMessage, msg, messageLength);
+	trimmedMessage[messageLength] = '\0';
+
+	jstring jmsg = (*thread_context->env)->NewStringUTF(
+		thread_context->env,
+		trimmedMessage);
+	free(trimmedMessage);
+
+	jclass logger = (*thread_context->env)->FindClass(
+		thread_context->env,
+		"org/slf4j/Logger");
+	jmethodID logMethod = (*thread_context->env)->GetMethodID(
+		thread_context->env,
+		logger,
+		methodName,
+		"(Ljava/lang/String;)V");
+
+	(*thread_context->env)->CallVoidMethod(
+		thread_context->env,
+		thread_context->log,
+		logMethod,
+		jmsg);
+}
+
+Slf4jContext *slf4j__setup_instance(JNIEnv *env, jobject jobj)
+{
+	jclass jclazz = (*env)->GetObjectClass(env, jobj);
+	return slf4j__setup_static(env, jclazz);
+}
+
+Slf4jContext *slf4j__setup_static(JNIEnv *env, jclass jclazz)
+{
+	jfieldID logId = (*env)->GetStaticFieldID(env, jclazz, "log", "Lorg/slf4j/Logger;");
+	jobject log = (*env)->GetStaticObjectField(env, jclazz, logId);
+
+	Slf4jContext *context = malloc(sizeof(Slf4jContext));
+	if (context == NULL)
+	{
+		return NULL;
+	}
+	memset(context, 0, sizeof(Slf4jContext));
+
+	context->env = env;
+	context->log = log;
+	context->prev = thread_context;
+
+	thread_context = context;
+	return thread_context;
+}
+
+void slf4j_teardown(Slf4jContext **unused)
+{
+	if (thread_context == NULL)
+	{
+		return;
+	}
+
+	Slf4jContext *context = thread_context;
+	thread_context = thread_context->prev;
+	free(context);
 }

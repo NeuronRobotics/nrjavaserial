@@ -61,6 +61,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
 * @author Trent Jarvi
 * @version %I%, %G%
@@ -72,8 +75,9 @@ import java.io.IOException;
   * CommPort
   */
 public abstract class CommPort extends Object {
+	private static final Logger log = LoggerFactory.getLogger(CommPort.class);
+
 	protected String name;
-	private final static boolean debug = false;
 
 	public abstract void enableReceiveFraming( int f ) 
 		throws UnsupportedCommOperationException;
@@ -97,7 +101,7 @@ public abstract class CommPort extends Object {
 	@SuppressWarnings("static-access")
 	public void close() 
 	{
-		if (debug) System.out.println("CommPort:close()");
+		log.trace("CommPort:close()");
 
 		try
 		{
@@ -116,12 +120,10 @@ public abstract class CommPort extends Object {
 
 	public String getName()
 	{
-		if (debug) System.out.println("CommPort:getName()");
 		return( name );
 	}
 	public String toString()
 	{
-		if (debug) System.out.println("CommPort:toString()");
 		return( name );
 	}
 }

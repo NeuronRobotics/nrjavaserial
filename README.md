@@ -57,6 +57,52 @@ ease of use and embeddability in other libraries.
 	</dependency>
 ```
 
+# Logging
+
+NRJavaSerial uses [the SLF4J API][slf4j] for logging.
+You may already be using a logging framework
+which implements the SLF4J interface,
+such as [Logback Classic][logback].
+If you are, then NRJavaSerial will use it automatically.
+Alternatively, SLF4J provides [bindings][slf4j-bindings]
+to several other popular logging frameworks.
+If you don't have a compatible logging framework
+on your classpath at runtime,
+you'll get these warning messages
+when loading NRJavaSerial:
+
+```
+SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+```
+
+The solution is to introduce a dependency
+on an SLF4J-compatible logging framework
+or an SLF4J binding to the logging framework of your choice.
+
+If you want to suppress or filter log messages from NRJavaSerial,
+you can configure your logging framework accordingly.
+For example,
+this Logback filter suppresses NRJavaSerial messages
+logged at a severity lower than `WARN` (i.e., `DEBUG` and `TRACE`):
+
+```
+<filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+    <evaluator class="ch.qos.logback.classic.boolex.GEventEvaluator">
+        <expression>
+            e.loggerName.startsWith("gnu.io.")
+                &amp;&amp; e.level.toInt() &lt; WARN.toInt()</expression>
+    </evaluator>
+    <onMatch>DENY</onMatch>
+    <onMismatch>NEUTRAL</onMismatch>
+</filter>
+```
+
+[slf4j]: http://www.slf4j.org/
+[logback]: https://logback.qos.ch/
+[slf4j-bindings]: http://www.slf4j.org/manual.html#swapping
+
 # Building the JAR
 
 1. Checkout the repository.

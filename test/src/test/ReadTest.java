@@ -7,12 +7,18 @@ import java.util.TooManyListenersException;
 import gnu.io.NRSerialPort;
 import gnu.io.SerialPortEvent;
 import gnu.io.Zystem;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ReadTest {
+	private static final Logger log = LoggerFactory.getLogger(ReadTest.class);
+
 	public static void main(String [] args) {
 
 		String port = "";
 		for(String s:NRSerialPort.getAvailableSerialPorts()){
-			System.out.println("Availible port: "+s);
+			log.info("Availible port: "+s);
 			port=s;
 		}
 
@@ -37,7 +43,7 @@ public class ReadTest {
 						e.printStackTrace();
 					}
 				}if(ev.getEventType()==SerialPortEvent.HARDWARE_ERROR) {
-					System.out.println("Clean exit of hardware");
+					log.info("Clean exit of hardware");
 					serial.disconnect();
 				}
 			});

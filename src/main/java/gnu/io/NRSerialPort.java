@@ -69,8 +69,12 @@ import gnu.io.factory.RFC2217PortCreator;
 import gnu.io.factory.RxTxPortCreator;
 import gnu.io.rfc2217.TelnetSerialPort;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class NRSerialPort
 {
+    private static final Logger log = LoggerFactory.getLogger(NRSerialPort.class);
 
     private SerialPort serial;
     private String port = null;
@@ -125,7 +129,7 @@ public class NRSerialPort
     {
         if (isConnected())
         {
-            System.err.println(port + " is already connected.");
+            log.warn(port + " is already connected.");
             return true;
         }
 
@@ -144,8 +148,7 @@ public class NRSerialPort
         }
         catch (Exception e)
         {
-            System.err.println("Failed to connect on port: " + port + " exception: ");
-            e.printStackTrace();
+            log.error("Failed to connect on port: " + port, e);
             setConnected(false);
         }
 

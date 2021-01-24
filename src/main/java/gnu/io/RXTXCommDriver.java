@@ -65,6 +65,8 @@ package gnu.io;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -75,14 +77,18 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
    This is the JavaComm for Linux driver.
 */
 public class RXTXCommDriver implements CommDriver
 {
+	private static final Logger log = LoggerFactory.getLogger(RXTXCommDriver.class);
+
 	private static Set<String> ports =new HashSet<String>();
-	
-	private final static boolean debug = false;
+
 	private final static boolean devel = false;
 	private final static boolean noVersionOutput = "true".equals( System.getProperty( "gnu.io.rxtx.NoVersionOutput" ) );
 
@@ -90,7 +96,6 @@ public class RXTXCommDriver implements CommDriver
 	{
 		if(ports==null)
 			ports =new HashSet<String>();
-		if(debug ) System.out.println("RXTXCommDriver {}");
 		//System.loadLibrary( "rxtxSerial" );
 		SerialManager.getInstance();
 		/*
@@ -111,25 +116,6 @@ public class RXTXCommDriver implements CommDriver
 		{
 			// for rxtx prior to 2.1.7
 			LibVersion = nativeGetVersion();
-		}
-		if ( devel )
-		{
-			if ( ! noVersionOutput )
-			{
-				System.out.println("Stable Library");
-				System.out.println("=========================================");
-				System.out.println("Native lib Version = " + LibVersion );
-				System.out.println("Java lib Version   = " + JarVersion );
-			}
-		}
-
-		if ( ! JarVersion.equals( LibVersion ) )
-		{
-			//System.out.println( "WARNING:  RXTX Version mismatch\n\tJar version = " + JarVersion + "\n\tnative lib Version = " + LibVersion );
-		}
-		else if ( debug )
-		{
-			System.out.println( "RXTXCommDriver:\n\tJar version = " + JarVersion + "\n\tnative lib Version = " + LibVersion );
 		}
 	}
 
@@ -196,12 +182,10 @@ public class RXTXCommDriver implements CommDriver
 		*/
 
 		String ValidPortPrefixes[]=new String [getScannedBufferSize()];
-		if (debug)
-			System.out.println("\nRXTXCommDriver:getValidPortPrefixes()");
+		log.trace("RXTXCommDriver:getValidPortPrefixes()");
 		if(CandidatePortPrefixes==null)
 		{
-			if (debug)
-				System.out.println("\nRXTXCommDriver:getValidPortPrefixes() No ports prefixes known for this System.\nPlease check the port prefixes listed for " + osName + " in RXTXCommDriver:registerScannedPorts()\n");
+			log.debug("RXTXCommDriver:getValidPortPrefixes() No ports prefixes known for this System. Please check the port prefixes listed for {} in RXTXCommDriver:registerScannedPorts()", osName);
 		}
 		int i=0;
 		for(int j=0;j<CandidatePortPrefixes.length;j++){
@@ -214,28 +198,10 @@ public class RXTXCommDriver implements CommDriver
 		System.arraycopy(ValidPortPrefixes, 0, returnArray, 0, i);
 		if(ValidPortPrefixes[0]==null)
 		{
-			if (debug)
-			{
-				System.out.println("\nRXTXCommDriver:getValidPortPrefixes() No ports matched the list assumed for this\nSystem in the directory " + deviceDirectory + ".  Please check the ports listed for \"" + osName + "\" in\nRXTXCommDriver:registerScannedPorts()\nTried:");
-				for(int j=0;j<CandidatePortPrefixes.length;j++){
-					System.out.println("\t" +
-						CandidatePortPrefixes[i]);
-				}
-			}
+			log.debug("RXTXCommDriver:getValidPortPrefixes() No ports matched the list assumed for this System in the directory {}. Please check the ports listed for \"{}\" in RXTXCommDriver:registerScannedPorts(). Tried: {}",
+			deviceDirectory, osName, String.join(", ", CandidatePortPrefixes));
 		}
-		else
-		{
-			if (debug)
-				System.out.println("\nRXTXCommDriver:getValidPortPrefixes()\nThe following port prefixes have been identified as valid on " + osName + ":\n");
-/*
-			for(int j=0;j<returnArray.length;j++)
-			{
-				if (debug)
-					System.out.println("\t" + j + " " +
-						returnArray[j]);
-			}
-*/
-		}
+
 		return returnArray;
 	}
 
@@ -286,20 +252,12 @@ public class RXTXCommDriver implements CommDriver
 			return;
 
 		}
-		
-		if (debug)
-		{
-			System.out.println("Entering registerValidPorts()");
-	/* */
-			System.out.println(" Candidate devices:");
-			for (int dn=0;dn<CandidateDeviceNames.length;dn++)
-				System.out.println("  "	+
-					CandidateDeviceNames[dn]);
-			System.out.println(" valid port prefixes:");
-			for (int pp=0;pp<ValidPortPrefixes.length;pp++)
-				System.out.println("  "+ValidPortPrefixes[pp]);
-	/* */
-		}
+
+		log.trace("RegisterValidPorts: Candidates: {}", String.join(", ", CandidateDeviceNames));
+		log.trace("RegisterValidPorts: Port prefixes: {}",  String.join(", ", ValidPortPrefixes));
+
+		List<String> foundDevices = new ArrayList<>();
+
 		if ( CandidateDeviceNames!=null && ValidPortPrefixes!=null)
 		{
 			for( i = 0;i<CandidateDeviceNames.length; i++ ) {
@@ -341,13 +299,7 @@ public class RXTXCommDriver implements CommDriver
 					{
 						PortName = C;
 					}
-					if (debug)
-					{
-						System.out.println( C +
-								" " + V );
-						System.out.println( CU +
-								" " + Cl );
-					}
+					foundDevices.add(C);
 					if( osName.equals("Solaris") ||
 						osName.equals("SunOS"))
 						checkSolaris(PortName,PortType);
@@ -372,8 +324,8 @@ public class RXTXCommDriver implements CommDriver
 				}
 			}
 		}
-		if (debug)
-			System.out.println("Leaving registerValidPorts()");
+		log.trace("Found Devices: {}", String.join(", ", foundDevices));
+		log.trace("Leaving registerValidPorts()");
 	}
 
 
@@ -405,7 +357,7 @@ public class RXTXCommDriver implements CommDriver
 	public void initialize()
 	{
 
-		if (debug) System.out.println("RXTXCommDriver:initialize()");
+		log.trace("RXTXCommDriver:initialize()");
 
 		osName=System.getProperty("os.name");
 		deviceDirectory=getDeviceDirectory();
@@ -428,8 +380,6 @@ public class RXTXCommDriver implements CommDriver
 		final String pathSep = System.getProperty("path.separator", ":");
 		final StringTokenizer tok = new StringTokenizer(names, pathSep);
 
-		if (debug)
-			System.out.println("\nRXTXCommDriver:addSpecifiedPorts()");
 		while (tok.hasMoreElements())
 		{
 			String PortName = tok.nextToken();
@@ -475,17 +425,11 @@ public class RXTXCommDriver implements CommDriver
 		          String key = (String) it.next();
 		          System.setProperty(key, p.getProperty(key));
 		     }
-		    }catch(Exception e){
-			if (debug){
-			    System.out.println("The file: gnu.io.rxtx.properties doesn't exists.");
-			    System.out.println(e.toString());
-			    }//end if
-			}//end catch
-
-		if (debug)
-			System.out.println("checking for system-known ports of type "+PortType);
-		if (debug)
-			System.out.println("checking registry for ports of type "+PortType);
+		} catch (FileNotFoundException e) {
+			log.trace("Skip reading config from gnu.io.rxtx.properties: File does not exist");
+		} catch (IOException e) {
+			log.error("Error opening file gnu.io.rxtx.properties:", e);
+		}
 
 		switch (PortType) {
 			case CommPortIdentifier.PORT_SERIAL:
@@ -498,8 +442,7 @@ public class RXTXCommDriver implements CommDriver
 				val = System.getProperty("gnu.io.ParallelPorts");
 				break;
 			default:
-				if (debug)
-				System.out.println("unknown port type "+PortType+" passed to RXTXCommDriver.registerSpecifiedPorts()");
+				log.error("Unknown port type "+PortType+" passed to RXTXCommDriver.registerSpecifiedPorts()");
 		}
 
 		System.setProperties(origp); //recall saved properties
@@ -525,8 +468,7 @@ public class RXTXCommDriver implements CommDriver
 		osName=System.getProperty("os.name");
 		deviceDirectory=getDeviceDirectory();
 		String[] CandidateDeviceNames;
-		if (debug)
-			System.out.println("scanning device directory "+deviceDirectory+" for ports of type "+PortType);
+		log.trace("Scanning device directory "+deviceDirectory+" for ports of type "+PortType);
 		
 		boolean performTestRead = true;
 		
@@ -542,8 +484,7 @@ public class RXTXCommDriver implements CommDriver
 					useFallback = false;
 				}
 				catch (Throwable ex) {
-					if (debug)
-						System.err.println("Error reading the registry to get port list " + ex.getMessage());					
+					log.debug("Error reading the registry to get port list: {}", ex.getMessage());
 				}
 			}
 
@@ -582,7 +523,7 @@ public class RXTXCommDriver implements CommDriver
 						deva.length, devb.length );
 				if( debug ) {
 					for( int j = 0; j< temp.length;j++)
-						System.out.println( temp[j] );
+						log.debug( temp[j] );
 				}
 				CandidateDeviceNames=temp;
 	*/
@@ -621,18 +562,13 @@ public class RXTXCommDriver implements CommDriver
 			}
 			if (CandidateDeviceNames==null)
 			{
-				if (debug)
-					System.out.println("RXTXCommDriver:registerScannedPorts() no Device files to check ");
+				log.debug("RXTXCommDriver:registerScannedPorts() no Device files to check ");
 				return;
 			}
 
 			String CandidatePortPrefixes[] = {};
 			switch (PortType) {
 				case CommPortIdentifier.PORT_SERIAL:
-					if (debug)
-						System.out.println("scanning for serial ports for os "+osName);
-
-
 			/*  There are _many_ possible ports that can be used
 			    on Linux.  See below in the fake Linux-all-ports  
 			    case for a list.  You may add additional ports
@@ -872,14 +808,12 @@ public class RXTXCommDriver implements CommDriver
 				}
 				else
 				{
-					if (debug)
-						System.out.println("No valid prefixes for serial ports have been entered for "+osName + " in RXTXCommDriver.java.  This may just be a typo in the method registerScanPorts().");
+					log.debug("No valid prefixes for serial ports have been entered for "+osName + " in RXTXCommDriver.java.  This may just be a typo in the method registerScanPorts().");
 				}
 				break;
 
 			case CommPortIdentifier.PORT_PARALLEL:
-				if (debug)
-					System.out.println("scanning for parallel ports for os "+osName);
+				log.debug("Scanning for parallel ports for os "+osName);
 			/** Get the Parallel port prefixes for the running os
 			* Holger Lehmann
 			* July 12, 1999
@@ -921,8 +855,7 @@ public class RXTXCommDriver implements CommDriver
 				}
 				break;
 			default:
-				if (debug)
-					System.out.println("Unknown PortType "+PortType+" passed to RXTXCommDriver.registerScannedPorts()");
+				log.debug("Unknown PortType "+PortType+" passed to RXTXCommDriver.registerScannedPorts()");
 		}
 		registerValidPorts(CandidateDeviceNames, CandidatePortPrefixes, PortType, performTestRead);
 	}
@@ -972,8 +905,7 @@ public class RXTXCommDriver implements CommDriver
 	*/
 	public CommPort getCommPort( String PortName, int PortType )
 	{
-		if (debug) System.out.println("RXTXCommDriver:getCommPort("
-			+PortName+","+PortType+")");
+		log.trace("RXTXCommDriver:getCommPort("+PortName+","+PortType+")");
 		try {
 			switch (PortType) {
 				case CommPortIdentifier.PORT_SERIAL:
@@ -987,13 +919,10 @@ public class RXTXCommDriver implements CommDriver
 						return new RXTXPort( deviceDirectory + PortName );
 					}
 				default:
-					if (debug)
-						System.out.println("unknown PortType  "+PortType+" passed to RXTXCommDriver.getCommPort()");
+					log.debug("Unknown PortType  "+PortType+" passed to RXTXCommDriver.getCommPort()");
 			}
 		} catch( PortInUseException e ) {
-			if (debug)
-				System.out.println(
-					"Port "+PortName+" in use by another application");
+			log.warn("Port "+PortName+" in use by another application");
 		}
 		return null;
 	}
@@ -1001,6 +930,6 @@ public class RXTXCommDriver implements CommDriver
 	/*  Yikes.  Trying to call println from C for odd reasons */
 	public void Report( String arg )
 	{
-		System.out.println(arg);
+		log.debug(arg);
 	}
 }

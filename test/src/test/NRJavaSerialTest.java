@@ -62,7 +62,11 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import gnu.io.CommPortIdentifier;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class NRJavaSerialTest {
+    private static final Logger log = LoggerFactory.getLogger(NRJavaSerialTest.class);
 
     private static final Lock LOCK = new ReentrantLock();
     private static final String PORT = "/dev/ttyUSB0";
@@ -73,7 +77,7 @@ public class NRJavaSerialTest {
         Thread.sleep(2000L);
         CommPortIdentifier id = CommPortIdentifier.getPortIdentifier(PORT);
         id.open(NRJavaSerialTest.class.getSimpleName(), 5000);
-        System.out.println("Opened: " + PORT);
+        log.info("Opened: " + PORT);
         LOCK.lock();
     }
 
@@ -82,15 +86,14 @@ public class NRJavaSerialTest {
         try {
             for (int i=0;i<5&&!Thread.currentThread().isInterrupted();i++) {
                 Enumeration<CommPortIdentifier> ids = CommPortIdentifier.getPortIdentifiers();
-                System.out.println("--- Port Identifiers ---");
+                log.info("--- Port Identifiers ---");
                 while (ids.hasMoreElements()) {
-                    System.out.println("name: " + ids.nextElement().getName());
+                    log.info("name: " + ids.nextElement().getName());
                 }
-                System.out.println();
                 Thread.sleep(5000L);
             }
         } catch (InterruptedException e) {
-            System.out.println("Thread interrupted");
+            log.error("Thread interrupted");
         }
         System.exit(0);
     }
