@@ -60,13 +60,6 @@
 #include <windows.h>
 #include <sys/types.h>
 #include <io.h>
-#ifdef TRACE
-#define ENTER(x) report("entering "x" \n");
-#define LEAVE(x) report("leaving "x" \n");
-#else
-#define ENTER(x)
-#define LEAVE(x)
-#endif /* TRACE */
 #if defined(_MSC_VER)
 #  define snprintf _snprintf
 #endif

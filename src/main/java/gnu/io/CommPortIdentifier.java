@@ -137,8 +137,6 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 		comments:
 	------------------------------------------------------------------------------*/
 	public static void addPortName(String s, int type, CommDriver c) {
-
-		log.trace("CommPortIdentifier:addPortName(" + s + ")");
 		AddIdentifierToList(new CommPortIdentifier(s, null, type, c));
 	}
 	/*------------------------------------------------------------------------------
@@ -370,8 +368,6 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 	private boolean HideOwnerEvents;
 
 	public RXTXPort open(String TheOwner, int i) throws gnu.io.PortInUseException {
-		log.trace("CommPortIdentifier:open(" + TheOwner + ", " + i + ")");
-
 		boolean isAvailable;
 		synchronized (this) {
 			isAvailable = this.Available;
@@ -470,7 +466,6 @@ public class CommPortIdentifier extends Object /* extends Vector? */
 	------------------------------------------------------------------------------*/
 	@SuppressWarnings("unchecked")
 	void fireOwnershipEvent(int eventType) {
-		log.trace("CommPortIdentifier:fireOwnershipEvent( " + eventType + " )");
 		if (ownershipListener != null) {
 			CommPortOwnershipListener c;
 			for (Enumeration e = ownershipListener.elements(); e.hasMoreElements(); c.ownershipChange(eventType))

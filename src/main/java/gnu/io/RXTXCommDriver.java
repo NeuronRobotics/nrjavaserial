@@ -175,7 +175,6 @@ public class RXTXCommDriver implements CommDriver {
 		 */
 
 		String ValidPortPrefixes[] = new String[getScannedBufferSize()];
-		log.trace("RXTXCommDriver:getValidPortPrefixes()");
 		if (CandidatePortPrefixes == null) {
 			log.debug(
 					"RXTXCommDriver:getValidPortPrefixes() No ports prefixes known for this System. Please check the port prefixes listed for {} in RXTXCommDriver:registerScannedPorts()",
@@ -280,7 +279,6 @@ public class RXTXCommDriver implements CommDriver {
 			}
 		}
 		log.trace("Found Devices: {}", String.join(", ", foundDevices));
-		log.trace("Leaving registerValidPorts()");
 	}
 
 	/*
@@ -302,9 +300,6 @@ public class RXTXCommDriver implements CommDriver {
 	 * Determine the OS and where the OS has the devices located
 	 */
 	public void initialize() {
-
-		log.trace("RXTXCommDriver:initialize()");
-
 		osName = System.getProperty("os.name");
 		deviceDirectory = getDeviceDirectory();
 
@@ -742,7 +737,6 @@ public class RXTXCommDriver implements CommDriver {
 	 *         returns an object that extends either SerialPort or ParallelPort.
 	 */
 	public CommPort getCommPort(String PortName, int PortType) {
-		log.trace("RXTXCommDriver:getCommPort(" + PortName + "," + PortType + ")");
 		try {
 			switch (PortType) {
 				case CommPortIdentifier.PORT_SERIAL :

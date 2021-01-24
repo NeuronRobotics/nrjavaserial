@@ -93,14 +93,12 @@ public abstract class CommPort extends Object {
 	public abstract int getInputBufferSize();
 	public abstract void setOutputBufferSize(int size);
 	public abstract int getOutputBufferSize();
-	@SuppressWarnings("static-access")
-	public void close() {
-		log.trace("CommPort:close()");
 
+	public void close() {
 		try {
 			CommPortIdentifier cp = CommPortIdentifier.getPortIdentifier(this);
 			if (cp != null)
-				cp.getPortIdentifier(this).internalClosePort();
+				CommPortIdentifier.getPortIdentifier(this).internalClosePort();
 		} catch (NoSuchPortException e) {
 		}
 	};
