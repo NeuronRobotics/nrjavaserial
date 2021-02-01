@@ -4272,10 +4272,23 @@ JNIEXPORT void JNICALL RXTXPort(eventLoop)( JNIEnv *env, jobject jobj )
 		do {
 			if(RXTXPort(nativeavailable)( env, jobj )<0){
 				report("eventLoop: Hardware Missing\n");
-				finalize_threads( &eis );
-				finalize_event_info_struct( &eis );
-				LEAVE("eventLoop:error");
-				return;
+				/* The hardware is gone, so we need to stop the monitor thread.
+				 * Conveniently, this function is supposed to be an infinite
+				 * loop, so once we return from it to Java-land, the thread will
+				 * close up shop. However, that also means that we need to make
+				 * sure any native cleanup happens before we return, or else it
+				 * will never run. We'll trigger that by the usual method to
+				 * ensure platform-specific cleanup happens (e.g., killing the
+				 * drain loop). That will also set `eis.closing`, so the
+				 * function will return as usual in the next block.
+				 *
+				 * Note that `nativeavailable()` has thrown an exception at this
+				 * point, so we need to be careful about calling further JNI
+				 * functions. Conventional wisdom states that JNI functions
+				 * called when an exception is pending “may lead to unexpected
+				 * results”. Empirically, this seems to work okay; I suspect, at
+				 * worst, the functions might return an error. */
+				RXTXPort(interruptEventLoop)(env, jobj);
 			}
 			/* nothing goes between this call and select */
 			if( eis.closing )
