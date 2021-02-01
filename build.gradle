@@ -76,6 +76,7 @@ task sourcesJar(type: Jar) {
 }
 
 spotless {
+	enforceCheck false
 	ratchetFrom 'origin/master'
 
 	format 'misc', {
