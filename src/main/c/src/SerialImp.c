@@ -5835,7 +5835,7 @@ int check_group_uucp()
 	strcat(testLockAbsFileName, testLockFileDirName);
 	strcat(testLockAbsFileName, "/");
 	strcat(testLockAbsFileName, testLockFileName);
-	if ( 0 == mkstemp(testLockAbsFileName) )
+	if ( 0 == strlen(mktemp(testLockAbsFileName)) )
 	{
 		free(testLockAbsFileName);
 		report_error("check_group_uucp(): mktemp malformed string - \
