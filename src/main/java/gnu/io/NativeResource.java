@@ -186,7 +186,9 @@ public class NativeResource {
 				}
 			}
 		}else if(OSUtil.isFreeBSD()) {
-			if(OSUtil.is64Bit()) {
+			if(OSUtil.isARM() && OSUtil.is64Bit()) {
+				file="/native/freebsd/ARM_64/" + name;
+			}else if(OSUtil.is64Bit()) {
 				file="/native/freebsd/x86_64/" + name;
 			}else {
 				file="/native/freebsd/x86_32/" + name;

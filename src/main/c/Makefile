@@ -239,6 +239,13 @@ freebsd64: export platform := freebsd/x86_64
 freebsd64:
 	$(MAKE) -f natives.mk
 
+# Requires a FreeBSD host running on aarch64 (arm64) architecture.
+freebsdarm64v8: export CFLAGS += -I$(JAVA_HOME)/include/freebsd
+freebsdarm64v8: export platform := freebsd/ARM_64
+freebsdarm64v8: export variant := v8
+freebsdarm64v8:
+	$(MAKE) -f natives.mk
+
 windows: windows32 windows64
 # Don't embed the build timestamp into DLLs so the output is the same from one
 # compile to the next for the same input source.
