@@ -62,6 +62,9 @@ import java.io.IOException;
 import java.util.TooManyListenersException;
 import java.lang.Math;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
 * An extension of gnu.io.SerialPort
@@ -146,7 +149,6 @@ public class RXTXPort extends SerialPort
 
 	/** Initialize the native library */
 	private native static void Initialize();
-	boolean MonitorThreadAlive=false;
 
 	/** 
 	*  Open the named port
@@ -173,12 +175,16 @@ public class RXTXPort extends SerialPort
 			fd = open( name );
 			this.name = name;
 
-			MonitorThreadLock = true;
+			this.monitorThreadState.writeLock().lock();
 			monThread = new MonitorThread();
 			monThread.setName("RXTXPortMonitor("+name+")");
 			monThread.start();
-			waitForTheNativeCodeSilly();
-			MonitorThreadAlive=true;
+			try {
+				this.monitorThreadReady.await();
+			} catch (InterruptedException e) {
+				z.reportln("Interrupted while waiting for the monitor thread to start!");
+			}
+			this.monitorThreadState.writeLock().unlock();
 	//	} catch ( PortInUseException e ){}
 		timeout = -1;	/* default disabled timeout */
 		if (debug)
@@ -189,7 +195,7 @@ public class RXTXPort extends SerialPort
 
 
 	/* dont close the file while accessing the fd */
-	private final java.util.concurrent.locks.ReentrantReadWriteLock IOLockedMutex = new java.util.concurrent.locks.ReentrantReadWriteLock(true);
+	private final ReentrantReadWriteLock IOLockedMutex = new ReentrantReadWriteLock(true);
 
 	/** File descriptor */
 	private int fd = 0;
@@ -666,13 +672,43 @@ public class RXTXPort extends SerialPort
 	/** Thread to monitor data */
 	private MonitorThread monThread;
 
+	/**
+	 * A lock around the monitor thread state. Used to synchronize event
+	 * configuration changes (event types enabled/disabled).
+	 *
+	 * This is a {@link ReentrantReadWriteLock} rather than a plain old object
+	 * (i.e., as used with <code>synchronized</code> blocks) to enable the
+	 * <code>InputStream</code>/<code>OutputStream</code> read/write methods to
+	 * take out a read lock on the monitor thread state.
+	 */
+	private final ReentrantReadWriteLock monitorThreadState = new ReentrantReadWriteLock();
+
+	/**
+	 * Shortcut field to make acquisition of the write lock easier from JNI code.
+	 * Saves retrieval of the {@link #monitorThreadState} field ID, then the
+	 * value of the field, then the <code>writeLock()</code> method ID,
+	 * then invoking that method.
+	 */
+	private final Lock monitorThreadStateWriteLock = this.monitorThreadState.writeLock();
+
+	/**
+	 * Signalled by JNI code from inside {@link #eventLoop()} when the event
+	 * loop has finished initialization of the native data structures and is
+	 * ready to service events.
+	 */
+	private final Condition monitorThreadReady = this.monitorThreadState.writeLock().newCondition();
+
 	/** Process SerialPortEvents */
 	native void eventLoop();
 
-	/** 
-	*  @return boolean  true if monitor thread is interrupted
-	*/
+	/**
+	 * Whether the monitor thread has been interrupted.
+	 *
+	 * The flag is cleared when the monitor thread is started, and set by the
+	 * native code in {@ #interruptEventLoop()}.
+	 */
 	boolean monThreadisInterrupted=true;
+
 	private native void interruptEventLoop( );
 	public boolean checkMonitorThread()
 	{
@@ -854,9 +890,6 @@ public class RXTXPort extends SerialPort
 	*  @param lsnr SerialPortEventListener
 	*    TooManyListenersException
 	*/
-
-	boolean MonitorThreadLock = true;
-
 	public void addEventListener(
 		SerialPortEventListener lsnr ) throws TooManyListenersException
 	{
@@ -871,94 +904,54 @@ public class RXTXPort extends SerialPort
 			throw new TooManyListenersException();
 		}
 		SPEventListener = lsnr;
-		if( !MonitorThreadAlive )
+		if (this.monThread == null)
 		{
-			MonitorThreadLock = true;
+			this.monitorThreadState.writeLock().lock();
 			monThread = new MonitorThread();
 			monThread.setName("RXTXPortMonitor("+name+")");
 			monThread.start();
-			waitForTheNativeCodeSilly();
-			MonitorThreadAlive=true;
+			try {
+				this.monitorThreadReady.await();
+			} catch (InterruptedException e) {
+				z.reportln("Interrupted while waiting for the monitor thread to start!");
+			}
+			this.monitorThreadState.writeLock().unlock();
 		}
 		if (debug)
 			z.reportln( "RXTXPort:Interrupt=false");
 	}
+
 	/**
-	*  Remove the serial port event listener
-	*/
-	public void removeEventListener()
-	{
-		if (debug)
-			z.reportln( "RXTXPort:removeEventListener() called");
-		waitForTheNativeCodeSilly();
-		//if( monThread != null && monThread.isAlive() )
-		if( monThreadisInterrupted == true )
-		{
-			z.reportln( "	RXTXPort:removeEventListener() already interrupted");
-			monThread = null;
-			SPEventListener = null;
-			return;
-		}
-		else if( monThread != null && monThread.isAlive() && !HARDWARE_FAULT)                       
-		{
-			if (debug)
-				z.reportln( "	RXTXPort:Interrupt=true");
-			monThreadisInterrupted=true;
-			/*
-			   Notify all threads in this PID that something is up
-			   They will call back to see if its their thread
-			   using isInterrupted().
-			*/
-			if (debug)
-				z.reportln( "	RXTXPort:calling interruptEventLoop");
-			interruptEventLoop( );
-			
-			if (debug)
-				z.reportln( "	RXTXPort:calling monThread.join()");
-			try {
-
-				// wait a reasonable moment for the death of the monitor thread
-				monThread.join(3000);
-			} catch (InterruptedException ex) {
-				// somebody called interrupt() on us (ie wants us to abort)
-				// we dont propagate InterruptedExceptions so lets re-set the flag 
-				Thread.currentThread().interrupt();
-				return;
- 			}
-				
-			if ( debug ) {
-				if (monThread.isAlive()) {
-					z.reportln( "	MonThread is still alive!");
-
+	 * Remove the serial port event listener.
+	 *
+	 * Also interrupts the monitor thread.
+	 */
+	public void removeEventListener() {
+		this.monitorThreadState.writeLock().lock();
+		try {
+			/* The monitor thread might already be interrupted if it
+			 * encountered a hardware error and shut itself down. */
+			if (!this.monThreadisInterrupted) {
+				this.interruptEventLoop();
+			}
+			if (this.monThread != null && this.monThread.isAlive()) {
+				try {
+					// wait a reasonable moment for the death of the monitor thread
+					this.monThread.join(3000);
+				} catch (InterruptedException ex) {
+					// somebody called interrupt() on us (ie wants us to abort)
+					// we dont propagate InterruptedExceptions so lets re-set the flag
+					Thread.currentThread().interrupt();
+					return;
 				}
 			}
-			
+			this.monThread = null;
+			this.SPEventListener = null;
+		} finally {
+			this.monitorThreadState.writeLock().unlock();
 		}
-		monThread = null;
-		SPEventListener = null;
-		MonitorThreadLock = false;
-		MonitorThreadAlive=false;
-		monThreadisInterrupted=true;
-		z.reportln( "RXTXPort:removeEventListener() returning");
 	}
-	/**
-	 *	Give the native code a chance to start listening to the hardware
-	 *	or should we say give the native code control of the issue.
-	 *
-	 *	This is important for applications that flicker the Monitor
-	 *	thread while keeping the port open.
-	 *	In worst case test cases this loops once or twice every time.
-	 */
 
-	protected void waitForTheNativeCodeSilly()
-	{
-		while( MonitorThreadLock )
-		{
-			try {
-				Thread.sleep(5);
-			} catch( Exception e ) {}
-		}
-	}
 	/**
 	*  @param enable
 	*/
@@ -969,14 +962,11 @@ public class RXTXPort extends SerialPort
 		if (debug)
 			z.reportln( "RXTXPort:notifyOnDataAvailable( " +
 				enable+" )");
-		
-		waitForTheNativeCodeSilly();
-
-		MonitorThreadLock = true;
+		this.monitorThreadState.writeLock().lock();
 		nativeSetEventFlag( fd, SerialPortEvent.DATA_AVAILABLE,
 					enable );
 		monThread.Data = enable;
-		MonitorThreadLock = false;
+		this.monitorThreadState.writeLock().unlock();
 	}
 
 	/**
@@ -987,12 +977,11 @@ public class RXTXPort extends SerialPort
 		if (debug)
 			z.reportln( "RXTXPort:notifyOnOutputEmpty( " +
 				enable+" )");
-		waitForTheNativeCodeSilly();
-		MonitorThreadLock = true;
+		this.monitorThreadState.writeLock().lock();
 		nativeSetEventFlag( fd, SerialPortEvent.OUTPUT_BUFFER_EMPTY,
 					enable );
 		monThread.Output = enable;
-		MonitorThreadLock = false;
+		this.monitorThreadState.writeLock().unlock();
 	}
 
 	/**
@@ -1003,11 +992,10 @@ public class RXTXPort extends SerialPort
 		if (debug)
 			z.reportln( "RXTXPort:notifyOnCTS( " +
 				enable+" )");
-		waitForTheNativeCodeSilly();
-		MonitorThreadLock = true;
+		this.monitorThreadState.writeLock().lock();
 		nativeSetEventFlag( fd, SerialPortEvent.CTS, enable );
 		monThread.CTS = enable;
-		MonitorThreadLock = false;
+		this.monitorThreadState.writeLock().unlock();
 	}
 	/**
 	*  @param enable
@@ -1017,11 +1005,10 @@ public class RXTXPort extends SerialPort
 		if (debug)
 			z.reportln( "RXTXPort:notifyOnDSR( " +
 				enable+" )");
-		waitForTheNativeCodeSilly();
-		MonitorThreadLock = true;
+		this.monitorThreadState.writeLock().lock();
 		nativeSetEventFlag( fd, SerialPortEvent.DSR, enable );
 		monThread.DSR = enable;
-		MonitorThreadLock = false;
+		this.monitorThreadState.writeLock().unlock();
 	}
 	/**
 	*  @param enable
@@ -1031,11 +1018,10 @@ public class RXTXPort extends SerialPort
 		if (debug)
 			z.reportln( "RXTXPort:notifyOnRingIndicator( " +
 				enable+" )");
-		waitForTheNativeCodeSilly();
-		MonitorThreadLock = true;
+		this.monitorThreadState.writeLock().lock();
 		nativeSetEventFlag( fd, SerialPortEvent.RI, enable );
 		monThread.RI = enable;
-		MonitorThreadLock = false;
+		this.monitorThreadState.writeLock().unlock();
 	}
 	/**
 	*  @param enable
@@ -1045,11 +1031,10 @@ public class RXTXPort extends SerialPort
 		if (debug)
 			z.reportln( "RXTXPort:notifyOnCarrierDetect( " +
 				enable+" )");
-		waitForTheNativeCodeSilly();
-		MonitorThreadLock = true;
+		this.monitorThreadState.writeLock().lock();
 		nativeSetEventFlag( fd, SerialPortEvent.CD, enable );
 		monThread.CD = enable;
-		MonitorThreadLock = false;
+		this.monitorThreadState.writeLock().unlock();
 	}
 	/**
 	*  @param enable
@@ -1059,11 +1044,10 @@ public class RXTXPort extends SerialPort
 		if (debug)
 			z.reportln( "RXTXPort:notifyOnOverrunError( " +
 				enable+" )");
-		waitForTheNativeCodeSilly();
-		MonitorThreadLock = true;
+		this.monitorThreadState.writeLock().lock();
 		nativeSetEventFlag( fd, SerialPortEvent.OE, enable );
 		monThread.OE = enable;
-		MonitorThreadLock = false;
+		this.monitorThreadState.writeLock().unlock();
 	}
 	/**
 	*  @param enable
@@ -1073,11 +1057,10 @@ public class RXTXPort extends SerialPort
 		if (debug)
 			z.reportln( "RXTXPort:notifyOnParityError( " +
 				enable+" )");
-		waitForTheNativeCodeSilly();
-		MonitorThreadLock = true;
+		this.monitorThreadState.writeLock().lock();
 		nativeSetEventFlag( fd, SerialPortEvent.PE, enable );
 		monThread.PE = enable;
-		MonitorThreadLock = false;
+		this.monitorThreadState.writeLock().unlock();
 	}
 	/**
 	*  @param enable
@@ -1087,11 +1070,10 @@ public class RXTXPort extends SerialPort
 		if (debug)
 			z.reportln( "RXTXPort:notifyOnFramingError( " +
 				enable+" )");
-		waitForTheNativeCodeSilly();
-		MonitorThreadLock = true;
+		this.monitorThreadState.writeLock().lock();
 		nativeSetEventFlag( fd, SerialPortEvent.FE, enable );
 		monThread.FE = enable;
-		MonitorThreadLock = false;
+		this.monitorThreadState.writeLock().unlock();
 	}
 	/**
 	*  @param enable
@@ -1101,11 +1083,10 @@ public class RXTXPort extends SerialPort
 		if (debug)
 			z.reportln( "RXTXPort:notifyOnBreakInterrupt( " +
 				enable+" )");
-		waitForTheNativeCodeSilly();
-		MonitorThreadLock = true;
+		this.monitorThreadState.writeLock().lock();
 		nativeSetEventFlag( fd, SerialPortEvent.BI, enable );
 		monThread.BI = enable;
-		MonitorThreadLock = false;
+		this.monitorThreadState.writeLock().unlock();
 	}
 
 	/** Close the port */
@@ -1193,8 +1174,8 @@ public class RXTXPort extends SerialPort
 				return;
 			}
 			IOLockedMutex.readLock().lock();
+			RXTXPort.this.monitorThreadState.readLock().lock();
 			try {
-				waitForTheNativeCodeSilly();
 				if ( fd == 0 )
 				{
 					System.err.println("File Descriptor for prot zero!!");
@@ -1204,6 +1185,7 @@ public class RXTXPort extends SerialPort
 				if (debug_write)
 					z.reportln( "Leaving RXTXPort:SerialOutputStream:write( int )");
 			} finally {
+				RXTXPort.this.monitorThreadState.readLock().unlock();
 				IOLockedMutex.readLock().unlock();
 			}
 		}
@@ -1224,12 +1206,13 @@ public class RXTXPort extends SerialPort
 			}
 			if ( fd == 0 ) throw new IOException();
 			IOLockedMutex.readLock().lock();
+			RXTXPort.this.monitorThreadState.readLock().lock();
 			try {
-				waitForTheNativeCodeSilly();
 				writeArray( b, 0, b.length, monThreadisInterrupted );
 				if (debug_write)
 					z.reportln( "Leaving RXTXPort:SerialOutputStream:write(" +b.length  +")");
 			} finally {
+				RXTXPort.this.monitorThreadState.readLock().unlock();
 				IOLockedMutex.readLock().unlock();
 			}
 			
@@ -1263,13 +1246,14 @@ public class RXTXPort extends SerialPort
 				return;
 			}
 			IOLockedMutex.readLock().lock();
+			RXTXPort.this.monitorThreadState.readLock().lock();
 			try
 			{
-				waitForTheNativeCodeSilly();
 				writeArray( send, 0, len, monThreadisInterrupted );
 				if( debug_write )
 					z.reportln( "Leaving RXTXPort:SerialOutputStream:write(" + send.length + " " + off + " " + len + " " +") "  /*+ new String(send)*/ );
 			} finally {
+				RXTXPort.this.monitorThreadState.readLock().unlock();
 				IOLockedMutex.readLock().unlock();
 			}
 		}
@@ -1288,9 +1272,9 @@ public class RXTXPort extends SerialPort
 				return;
 			}
 			IOLockedMutex.readLock().lock();
+			RXTXPort.this.monitorThreadState.readLock().lock();
 			try
 			{
-				waitForTheNativeCodeSilly();
 				/* 
 				   this is probably good on all OS's but for now
 				   just sendEvent from java on Sol
@@ -1302,6 +1286,7 @@ public class RXTXPort extends SerialPort
 			}
 			finally
 			{
+				RXTXPort.this.monitorThreadState.readLock().unlock();
 				IOLockedMutex.readLock().unlock();
 			}
 		}
@@ -1335,10 +1320,10 @@ public class RXTXPort extends SerialPort
 				z.reportln( "+++++++++ read() monThreadisInterrupted" );
 			}
 			IOLockedMutex.readLock().lock();
+			RXTXPort.this.monitorThreadState.readLock().lock();
 			try {
 				if (debug_read_results)
 					z.reportln(  "RXTXPort:SerialInputStream:read() L" );
-				waitForTheNativeCodeSilly();
 				if (debug_read_results)
 					z.reportln(  "RXTXPort:SerialInputStream:read() N" );
 				int result = readByte();
@@ -1349,6 +1334,7 @@ public class RXTXPort extends SerialPort
 			}				
 			finally
 			{
+				RXTXPort.this.monitorThreadState.readLock().unlock();
 				IOLockedMutex.readLock().unlock();
 			}
 		}
@@ -1375,9 +1361,9 @@ public class RXTXPort extends SerialPort
 				return(0);
 			}
 			IOLockedMutex.readLock().lock();
+			RXTXPort.this.monitorThreadState.readLock().lock();
 			try
 			{
-				waitForTheNativeCodeSilly();
 				result = read( b, 0, b.length);
 				if (debug_read_results)
 					z.reportln(  "RXTXPort:SerialInputStream:read() returned " + result + " bytes" );
@@ -1385,6 +1371,7 @@ public class RXTXPort extends SerialPort
 			}
 			finally
 			{
+				RXTXPort.this.monitorThreadState.readLock().unlock();
 				IOLockedMutex.readLock().unlock();
 			}
 		}
@@ -1486,9 +1473,9 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 				return(0);
 			}
 			IOLockedMutex.readLock().lock();
+			RXTXPort.this.monitorThreadState.readLock().lock();
 			try
 			{
-				waitForTheNativeCodeSilly();
 				result = readArray( b, off, Minimum);
 				if (debug_read_results)
 					z.reportln( "RXTXPort:SerialInputStream:read(" + b.length + " " + off + " " + len + ") returned " + result + " bytes"  /*+ new String(b) */);
@@ -1496,6 +1483,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 			}
 			finally
 			{
+				RXTXPort.this.monitorThreadState.readLock().unlock();
 				IOLockedMutex.readLock().unlock();
 			}
 		}
@@ -1595,9 +1583,9 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 				return(0);
 			}
 			IOLockedMutex.readLock().lock();
+			RXTXPort.this.monitorThreadState.readLock().lock();
 			try
 			{
-				waitForTheNativeCodeSilly();
 				result = readTerminatedArray( b, off, Minimum, t );
 				if (debug_read_results)
 					z.reportln( "RXTXPort:SerialInputStream:read(" + b.length + " " + off + " " + len + ") returned " + result + " bytes"  /*+ new String(b) */);
@@ -1605,6 +1593,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 			}
 			finally
 			{
+				RXTXPort.this.monitorThreadState.readLock().unlock();
 				IOLockedMutex.readLock().unlock();
 			}
 		}
@@ -1621,6 +1610,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 			if ( debug_verbose )
 				z.reportln( "RXTXPort:available() called" );
 			IOLockedMutex.readLock().lock();
+			RXTXPort.this.monitorThreadState.readLock().lock();
 			try
 			{
 				int r = nativeavailable();
@@ -1631,6 +1621,7 @@ Documentation is at http://java.sun.com/products/jdk/1.2/docs/api/java/io/InputS
 			}
 			finally
 			{
+				RXTXPort.this.monitorThreadState.readLock().unlock();
 				IOLockedMutex.readLock().unlock();
 			}
 		}
