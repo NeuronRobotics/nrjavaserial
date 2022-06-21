@@ -104,6 +104,11 @@ public class NativeResource {
 
 	private void loadLib(String name) throws NativeResourceException {
 		try {
+			String libNameFromClasspath = System.getProperty(name + ".classpathlib");
+			if(libNameFromClasspath != null) {
+				inJarLoad(libNameFromClasspath);
+				return;
+			}
 			if(OSUtil.isARM()) {
 				//System.err.println("Attempting arm variants");
 				for(String libName : OSUtil.is64Bit() ? ARM64_LIBS : ARM32_LIBS) {
