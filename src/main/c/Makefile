@@ -61,7 +61,7 @@ include platform.mk
 # In all cases, we want to include the system JNI headers, our own headers,
 # crank the optimization level, and compile position-independent code so that
 # it will work as a library (dlopen(3) et al. can load it into any memory).
-export CFLAGS ?= -I$(JAVA_HOME)/include -I./include -I./include/target \
+export CFLAGS ?= -I"$(JAVA_HOME)/include" -I./include -I./include/target \
                    -O3 -fPIC -c \
                    -Wall
 # We want to use the compiler frontend to invoke the linker, too.
