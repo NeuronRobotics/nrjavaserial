@@ -260,10 +260,6 @@ JNIEXPORT void JNICALL RXTXPort(Initialize)(
 	jclass jclazz
 	)
 {
-#if defined(DEBUG) && defined(__linux__) && defined(UTS_RELEASE)
-	struct utsname name;
-	char message[80];
-#endif /* DEBUG && __linux__ && UTS_RELEASE */
 	/* This bit of code checks to see if there is a signal handler installed
 	   for SIGIO, and installs SIG_IGN if there is not.  This is necessary
 	   for the native threads jdk, but we don't want to do it with green
@@ -296,23 +292,7 @@ JNIEXPORT void JNICALL RXTXPort(Initialize)(
 	/* WIN32 does not have gettimeofday() */
 	gettimeofday(&seloop, NULL);
 #endif /* DEBUG_TIMING && ! WIN32 */
-#if defined(DEBUG) && defined(__linux__) && defined(UTS_RELEASE)
-	/* Lets let people who upgraded kernels know they may have problems */
-	if (uname (&name) == -1)
-	{
-		report( "RXTX WARNING:  cannot get system name\n" );
-		LEAVE( "RXTXPort:Initialize" );
-		return;
-	}
-	if(strcmp(name.release,UTS_RELEASE)!=0)
-	{
-//		sprintf( message, LINUX_KERNEL_VERSION_ERROR, UTS_RELEASE,
-//			name.release );
-		report( message );
-		getchar();
-	}
 	LEAVE( "RXTXPort:Initialize" );
-#endif /* DEBUG && __linux__ && UTS_RELEASE */
 }
 
 /*----------------------------------------------------------
@@ -666,7 +646,7 @@ JNIEXPORT jint JNICALL RXTXPort(open)(
 {
 	int fd;
 	int  pid = -1;
-	char message[80];
+	char message[256];
 	const char *filename;
 	jclass jclazz = (*env)->GetObjectClass( env, jobj );
 	jfieldID jfid = (*env)->GetFieldID( env, jclazz, "pid", "I" );
@@ -700,16 +680,16 @@ JNIEXPORT jint JNICALL RXTXPort(open)(
 	//report_warning("\nopen() Attempting to lock: ");
 	if ( LOCK( filename, pid ) )
 	{
-		sprintf( message, "open: locking has failed for %s\n",
+		snprintf( message, sizeof(message), "open: locking has failed for %s\n",
 			filename );
 		report_error( message );
 		goto fail;
 	}
-	else
-	{
-		sprintf( message, "open: locking worked for %s\n", filename );
-		//report_warning( message );
-	}
+//	else
+//	{
+//		snprintf( message, sizeof(message), "open: locking worked for %s\n", filename );
+//		report( message );
+//	}
 	/* This is used so DTR can remain low on 'open()' */
 	fd = find_preopened_ports( filename );
 	if( fd )
@@ -748,7 +728,7 @@ JNIEXPORT jint JNICALL RXTXPort(open)(
 #endif
        if (fd >= 0 && (ioctl(fd, TIOCEXCL) == -1))
        {
-               sprintf( message, "open: exclusive access denied for %s\n",
+               snprintf( message, sizeof(message), "open: exclusive access denied for %s\n",
                        filename );
                report( message );
                report_error( message );
@@ -760,7 +740,7 @@ JNIEXPORT jint JNICALL RXTXPort(open)(
 
 	if( configure_port( fd ) ) goto fail;
 	(*env)->ReleaseStringUTFChars( env, jstr, filename );
-	sprintf( message, "open: fd returned is %i\n", fd );
+	snprintf( message, sizeof(message), "open: fd returned is %i\n", fd );
 	report( message );
 	LEAVE( "RXTXPort:open" );
 	report_time_end( );
@@ -1344,7 +1324,7 @@ void *drain_loop( void *arg )
 			if( eis && eis->writing )
 			{
 				/*
-				sprintf(msg, "drain_loop: setting OUTPUT_BUFFER_EMPTY\n" );
+				snprintf(msg, sizeof(msg), "drain_loop: setting OUTPUT_BUFFER_EMPTY\n" );
 				report( msg );
 				*/
 				eis->output_buffer_empty_flag = 1;
@@ -1412,7 +1392,7 @@ static void warn_sig_abort( int signo )
 {
 	/*
 	char msg[80];
-	sprintf( msg, "RXTX Recieved Signal %i\n", signo );
+	snprintf( msg, sizeof(msg), "RXTX Recieved Signal %i\n", signo );
 	report_error( msg );
 	*/
 }
@@ -1523,7 +1503,7 @@ JNIEXPORT void JNICALL RXTXPort(writeByte)( JNIEnv *env,
 	report_time_start();
 	ENTER( "RXTXPort:writeByte" );
 	do {
-		sprintf( msg, "writeByte %c>>\n", byte );
+		snprintf( msg, sizeof(msg), "writeByte %c>>\n", byte );
 		report( msg );
 		result=localWrite(fd, (void * ) &byte, sizeof(unsigned char));
 	}  while (result < 0 && errno==EINTR);
@@ -1553,7 +1533,7 @@ JNIEXPORT void JNICALL RXTXPort(writeByte)( JNIEnv *env,
 		report( "writeByte:  index->writing = 1" );
 	}
 #endif
-	sprintf( msg, "RXTXPort:writeByte %i\n", result );
+	snprintf( msg, sizeof(msg), "RXTXPort:writeByte %i\n", result );
 	report( msg );
 	LEAVE( "RXTXPort:writeByte" );
 	if(result >= 0)
@@ -1609,7 +1589,7 @@ JNIEXPORT void JNICALL RXTXPort(writeArray)( JNIEnv *env,
 	ENTER( "writeArray" );
 	/* warning Roy Rogers */
 	/*
-	sprintf( message, "::::RXTXPort:writeArray(%s);\n", (char *) body );
+	snprintf( message, sizeof(message), "::::RXTXPort:writeArray(%s);\n", (char *) body );
 	report_verbose( message );
 	*/
 
@@ -1685,7 +1665,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeDrain)( JNIEnv *env,
 	struct event_info_struct *eis = ( struct event_info_struct * ) get_java_var_long( env, jobj, "eis", "J" );
 	int result, count=0;
 
-	char message[80];
+	char message[256];
 
 	ENTER( "SerialImp.c:drain()" );
 	report_time_start( );
@@ -1695,7 +1675,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeDrain)( JNIEnv *env,
 		count++;
 	}  while (result && errno==EINTR && count <3);
 
-	sprintf( message, "RXTXPort:drain() returns: %i\n", result );
+	snprintf( message, sizeof(message), "RXTXPort:drain() returns: %i\n", result );
 	report_verbose( message );
 #if defined(__sun__)
 	/* FIXME: No time to test on all OS's for production */
@@ -1813,7 +1793,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(isDSR)( JNIEnv *env,
 
 	ENTER( "RXTXPort:isDSR" );
 	ioctl( fd, TIOCMGET, &result );
-	sprintf( message, "RXTXPort:isDSR returns %i\n", result & TIOCM_DSR );
+	snprintf( message, sizeof(message), "RXTXPort:isDSR returns %i\n", result & TIOCM_DSR );
 	report( message );
 	LEAVE( "RXTXPort:isDSR" );
 	if( result & TIOCM_DSR ) return JNI_TRUE;
@@ -1843,7 +1823,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(isCD)( JNIEnv *env,
 
 	ENTER( "RXTXPort:isCD" );
 	ioctl( fd, TIOCMGET, &result );
-	sprintf( message, "RXTXPort:isCD returns %i\n", result & TIOCM_CD );
+	snprintf( message, sizeof(message), "RXTXPort:isCD returns %i\n", result & TIOCM_CD );
 	LEAVE( "RXTXPort:isCD" );
 	if( result & TIOCM_CD ) return JNI_TRUE;
 	else return JNI_FALSE;
@@ -1868,7 +1848,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(isCTS)( JNIEnv *env,
 
 	ENTER( "RXTXPort:isCTS" );
 	ioctl( fd, TIOCMGET, &result );
-	sprintf( message, "RXTXPort:isCTS returns %i\n", result & TIOCM_CTS );
+	snprintf( message, sizeof(message), "RXTXPort:isCTS returns %i\n", result & TIOCM_CTS );
 	report( message );
 	LEAVE( "RXTXPort:isCTS" );
 	if( result & TIOCM_CTS ) return JNI_TRUE;
@@ -1894,7 +1874,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(isRI)( JNIEnv *env,
 
 	ENTER( "RXTXPort:isRI" );
 	ioctl( fd, TIOCMGET, &result );
-	sprintf( message, "RXTXPort:isRI returns %i\n", result & TIOCM_RI );
+	snprintf( message, sizeof(message), "RXTXPort:isRI returns %i\n", result & TIOCM_RI );
 	report( message );
 	LEAVE( "RXTXPort:isRI" );
 	if( result & TIOCM_RI ) return JNI_TRUE;
@@ -1920,7 +1900,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(isRTS)( JNIEnv *env,
 
 	ENTER( "RXTXPort:isRTS" );
 	ioctl( fd, TIOCMGET, &result );
-	sprintf( message, "RXTXPort:isRTS returns %i\n", result & TIOCM_RTS );
+	snprintf( message, sizeof(message), "RXTXPort:isRTS returns %i\n", result & TIOCM_RTS );
 	report( message );
 	LEAVE( "RXTXPort:isRTS" );
 	if( result & TIOCM_RTS ) return JNI_TRUE;
@@ -1950,7 +1930,7 @@ JNIEXPORT void JNICALL RXTXPort(setRTS)( JNIEnv *env,
 	if( state == JNI_TRUE ) result |= TIOCM_RTS;
 	else result &= ~TIOCM_RTS;
 	ioctl( fd, TIOCMSET, &result );
-	sprintf( message, "setRTS( %i )\n", state );
+	snprintf( message, sizeof(message), "setRTS( %i )\n", state );
 	report( message );
 	LEAVE( "RXTXPort:setRTS" );
 	return;
@@ -1977,11 +1957,11 @@ JNIEXPORT void JNICALL RXTXPort(setDSR)( JNIEnv *env,
 	ENTER( "RXTXPort:setDSR()" );
 	ioctl( fd, TIOCMGET, &result );
 
-	sprintf( message, "setDSR( %i )\n", state );
+	snprintf( message, sizeof(message), "setDSR( %i )\n", state );
 	if( state == JNI_TRUE ) result |= TIOCM_DSR;
 	else result &= ~TIOCM_DSR;
 	ioctl( fd, TIOCMSET, &result );
-	sprintf( message, "setDSR( %i )\n", state );
+	snprintf( message, sizeof(message), "setDSR( %i )\n", state );
 	report( message );
 	LEAVE( "RXTXPort:setDSR()" );
 	return;
@@ -2006,7 +1986,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(isDTR)( JNIEnv *env,
 
 	ENTER( "RXTXPort:isDTR" );
 	ioctl( fd, TIOCMGET, &result );
-	sprintf( message, "isDTR( ) returns %i\n", result& TIOCM_DTR );
+	snprintf( message, sizeof(message), "isDTR( ) returns %i\n", result& TIOCM_DTR );
 	report( message );
 	LEAVE( "RXTXPort:isDTR" );
 	if( result & TIOCM_DTR ) return JNI_TRUE;
@@ -2035,7 +2015,7 @@ JNIEXPORT void JNICALL RXTXPort(setDTR)( JNIEnv *env,
 	if( state == JNI_TRUE ) result |= TIOCM_DTR;
 	else result &= ~TIOCM_DTR;
 	ioctl( fd, TIOCMSET, &result );
-	sprintf( message, "setDTR( %i )\n", state );
+	snprintf( message, sizeof(message), "setDTR( %i )\n", state );
 	report( message );
 	LEAVE( "RXTXPort:setDTR" );
 	return;
@@ -2574,7 +2554,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticIsRTS)( JNIEnv *env,
 		return JNI_FALSE;
 	}
 	ioctl( fd, TIOCMGET, &result );
-	sprintf( message, "nativeStaticIsRTS( ) returns %i\n", result& TIOCM_RTS );
+	snprintf( message, sizeof(message), "nativeStaticIsRTS( ) returns %i\n", result& TIOCM_RTS );
 	report( message );
 	LEAVE( "RXTXPort:nativeStaticIsRTS" );
 	if( result & TIOCM_RTS ) return JNI_TRUE;
@@ -2606,7 +2586,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticIsDSR)( JNIEnv *env,
 		return JNI_FALSE;
 	}
 	ioctl( fd, TIOCMGET, &result );
-	sprintf( message, "nativeStaticIsDSR( ) returns %i\n", result& TIOCM_DSR );
+	snprintf( message, sizeof(message), "nativeStaticIsDSR( ) returns %i\n", result& TIOCM_DSR );
 	report( message );
 	LEAVE( "RXTXPort:nativeStaticIsDSR" );
 	if( result & TIOCM_DSR ) return JNI_TRUE;
@@ -2638,7 +2618,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticIsDTR)( JNIEnv *env,
 		return JNI_FALSE;
 	}
 	ioctl( fd, TIOCMGET, &result );
-	sprintf( message, "nativeStaticIsDTR( ) returns %i\n", result& TIOCM_DTR );
+	snprintf( message, sizeof(message), "nativeStaticIsDTR( ) returns %i\n", result& TIOCM_DTR );
 	report( message );
 	LEAVE( "RXTXPort:nativeStaticIsDTR" );
 	if( result & TIOCM_DTR ) return JNI_TRUE;
@@ -2670,7 +2650,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticIsCD)( JNIEnv *env,
 		return JNI_FALSE;
 	}
 	ioctl( fd, TIOCMGET, &result );
-	sprintf( message, "nativeStaticIsCD( ) returns %i\n", result& TIOCM_CD );
+	snprintf( message, sizeof(message), "nativeStaticIsCD( ) returns %i\n", result& TIOCM_CD );
 	report( message );
 	LEAVE( "RXTXPort:nativeStaticIsCD" );
 	if( result & TIOCM_CD ) return JNI_TRUE;
@@ -2702,7 +2682,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticIsCTS)( JNIEnv *env,
 		return JNI_FALSE;
 	}
 	ioctl( fd, TIOCMGET, &result );
-	sprintf( message, "nativeStaticIsCTS( ) returns %i\n", result& TIOCM_CTS );
+	snprintf( message, sizeof(message), "nativeStaticIsCTS( ) returns %i\n", result& TIOCM_CTS );
 	report( message );
 	LEAVE( "RXTXPort:nativeStaticIsCTS" );
 	if( result & TIOCM_CTS ) return JNI_TRUE;
@@ -2734,7 +2714,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeStaticIsRI)( JNIEnv *env,
 		return JNI_FALSE;
 	}
 	ioctl( fd, TIOCMGET, &result );
-	sprintf( message, "nativeStaticRI( ) returns %i\n", result& TIOCM_RI );
+	snprintf( message, sizeof(message), "nativeStaticRI( ) returns %i\n", result& TIOCM_RI );
 	report( message );
 	LEAVE( "RXTXPort:nativeStaticIsRI" );
 	if( result & TIOCM_RI ) return JNI_TRUE;
@@ -3106,7 +3086,7 @@ int read_byte_array( JNIEnv *env,
 	eis->eventflags[SPE_DATA_AVAILABLE] = 0;
 /*
 	ENTER( "read_byte_array" );
-	sprintf(msg, "read_byte_array requests %i\n", length);
+	snprintf(msg, sizeof(msg), "read_byte_array requests %i\n", length);
 	report( msg );
 */
 	left = length;
@@ -3195,7 +3175,7 @@ int read_byte_array( JNIEnv *env,
 			"No data available" );
 	}
 
-	sprintf(msg, "read_byte_array returns %i\n", bytes);
+	snprintf(msg, sizeof(msg), "read_byte_array returns %i\n", bytes);
 	report( msg );
 	LEAVE( "read_byte_array" );
 	report_time_end();
@@ -3218,7 +3198,7 @@ int read_byte_array(	JNIEnv *env,
 
 	report_time_start();
 	ENTER( "read_byte_array" );
-	sprintf(msg, "read_byte_array requests %i\n", length);
+	snprintf(msg, sizeof(msg), "read_byte_array requests %i\n", length);
 	report( msg );
 	left = length;
 	if (timeout >= 0)
@@ -3241,7 +3221,7 @@ RETRY:	if ((ret = READ( fd, buffer + bytes, left )) < 0 )
 		bytes += ret;
 		left -= ret;
 	}
-	sprintf(msg, "read_byte_array returns %i\n", bytes);
+	snprintf(msg, sizeof(msg), "read_byte_array returns %i\n", bytes);
 	report( msg );
 	LEAVE( "read_byte_array" );
 	report_time_end();
@@ -3525,7 +3505,7 @@ JNIEXPORT jint JNICALL RXTXPort(readByte)( JNIEnv *env,
 	}
 /*
 	LEAVE( "RXTXPort:readByte" );
-	sprintf( msg, "readByte return(%i)\n", bytes ? buffer[ 0 ] : -1 );
+	snprintf( msg, sizeof(msg), "readByte return(%i)\n", bytes ? buffer[ 0 ] : -1 );
 	report( msg );
 	report_time_end( );
 */
@@ -3579,7 +3559,7 @@ JNIEXPORT jint JNICALL RXTXPort(readArray)( JNIEnv *env,
 		return -1;
 	}
 /*
-	sprintf( msg, "RXTXPort:readArray: %i %i\n", (int) length, bytes);
+	snprintf( msg, sizeof(msg), "RXTXPort:readArray: %i %i\n", (int) length, bytes);
 	report( msg );
 	report_time_end( );
 	LEAVE( "RXTXPort:readArray" );
@@ -3669,7 +3649,7 @@ JNIEXPORT jint JNICALL RXTXPort(readTerminatedArray)( JNIEnv *env,
 	} while ( bytes > 0 && total < length );
 	(*env)->ReleaseByteArrayElements( env, jbarray, body, 0 );
 /*
-	sprintf( msg, "RXTXPort:readArray: %i %i\n", (int) length, bytes);
+	snprintf( msg, sizeof(msg), "RXTXPort:readArray: %i %i\n", (int) length, bytes);
 	report( msg );
 	report_time_end( );
 	LEAVE( "RXTXPort:readArray" );
@@ -3715,12 +3695,12 @@ JNIEXPORT jint JNICALL RXTXPort(nativeavailable)( JNIEnv *env,
 		goto fail;
 	}
 /*
-	sprintf(message, "    nativeavailable: FIORDCHK result %d, \
+	snprintf(message, sizeof(message), "    nativeavailable: FIORDCHK result %d, \
 		errno %d\n", result , result == -1 ? errno : 0);
 	report_verbose( message );
 	if( result )
 	{
-		sprintf(message, "    nativeavailable: FIORDCHK result %d, \
+		snprintf(message, sizeof(message), "    nativeavailable: FIORDCHK result %d, \
 				errno %d\n", result , result == -1 ? errno : 0);
 		report( message );
 	}
@@ -3951,10 +3931,10 @@ port_has_changed_fionread
 int port_has_changed_fionread( struct event_info_struct *eis )
 {
 	int change, rc;
-	char message[80];
+	char message[128];
 
 	rc = ioctl( eis->fd, FIONREAD, &change );
-	sprintf( message, "port_has_changed_fionread: change is %i ret is %i\n", change, eis->ret );
+	snprintf( message, sizeof(message), "port_has_changed_fionread: change is %i ret is %i\n", change, eis->ret );
 	report_verbose( message );
 #if defined(__unixware__) || defined(__sun__)
 	/*
@@ -4375,7 +4355,7 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
 	int pid = -1;
 #endif
 #ifdef TRENT_IS_HERE_DEBUGGING_ENUMERATION
-	char message[80];
+	char message[256];
 #endif /* TRENT_IS_HERE_DEBUGGING_ENUMERATION */
 	/* We opened the file in this thread, use this pid to unlock */
 #ifndef WIN32
@@ -4391,7 +4371,7 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
 	if( !strcmp( name, "COM1" ) || !strcmp( name, "COM2") )
 	{
 		printf("%s is good\n",name);
-		sprintf( message, "testRead: %s is good!\n", name );
+		snprintf( message, sizeof(message), "testRead: %s is good!\n", name );
 		report( message );
 		(*env)->ReleaseStringUTFChars( env, tty_name, name );
 		return( JNI_TRUE );
@@ -4752,7 +4732,7 @@ JNIEXPORT jboolean JNICALL RXTXCommDriver(registerKnownPorts)(JNIEnv *env,
 		PORT_TYPE_RS485,
 		PORT_TYPE_RAW};
 	jboolean result = JNI_FALSE;
-	char message[80];
+	char message[256];
 
 	switch(portType) {
 		case PORT_TYPE_SERIAL:
@@ -4768,7 +4748,7 @@ JNIEXPORT jboolean JNICALL RXTXCommDriver(registerKnownPorts)(JNIEnv *env,
 		case PORT_TYPE_RS485:    break;
 		case PORT_TYPE_RAW:      break;
 		default:
-			sprintf( message, "unknown portType %d to \
+			snprintf( message, sizeof(message), "unknown portType %d to \
 				native RXTXCommDriver.registerKnownPorts()\n",
 				(int) portType
 			);
@@ -4800,13 +4780,13 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(isPortPrefixValid)(JNIEnv *env,
 #if defined(__sun__)
 		/* Solaris uses /dev/cua/a instead of /dev/cua0 */
 		if( i > 25 ) break;
-		sprintf(teststring,"%s%s%c",DEVICEDIR, name, i + 97 );
+		snprintf(teststring, sizeof(teststring), "%s%s%c",DEVICEDIR, name, i + 97 );
 		fprintf(stderr, "testing: %s\n", teststring);
 #else
 #if defined(_GNU_SOURCE)
-		snprintf(teststring, 256, "%s%s%i",DEVICEDIR,name, i);
+		snprintf(teststring, 256, "%s%s%i", DEVICEDIR, name, i);
 #else
-		sprintf(teststring,"%s%s%i",DEVICEDIR,name, i);
+		snprintf(teststring, sizeof(teststring), "%s%s%i", DEVICEDIR, name, i);
 #endif /* _GNU_SOURCE */
 		stat(teststring,&mystat);
 #endif /* __sun__ */
@@ -4829,9 +4809,9 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(isPortPrefixValid)(JNIEnv *env,
 #endif  /* __FreeBSD __ */
 	}
 #if defined(_GNU_SOURCE)
-	snprintf(teststring, 256, "%s%s",DEVICEDIR,name);
+	snprintf(teststring, 256, "%s%s", DEVICEDIR, name);
 #else
-	sprintf(teststring,"%s%s",DEVICEDIR,name);
+	snprintf(teststring, sizeof(teststring), "%s%s", DEVICEDIR, name);
 #endif /* _GNU_SOURCE */
 	stat(teststring,&mystat);
 	if(S_ISCHR(mystat.st_mode)){
@@ -5188,7 +5168,7 @@ void throw_java_exception( JNIEnv *env, char *exc, char *foo, char *msg )
 #if defined(_GNU_SOURCE)
 	snprintf( buf, 60, "%s in %s", msg, foo );
 #else
-	sprintf( buf,"%s in %s", msg, foo );
+	snprintf( buf, sizeof(buf), "%s in %s", msg, foo );
 #endif /* _GNU_SOURCE */
 	(*env)->ThrowNew( env, clazz, buf );
 /* ct7 * Added DeleteLocalRef */
@@ -5285,7 +5265,7 @@ int lfs_lock( const char *filename, int pid )
 	if ( !connect( s, ( struct sockaddr * ) &addr, sizeof( addr ) ) == 0 )
 		return 1;
 	ret=recv( s, buffer, size, 0 );
-	sprintf( buffer, "lock %s %i\n", filename, pid );
+	snprintf( buffer, sizeof(buffer), "lock %s %i\n", filename, pid );
 	/* printf( "%s", buffer ); */
 	send( s, buffer, strlen(buffer), 0 );
 	ret=recv( s, buffer, size, 0 );
@@ -5328,7 +5308,7 @@ int lfs_unlock( const char *filename, int pid )
 
 	if ( !connect( s, ( struct sockaddr * ) &addr, sizeof( addr ) ) == 0 )
 		return 1;
-	sprintf( buffer, "unlock %s %i\n", filename, pid );
+	snprintf( buffer, sizeof(buffer), "unlock %s %i\n", filename, pid );
 	/* printf( "%s", buffer ); */
 	send( s, buffer, strlen(buffer), 0 );
 	ret = recv( s, buffer, size, 0 );
@@ -5388,7 +5368,7 @@ int lib_lock_dev_unlock( const char *filename, int pid )
 #ifdef LIBLOCKDEV
 int lib_lock_dev_lock( const char *filename, int pid )
 {
-	char message[80];
+	char message[256];
 	if ( dev_testlock( filename ) )
 	{
 		report( "fhs_lock() lockstatus fail\n" );
@@ -5396,7 +5376,8 @@ int lib_lock_dev_lock( const char *filename, int pid )
 	}
 	if ( dev_lock( filename ) )
 	{
-		sprintf( message,
+		snprintf( message,
+			sizeof(message),
 			"RXTX fhs_lock() Error: creating lock file for: %s: %s\n",
 			filename, strerror(errno) );
 		report_error( message );
@@ -5434,7 +5415,7 @@ int fhs_lock( const char *filename, int pid )
 	//return 0;
 #endif
 	int fd,j;
-	char lockinfo[12], message[200];
+	char lockinfo[12], message[256];
 	char file[200], *p;
 
 	j = strlen( filename );
@@ -5462,7 +5443,7 @@ int fhs_lock( const char *filename, int pid )
 
 		fd = open( file,  O_WRONLY );
 		if( fd < 0 ){
-			sprintf( message,
+			snprintf( message, sizeof(message),
 				" FAILED TO OPEN: %s\n",
 				 strerror(errno) );
 			report_error( message );
@@ -5472,7 +5453,7 @@ int fhs_lock( const char *filename, int pid )
 		if(check_lock_pid( file, pid )==0){
 //			report_error(" It is mine\n" );
 		}else{
-			sprintf(message, "RXTX fhs_lock() Error: opening lock file: %s: %s.", file,
+			snprintf(message, sizeof(message), "RXTX fhs_lock() Error: opening lock file: %s: %s.", file,
 			strerror(errno));
 			report_error( message );
 			report_error(" It is NOT mine\n" );
@@ -5483,11 +5464,11 @@ int fhs_lock( const char *filename, int pid )
 	}
 
 	sprintf( lockinfo, "%10d\n",(int) getpid() );
-	sprintf( message, "fhs_lock: creating lockfile: %s\n", lockinfo );
+	snprintf( message, sizeof(message), "fhs_lock: creating lockfile: %s\n", lockinfo );
 	report( message );
 	if( ( write( fd, lockinfo, 11 ) ) < 0 )
 	{
-		sprintf( message,
+		snprintf( message, sizeof(message),
 				"RXTX fhs_lock() Error: writing lock file: %s: %s\n",
 				file, strerror(errno) );
 		report_error( message );
@@ -5542,13 +5523,12 @@ int fhs_lock( const char *filename, int pid )
 ----------------------------------------------------------*/
 int uucp_lock( const char *filename, int pid )
 {
-	char lockfilename[80], lockinfo[12], message[80];
-	char name[80];
+	char lockfilename[80], lockinfo[12], message[256];
 	int fd;
 	struct stat buf;
 
-//	sprintf( message, "uucp_lock( %s );\n", filename );
-	report( message );
+//	snprintf( message, sizeof(message), "uucp_lock( %s );\n", filename );
+//	report( message );
 
 	if ( check_lock_status( filename ) )
 	{
@@ -5563,7 +5543,7 @@ int uucp_lock( const char *filename, int pid )
 	if ( stat( filename, &buf ) != 0 )
 	{
 		report( "RXTX uucp_lock() could not find device.\n" );
-		sprintf( message, "uucp_lock: device was %s\n", name );
+		snprintf( message, sizeof(message), "uucp_lock: device was %s\n", filename );
 		report( message );
 		return 1;
 	}
@@ -5576,7 +5556,7 @@ int uucp_lock( const char *filename, int pid )
 	sprintf( lockinfo, "%10d\n", (int) getpid() );
 	if ( stat( lockfilename, &buf ) == 0 )
 	{
-		sprintf( message, "RXTX uucp_lock() %s is there\n",
+		snprintf( message, sizeof(message), "RXTX uucp_lock() %s is there\n",
 			lockfilename );
 		report( message );
 		report_error( message );
@@ -5585,7 +5565,8 @@ int uucp_lock( const char *filename, int pid )
 	fd = open( lockfilename, O_CREAT | O_WRONLY | O_EXCL, 0444 );
 	if( fd < 0 )
 	{
-		sprintf( message,
+		snprintf( message,
+			sizeof(message),
 			"RXTX uucp_lock() Error: opening lock file: %s: %s\n",
 			lockfilename, strerror(errno) );
 		report_error( message );
@@ -5593,7 +5574,8 @@ int uucp_lock( const char *filename, int pid )
 	}
 	if( ( write( fd, lockinfo, 11 ) ) < 0 )
 	{
-		sprintf( message,
+		snprintf( message,
+			sizeof(message),
 			"RXTX uucp_lock() Error: writing lock file: %s: %s\n",
 			lockfilename, strerror(errno) );
 		report_error( message );
@@ -5624,7 +5606,7 @@ int check_lock_status( const char *filename )
 
 	if ( stat( LOCKDIR, &buf ) != 0 )
 	{
-		sprintf( message,"check_lock_status: could not find lock directory.\n" );
+		snprintf( message, sizeof(message), "check_lock_status: could not find lock directory.\n" );
 		report( message );
 		report_error( message );
 		return 0;
@@ -5635,7 +5617,7 @@ int check_lock_status( const char *filename )
 	if ( check_group_uucp() )
 	{
 
-		sprintf( message,"check_lock_status: No permission to create lock file.\n" );
+		snprintf( message, sizeof(message), "check_lock_status: No permission to create lock file.\n" );
 		report( message );
 		report_error( message );
 		return(0);
@@ -5646,7 +5628,7 @@ int check_lock_status( const char *filename )
 	if ( is_device_locked( filename ) )
 	{
 
-		sprintf( message,"check_lock_status: device is locked by another application\n"  );
+		snprintf( message, sizeof(message), "check_lock_status: device is locked by another application\n" );
 		report( message );
 		report_error( message );
 		return 0;
@@ -5669,7 +5651,7 @@ int check_lock_status( const char *filename )
 void fhs_unlock( const char *filename, int openpid )
 {
 
-	char message[80];
+	char message[128];
 #if defined(__linux__)
 	//return;
 #endif
@@ -5691,7 +5673,7 @@ void fhs_unlock( const char *filename, int openpid )
 	else
 	{
 		report("fhs_unlock: Unable to remove LockFile\n");
-		sprintf( message,"fhs_unlock: Unable to remove LockFile\n"  );
+		snprintf( message, sizeof(message), "fhs_unlock: Unable to remove LockFile\n" );
 		report( message );
 		report_error( message );
 	}
@@ -5709,10 +5691,10 @@ void fhs_unlock( const char *filename, int openpid )
 void uucp_unlock( const char *filename, int openpid )
 {
 	struct stat buf;
-	char file[80], message[80];
+	char file[80], message[128];
 	/* FIXME */
 
-	sprintf( message, "uucp_unlock( %s );\n", filename );
+	snprintf( message, sizeof(message), "uucp_unlock( %s );\n", filename );
 	report( message );
 
 	if ( stat( filename, &buf ) != 0 )
@@ -5734,13 +5716,13 @@ void uucp_unlock( const char *filename, int openpid )
 	}
 	if( !check_lock_pid( file, openpid ) )
 	{
-		sprintf( message, "uucp_unlock: unlinking %s\n", file );
+		snprintf( message, sizeof(message), "uucp_unlock: unlinking %s\n", file );
 		report( message );
 		unlink(file);
 	}
 	else
 	{
-		sprintf( message, "uucp_unlock: unlinking failed %s\n", file );
+		snprintf( message, sizeof(message), "uucp_unlock: unlinking failed %s\n", file );
 		report( message );
 	}
 }
@@ -5758,7 +5740,7 @@ int check_lock_pid( const char *file, int openpid )
 {
 	int fd, lockpid;
 	char pid_buffer[12];
-	char message[200];
+	char message[256];
 
 	fd=open( file, O_RDONLY );
 	if ( fd < 0 )
@@ -5776,12 +5758,12 @@ int check_lock_pid( const char *file, int openpid )
 	/* Native threads JVM's have multiple pids */
 	if ( lockpid != getpid() && lockpid != getppid() && lockpid != openpid )
 	{
-		sprintf(message, "check_lock_pid: lock = %s pid = %i gpid=%i openpid=%i\n",
+		snprintf(message, sizeof(message), "check_lock_pid: lock = %s pid = %i gpid=%i openpid=%i\n",
 			pid_buffer, (int) getpid(), (int) getppid(), openpid );
 		report( message );
 		return( 1 );
 	}
-	sprintf(message, "check_lock_pid() is mine: lock = %s pid = %i gpid=%i openpid=%i\n",
+	snprintf(message, sizeof(message), "check_lock_pid() is mine: lock = %s pid = %i gpid=%i openpid=%i\n",
 		pid_buffer, (int) getpid(), (int) getppid(), openpid );
 	//report_warning( message );
 	return( 0 );
@@ -5867,12 +5849,12 @@ int check_group_uucp()
 	int group_count;
 	struct passwd *user = getpwuid( geteuid() );
 	struct stat buf;
-	char msg[80];
+	char msg[128];
 	gid_t list[ NGROUPS_MAX ];
 
 	if( stat( LOCKDIR, &buf) )
 	{
-		sprintf( msg, "check_group_uucp:  Can not find Lock Directory: %s\n", LOCKDIR );
+		snprintf( msg, sizeof(msg), "check_group_uucp:  Can not find Lock Directory: %s\n", LOCKDIR );
 		report_error( msg );
 		return( 1 );
 	}
@@ -5896,7 +5878,7 @@ int check_group_uucp()
 		}
 		if( buf.st_gid == list[ group_count ] )
 			return 0;
-		sprintf( msg, "%i %i\n", buf.st_gid, list[ group_count ] );
+		snprintf( msg, sizeof(msg), "%i %i\n", buf.st_gid, list[ group_count ] );
 		report_error( msg );
 		report_error( UUCP_ERROR );
 		return 1;
@@ -6015,7 +5997,7 @@ int is_device_locked( const char *port_filename )
 					lockprefixes[k], p );
 				if( stat( file, &buf ) == 0 )
 				{
-					sprintf( message, UNEXPECTED_LOCK_FILE,
+					snprintf( message, sizeof(message), UNEXPECTED_LOCK_FILE,
 						file );
 					report_warning( message );
 					return 1;
@@ -6032,7 +6014,7 @@ int is_device_locked( const char *port_filename )
 				);
 				if( stat( file, &buf ) == 0 )
 				{
-					sprintf( message, UNEXPECTED_LOCK_FILE,
+					snprintf( message, sizeof(message), UNEXPECTED_LOCK_FILE,
 						file );
 					report_warning( message );
 					return 1;
@@ -6084,7 +6066,7 @@ int is_device_locked( const char *port_filename )
 		fd=open( file, O_RDONLY );
 		if( fd < 0 )
 		{
-			sprintf( message,
+			snprintf( message, sizeof(message),
 				"RXTX is_device_locked() Error: opening lock file: %s: %s\n",
 					file, strerror(errno) );
 			report_warning( message );
@@ -6092,7 +6074,7 @@ int is_device_locked( const char *port_filename )
 		}
 		if ( ( read( fd, pid_buffer, 11 ) ) < 0 ) 
 		{
-			sprintf( message,
+			snprintf( message, sizeof(message),
 					"RXTX is_device_locked() Error: reading lock file: %s: %s\n",
 					file, strerror(errno) );
 			report_warning( message );
@@ -6105,13 +6087,13 @@ int is_device_locked( const char *port_filename )
 
 		if( kill( (pid_t) pid, 0 ) && errno==ESRCH )
 		{
-			sprintf( message,
+			snprintf( message, sizeof(message),
 				"RXTX Warning:  Removing stale lock file. %s\n",
 				file );
 			report_warning( message );
 			if( unlink( file ) != 0 )
 			{
-				snprintf( message, 80, "RXTX Error:  Unable to \
+				snprintf( message, sizeof(message), "RXTX Error:  Unable to \
 					remove stale lock file: %s\n",
 					file
 				);
