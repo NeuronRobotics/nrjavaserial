@@ -661,7 +661,9 @@ public class RXTXCommDriver implements CommDriver
 						"Bootloader",// NRDyIO bootloader
 						"BowlerDevice",// Generic Bowler Device
 						"DeltaDoodle",// DeltaDoodle Printer
-						"dyio"// linux CDC ACM devices
+						"dyio",// linux CDC ACM devices
+						"ttymxc", // linux NXP i.MX
+						"ttySTM" // linux ST stm32mpu
 						};
 						CandidatePortPrefixes=Temp;
 					}
@@ -705,7 +707,9 @@ public class RXTXCommDriver implements CommDriver
 						"ttyUSB",//linux USB serial converters
 						"ttyV", // linux Comtrol VS-1000 serial controller
 						"ttyW", // linux specialix cards
-						"ttyX"  // linux SpecialX serial card
+						"ttyX",  // linux SpecialX serial card
+						"ttymxc", // linux NXP i.MX
+						"ttySTM" // linux ST stm32mpu
 						};
 						CandidatePortPrefixes=Temp;
 					}
