@@ -1,3 +1,8 @@
 build/
 .project
 .cproject
+
+# We don't want to track the platform-specific macOS libraries, only the
+# combined universal binary (libNRJavaSerial.jnilib).
+resources/native/osx/libNRJavaSerialarm64.jnilib
+resources/native/osx/libNRJavaSerialintel.jnilib
