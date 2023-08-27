@@ -2,7 +2,7 @@
 
 [![Financial Contributors on Open Collective](https://opencollective.com/nrjavaserial/all/badge.svg?label=financial+contributors)](https://opencollective.com/nrjavaserial) [![Join the chat at https://gitter.im/NeuronRobotics/nrjavaserial](https://badges.gitter.im/NeuronRobotics/nrjavaserial.svg)](https://gitter.im/NeuronRobotics/nrjavaserial?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.neuronrobotics/nrjavaserial/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.neuronrobotics/nrjavaserial)
-![Build](https://github.com/NeuronRobotics/nrjavaserial/workflows/Build/badge.svg)
+[![Build](https://github.com/NeuronRobotics/nrjavaserial/workflows/Build/badge.svg)](https://github.com/NeuronRobotics/nrjavaserial/actions/workflows/build.yml?query=branch%3Amaster)
 [![License](https://img.shields.io/badge/License-LGPL%20v2.1-brightgreen.svg)](http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt)
 
 This is a fork of the [RXTX library](http://rxtx.qbang.org/) with a focus on
