@@ -42,6 +42,11 @@ dependencies {
 	compileOnly 'net.java.dev.jna:jna-platform:4.4.0'
 }
 
+java {
+	withJavadocJar()
+	withSourcesJar()
+}
+
 jar {
 	bnd("Created-By": "Commonwealth Robotics Cooperative",
 		"Specification-Title": props."app.name",
@@ -55,17 +60,11 @@ jar {
 	)
 }
 
-task javadocJar(type: Jar) {
-	classifier = 'javadoc'
-	from javadoc
-}
-
-task sourcesJar(type: Jar) {
-	classifier = 'sources'
-	from (sourceSets.main.allSource) {
-		exclude 'native/'
-	}
-}
+// withSourcesJar() creates the sourcesJar task which, by default, packages
+// sourceSets.main.allSource. Including native libraries in this source set is
+// the easiest way to include them the final library archive, but we don't want
+// an extra half meg of binaries to be included in the source archive.
+sourcesJar.exclude('native/')
 
 spotless {
 	enforceCheck false
