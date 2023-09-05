@@ -3,7 +3,7 @@ plugins {
 	id "com.diffplug.spotless" version "5.9.0"
 	id 'eclipse'
 	id 'java'
-	id 'maven'
+	id 'maven-publish'
 	id 'signing'
 }
 
@@ -92,12 +92,6 @@ signing {
 	sign configurations.archives
 }
 
-artifacts {
-	archives javadocJar
-	archives sourcesJar
-	archives jar
-}
-
 //import org.gradle.plugins.signing.Sign
 //
 //gradle.taskGraph.whenReady { taskGraph ->
@@ -119,49 +113,95 @@ artifacts {
 //		console.printf "\nThanks.\n\n"
 //	}
 //}
+*/
+// You can provide OSSRH publication credentials in three ways. Either:
+//
+// 1. Pass the username and password properties on the command line:
+//
+//     ./gradlew ... -PossrhUsername=username -PossrhPassword=password
+//
+// 2. Configure those properties in ~/.gradle/gradle.properties.
+// 3. Set the OSSRHUSERNAME and OSSRHPASSWORD environment variables to the
+//    username and password, respectively.
+publishing {
+	def ossrhUsername = findProperty('ossrhUsername')
+	def ossrhPassword = findProperty('ossrhPassword')
 
-uploadArchives {
+	if (System.env.OSSRHUSERNAME && System.env.OSSRHPASSWORD) {
+		ossrhUsername = System.env.OSSRHUSERNAME
+		ossrhPassword = System.env.OSSRHPASSWORD
+	}
+
 	repositories {
-		mavenDeployer {
-			beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-		repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-			authentication(userName: ossrhUsername, password: ossrhPassword)
+		// A Nexus Repository instance running on localhost. Useful for
+		// debugging the publishing process. Named “localhost”, not “local”, to
+		// avoid confusion with the publishToMavenLocal task, which publishes
+		// to the local Maven cache at ~/.m2/repository.
+		maven {
+			name = 'localhost'
+			url = 'http://localhost:8081/repository/maven-releases/'
+			allowInsecureProtocol = true
+			credentials {
+				username = ossrhUsername
+				password = ossrhPassword
+			}
 		}
 
-		snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-			authentication(userName: ossrhUsername, password: ossrhPassword)
+		maven {
+			name = 'ossrh'
+			url = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+			credentials {
+				username = ossrhUsername
+				password = ossrhPassword
+			}
 		}
 
+		maven {
+			name = 'ossrhSnapshots'
+			url = 'https://oss.sonatype.org/content/repositories/snapshots/'
+			credentials {
+				username = ossrhUsername
+				password = ossrhPassword
+			}
+		}
+	}
 
-			pom.project {
-				name 'NRJavaSerial'
-				packaging 'jar'
-				description 'A fork of the RXTX library with a focus on ease of use and embeddability in other libraries.'
-				url 'http://neuronrobotics.com'
+	publications {
+		nrJavaSerial(MavenPublication) {
+			pom {
+				// By default, the artifact ID is derived from the name of the
+				// directory housing this file. If we don't specifically
+				// override that, we'll end up with an unexpected artifact ID
+				// if the project directory is called something other than
+				// “nrjavaserial”.
+				artifactId = props.'app.name'
+				name = 'NRJavaSerial'
+				description = 'A fork of the RXTX library with a focus on ease of use and embeddability in other libraries.'
+				url = 'https://nrjs.org'
+
+				from components.java
 
 				scm {
-					connection			'scm:git:https://github.com/NeuronRobotics/nrjavaserial.git'
-					developerConnection	'scm:git:git@github.com:NeuronRobotics/nrjavaserial.git'
-					url					'https://github.com/NeuronRobotics/nrjavaserial'
+					connection = 'scm:git:https://github.com/NeuronRobotics/nrjavaserial.git'
+					developerConnection = 'scm:git:git@github.com:NeuronRobotics/nrjavaserial.git'
+					url = 'https://github.com/NeuronRobotics/nrjavaserial'
 				}
 
 				licenses {
 					license {
-						name	'The Apache License, Version 2.0'
-						url		'http://www.apache.org/licenses/LICENSE-2.0.txt'
+						name = 'RXTX License v 2.1 - LGPL v 2.1 + Linking Over Controlled Interface'
+						url = 'https://raw.githubusercontent.com/NeuronRobotics/nrjavaserial/master/LICENSE'
 					}
 				}
 
 				developers {
 					developer {
-						id		'madhephaestus'
-						name	'Kevin Harrington'
-						email	'kharrington@neuronrobotics.com'
+						id = 'madhephaestus'
+						name = 'Kevin Harrington'
+						email = 'kharrington@neuronrobotics.com'
 					}
 				}
 			}
 		}
 	}
 }
-*/
