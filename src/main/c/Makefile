@@ -215,8 +215,12 @@ ppc:
 	$(MAKE) -f natives.mk
 
 # Requires a macOS host.
-osx: export CFLAGS += -I$(JAVA_HOME)/include/darwin -arch x86_64
-osx: export LDFLAGS := -arch x86_64 -dynamiclib -framework IOKit -framework CoreFoundation
+osx: export CFLAGS += -I$(JAVA_HOME)/include/darwin \
+                      -target x86_64-apple-macos10.7
+osx: export LDFLAGS := -target x86_64-apple-macos10.7 \
+                       -dynamiclib \
+                       -framework IOKit \
+                       -framework CoreFoundation
 osx: export objects := fuserImp.o SerialImp.o
 osx: export platform := osx
 osx: export lib_type := jnilib
