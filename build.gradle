@@ -31,8 +31,6 @@ sourceSets {
 	}
 }
 
-jar.archiveName = "nrjavaserial-${props.'app.version'}.jar"
-
 repositories {
 	mavenCentral()
 }
@@ -45,8 +43,6 @@ dependencies {
 }
 
 jar {
-	jar.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
 	bnd("Created-By": "Commonwealth Robotics Cooperative",
 		"Specification-Title": props."app.name",
 		"Specification-Version": props."app.version",
@@ -57,7 +53,6 @@ jar {
 		"Import-Package": "com.sun.jna.platform.win32;resolution:=optional,org.apache.commons.net.telnet;resolution:=optional,!gnu.io*,*",
 		"Export-Package": "gnu.io*"
 	)
-
 }
 
 task javadocJar(type: Jar) {
