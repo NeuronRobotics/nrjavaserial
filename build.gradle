@@ -36,8 +36,8 @@ repositories {
 }
 
 dependencies {
-	testCompile 'junit:junit:4.12'
-	compile 'commons-net:commons-net:3.9.0'
+	testImplementation 'junit:junit:4.12'
+	implementation 'commons-net:commons-net:3.9.0'
 	compileOnly 'net.java.dev.jna:jna:4.4.0'
 	compileOnly 'net.java.dev.jna:jna-platform:4.4.0'
 }
