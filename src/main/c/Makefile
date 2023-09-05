@@ -146,8 +146,8 @@ arm32v6:
 
 # Requires gcc-arm-linux-gnueabihf.
 arm32v6HF: export CC := arm-linux-gnueabihf-gcc
-arm32v6HF: export CFLAGS += $(LINUX_CFLAGS) -march=armv6 -mfpu=vfp -marm
-arm32v6HF: export LDFLAGS += -march=armv6 -mfpu=vfp -marm
+arm32v6HF: export CFLAGS += $(LINUX_CFLAGS) -march=armv6+fp -marm
+arm32v6HF: export LDFLAGS += -march=armv6+fp -marm
 arm32v6HF: export platform := linux/ARM_32
 arm32v6HF: export variant := v6_HF
 arm32v6HF:
@@ -164,8 +164,8 @@ arm32v7:
 
 # Requires gcc-arm-linux-gnueabihf.
 arm32v7HF: export CC := arm-linux-gnueabihf-gcc
-arm32v7HF: export CFLAGS += $(LINUX_CFLAGS) -march=armv7-a
-arm32v7HF: export LDFLAGS += -march=armv7-a
+arm32v7HF: export CFLAGS += $(LINUX_CFLAGS) -march=armv7-a+fp
+arm32v7HF: export LDFLAGS += -march=armv7-a+fp
 arm32v7HF: export platform := linux/ARM_32
 arm32v7HF: export variant := v7_HF
 arm32v7HF:
@@ -182,8 +182,8 @@ arm32v8:
 
 # Requires gcc-arm-linux-gnueabihf.
 arm32v8HF: export CC := arm-linux-gnueabihf-gcc
-arm32v8HF: export CFLAGS += $(LINUX_CFLAGS) -march=armv8-a
-arm32v8HF: export LDFLAGS += -march=armv8-a
+arm32v8HF: export CFLAGS += $(LINUX_CFLAGS) -march=armv8-a -mfpu=neon-fp-armv8
+arm32v8HF: export LDFLAGS += -march=armv8-a -mfpu=neon-fp-armv8
 arm32v8HF: export platform := linux/ARM_32
 arm32v8HF: export variant := v8_HF
 arm32v8HF:
@@ -191,8 +191,8 @@ arm32v8HF:
 
 # Requires gcc-aarch64-linux-gnu.
 arm64v8: export CC := aarch64-linux-gnu-gcc
-arm64v8: export CFLAGS += $(LINUX_CFLAGS) -march=armv8-a
-arm64v8: export LDFLAGS += -march=armv8-a
+arm64v8: export CFLAGS += $(LINUX_CFLAGS) -march=armv8-a+fp
+arm64v8: export LDFLAGS += -march=armv8-a+fp
 arm64v8: export platform := linux/ARM_64
 arm64v8: export variant := v8
 arm64v8:
