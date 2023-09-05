@@ -216,7 +216,7 @@ ppc:
 
 # Requires a macOS host.
 osx: export CFLAGS += -I$(JAVA_HOME)/include/darwin -arch x86_64
-osx: export LDFLAGS := -arch x86_64 -dynamiclib -framework JavaVM -framework IOKit -framework CoreFoundation
+osx: export LDFLAGS := -arch x86_64 -dynamiclib -framework IOKit -framework CoreFoundation
 osx: export objects := fuserImp.o SerialImp.o
 osx: export platform := osx
 osx: export lib_type := jnilib
