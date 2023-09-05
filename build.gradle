@@ -1,12 +1,11 @@
 plugins {
 	id "biz.aQute.bnd.builder" version "5.0.1"
 	id "com.diffplug.spotless" version "5.9.0"
+	id 'eclipse'
+	id 'java'
+	id 'maven'
+	id 'signing'
 }
-
-apply plugin: 'java'
-apply plugin: 'eclipse'
-apply plugin: 'maven'
-apply plugin: 'signing'
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
