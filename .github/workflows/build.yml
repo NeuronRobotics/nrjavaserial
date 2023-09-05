@@ -90,7 +90,7 @@ jobs:
     name: FreeBSD native library compilation
     runs-on: ubuntu-latest
     container:
-      image: empterdose/freebsd-cross-build:9.3
+      image: empterdose/freebsd-cross-build:11.4
 
     defaults:
       run:
@@ -114,8 +114,9 @@ jobs:
       - name: Build the FreeBSD native libraries
         run: |
           make clean-freebsd
-          settarget i386-freebsd9 make freebsd32
-          settarget x86_64-freebsd9 make freebsd64
+          settarget i386-freebsd11 make freebsd32
+          settarget x86_64-freebsd11 make freebsd64
+          settarget arm64-freebsd11 make freebsdarm64v8
 
       - name: Upload FreeBSD native libraries
         uses: actions/upload-artifact@v3
