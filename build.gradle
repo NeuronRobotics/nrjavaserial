@@ -1,6 +1,17 @@
 plugins {
 	id 'base'
-	id "biz.aQute.bnd.builder" version "5.0.1"
+	// The application of the Bnd plugin triggers a Gradle warning:
+	//
+	//     The AbstractTask.getConvention() method has been deprecated. This is
+	//     scheduled to be removed in Gradle 9.0. Consult the upgrading guide
+	//     for further information: https://docs.gradle.org/8.3/userguide/
+	//     upgrading_version_8.html#deprecated_access_to_conventions
+	//
+	// This warning is caused by Bnd itself, and there is nothing we can do
+	// about it in our own configuration. This will be resolved [in Bnd v7.0].
+	//
+	// [in Bnd v7.0]: https://github.com/bndtools/bnd/issues/5714#issuecomment-1635684935
+	id 'biz.aQute.bnd.builder' version '6.4.0'
 	id "com.diffplug.spotless" version "5.9.0"
 	id 'eclipse'
 	id 'java'
@@ -53,16 +64,18 @@ java {
 }
 
 jar {
-	bnd("Created-By": "Commonwealth Robotics Cooperative",
-		"Specification-Title": props."app.name",
-		"Specification-Version": props."app.version",
-		"Specification-Vendor": "Commonwealth Robotics Cooperative",
-		"Implementation-Title": props."app.name",
-		"Implementation-Version" : props."app.version",
-		"Implementation-Vendor": "Commonwealth Robotics Cooperative",
-		"Import-Package": "com.sun.jna.platform.win32;resolution:=optional,org.apache.commons.net.telnet;resolution:=optional,!gnu.io*,*",
-		"Export-Package": "gnu.io*"
-	)
+	bundle {
+		bnd(
+			'Specification-Title': props.'app.name',
+			'Specification-Version': props.'app.version',
+			'Specification-Vendor': 'Commonwealth Robotics Cooperative',
+			'Implementation-Title': props.'app.name',
+			'Implementation-Version' : props.'app.version',
+			'Implementation-Vendor': 'Commonwealth Robotics Cooperative',
+			'Import-Package': 'com.sun.jna.platform.win32;resolution:=optional,org.apache.commons.net.telnet;resolution:=optional,!gnu.io*,*',
+			'Export-Package': 'gnu.io*',
+		)
+	}
 }
 
 // withSourcesJar() creates the sourcesJar task which, by default, packages
