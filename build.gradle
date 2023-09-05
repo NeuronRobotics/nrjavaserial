@@ -1,4 +1,5 @@
 plugins {
+	id 'base'
 	id "biz.aQute.bnd.builder" version "5.0.1"
 	id "com.diffplug.spotless" version "5.9.0"
 	id 'eclipse'
@@ -14,7 +15,7 @@ Properties props = new Properties()
 props.load(new FileInputStream(buildDir.getAbsolutePath() + "/src/main/resources/com/neuronrobotics/nrjavaserial/build.properties"))
 
 group = "com.neuronrobotics"
-archivesBaseName = "nrjavaserial"
+base.archivesName = props.'app.name'
 version = props."app.version"
 
 sourceSets {
