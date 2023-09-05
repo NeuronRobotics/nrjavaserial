@@ -29,24 +29,24 @@ plugins {
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
-File buildDir = file(".");
+File buildDir = file('.');
 Properties props = new Properties()
-props.load(new FileInputStream(buildDir.getAbsolutePath() + "/src/main/resources/com/neuronrobotics/nrjavaserial/build.properties"))
+props.load(new FileInputStream("${buildDir.getAbsolutePath()}/src/main/resources/com/neuronrobotics/nrjavaserial/build.properties"))
 
-group = "com.neuronrobotics"
+group = 'com.neuronrobotics'
 base.archivesName = props.'app.name'
-version = props."app.version"
+version = props.'app.version'
 
 sourceSets {
 	test {
 		java {
-			srcDirs = ["test/src"]
+			srcDirs = ['test/src']
 		}
 	}
 	main {
 		resources {
-			srcDirs = ["src/main/resources", "src/main/c/resources"]
-			includes = ["**/*.so","**/*.dll", "**/*.jnilib","**/*.properties"]
+			srcDirs = ['src/main/resources', 'src/main/c/resources']
+			includes = ['**/*.so','**/*.dll', '**/*.jnilib', '**/*.properties']
 		}
 	}
 }
