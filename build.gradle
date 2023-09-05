@@ -198,6 +198,11 @@ publishing {
 						name = 'Kevin Harrington'
 						email = 'kharrington@neuronrobotics.com'
 					}
+					developer {
+						id = 'MrDOS'
+						name = 'Samuel Coleman'
+						email = 'samuel@seenet.ca'
+					}
 				}
 			}
 		}
