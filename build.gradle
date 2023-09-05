@@ -12,7 +12,15 @@ plugins {
 	//
 	// [in Bnd v7.0]: https://github.com/bndtools/bnd/issues/5714#issuecomment-1635684935
 	id 'biz.aQute.bnd.builder' version '6.4.0'
-	id "com.diffplug.spotless" version "5.9.0"
+	// This is the [last version] of Spotless which runs on Java 8. Even though
+	// our toolchain configuration allows us to run Gradle on a higher Java
+	// version than we use to build, Java 8 is a pretty fixed target, so as
+	// long as we're not able to take advantage of any newer language features,
+	// we're probably not losing much by sticking with an older linter.
+	//
+	// [last version]: https://github.com/diffplug/spotless/issues/1337
+	// [toolchain]: https://docs.gradle.org/current/userguide/toolchains.html
+	id 'com.diffplug.spotless' version '6.13.0'
 	id 'eclipse'
 	id 'java'
 	id 'maven-publish'
