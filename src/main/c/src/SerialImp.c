@@ -121,6 +121,7 @@
 #include <sys/sysmacros.h>
 #	include <linux/serial.h>
 #	include <linux/version.h>
+#include "termbits2.h"
 #endif /* __linux__ */
 #if defined(__sun__)
 #	include <sys/filio.h>
@@ -506,6 +507,9 @@ set_java_vars
 void set_java_vars( JNIEnv *env, jobject jobj, int fd )
 {
 	struct termios ttyset;
+#if defined(IOCTL_GETS)	/* termios2 access */
+	struct termios2 ttyset2;
+#endif
 	int databits = -1;
 	int jparity = -1;
 	int stop_bits = STOPBITS_1_5;
@@ -574,12 +578,21 @@ cf{get,set}{i,o}speed and shouldn't be provided or used.
 
 */
 #if defined(CBAUD)/* dima */
-    	baudrate = ttyset.c_cflag&CBAUD;
+	baudrate = ttyset.c_cflag&CBAUD;
 #else
-    	baudrate = cfgetispeed(&ttyset);
-#endif
-	(*env)->SetIntField(env, jobj, jfspeed,
-		( jint ) get_java_baudrate(baudrate) );
+	baudrate = cfgetispeed(&ttyset);
+#endif	/* CBAUD */
+#if defined(IOCTL_GETS)	/* termios2 access */
+	if (baudrate == BOTHER && ioctl(fd, IOCTL_GETS, &ttyset2) >= 0){
+		baudrate = ttyset2.c_ospeed;
+	} else {
+		baudrate = get_java_baudrate(baudrate);
+	}
+#else
+	baudrate = get_java_baudrate(baudrate);
+#endif	/* IOCTL_GETS */
+	
+	(*env)->SetIntField(env, jobj, jfspeed, ( jint ) baudrate );
 	(*env)->SetIntField(env, jobj, jfdataBits, ( jint ) databits );
 	(*env)->SetIntField(env, jobj, jfstopBits, ( jint ) stop_bits );
 	(*env)->SetIntField(env, jobj, jfparity, ( jint ) jparity );
@@ -833,6 +846,37 @@ JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
 }
 
 /*----------------------------------------------------------
+ translate_port_params
+
+   accept:     gnu.io.SerialPort.* constants
+   perform:    set proper termios c_cflag bits
+   return:     1 on error
+   exceptions: UnsupportedCommOperationException
+----------------------------------------------------------*/
+int translate_port_params( JNIEnv *env, tcflag_t *cflag, int dataBits,
+			int stopBits, int parity )
+{
+	if( translate_data_bits( env, cflag, dataBits ) )
+	{
+		report( "set_port_params: Invalid Data Bits Selected\n" );
+		return(1);
+	}
+
+	if( translate_stop_bits( env, cflag, stopBits ) )
+	{
+		report( "set_port_params: Invalid Stop Bits Selected\n" );
+		return(1);
+	}
+
+	if( translate_parity( env, cflag, parity ) )
+	{
+		report( "set_port_params: Invalid Parity Selected\n" );
+		return(1);
+	}
+	return (0);
+}
+
+/*----------------------------------------------------------
  RXTXPort.set_port_params
 
    accept:     env, fd, speed, data bits, stop bits, parity
@@ -845,36 +889,22 @@ JNIEXPORT void JNICALL RXTXPort(nativeClose)( JNIEnv *env,
 
 		see:  nativeSetSerialPortParams & nativeStaticSerialPortParams
 ----------------------------------------------------------*/
-int set_port_params( JNIEnv *env, int fd, int cspeed, int dataBits,
+int set_port_params( JNIEnv *env, int fd, int speed, int dataBits,
 			int stopBits, int parity )
 {
 	struct termios ttyset;
+#if defined(IOCTL_SETS)	/* termios2 access */
+	struct termios2 ttyset2;
+#endif
 	int result = 0;
 #if defined(TIOCGSERIAL)
 	struct serial_struct sstruct;
 #endif /* TIOCGSERIAL */
+	int cspeed = translate_speed( env, speed );
 
 	if( tcgetattr( fd, &ttyset ) < 0 )
 	{
 		report( "set_port_params: Cannot Get Serial Port Settings\n" );
-		return(1);
-	}
-
-	if( translate_data_bits( env, &(ttyset.c_cflag), dataBits ) )
-	{
-		report( "set_port_params: Invalid Data Bits Selected\n" );
-		return(1);
-	}
-
-	if( translate_stop_bits( env, &(ttyset.c_cflag), stopBits ) )
-	{
-		report( "set_port_params: Invalid Stop Bits Selected\n" );
-		return(1);
-	}
-
-	if( translate_parity( env, &(ttyset.c_cflag), parity ) )
-	{
-		report( "set_port_params: Invalid Parity Selected\n" );
 		return(1);
 	}
 
@@ -885,7 +915,7 @@ int set_port_params( JNIEnv *env, int fd, int cspeed, int dataBits,
 		return( 1 );
 	}
 #endif  /* __FreeBSD__ */
-	if( !cspeed )
+	if( !speed )
 	{
 		/* hang up the modem aka drop DTR  */
 		/* Unix should handle this */
@@ -896,9 +926,24 @@ int set_port_params( JNIEnv *env, int fd, int cspeed, int dataBits,
 		result &= ~TIOCM_DTR;
 		ioctl( fd, TIOCMSET, &result );
 	}
-	if(     cfsetispeed( &ttyset, cspeed ) < 0 ||
+#if defined(IOCTL_SETS)	/* termios2 access */
+	if(	(speed != 0 && speed == cspeed) ||	//custom baudrate
+		cfsetispeed( &ttyset, cspeed ) < 0 ||
 		cfsetospeed( &ttyset, cspeed ) < 0 )
 	{
+		if (speed > 0 && ioctl(fd, IOCTL_GETS, &ttyset2) >= 0){
+			ttyset2.c_cflag &= ~(((CBAUD | CBAUDEX) << IBSHIFT) | CBAUD);
+			ttyset2.c_cflag |= BOTHER;
+			ttyset2.c_ospeed = speed;
+			if (translate_port_params(env, &(ttyset2.c_cflag), dataBits, stopBits, parity))
+				return (1);
+			if (ioctl(fd, IOCTL_SETS, &ttyset2) >= 0) return (0);
+		}
+#else	/* IOCTL_SETS */
+	if(	cfsetispeed( &ttyset, cspeed ) < 0 ||
+		cfsetospeed( &ttyset, cspeed ) < 0 )
+	{
+#endif	/* IOCTL_SETS */
 		/*
 		    Some people need to set the baud rate to ones not defined
 		    in termios.h
@@ -915,11 +960,16 @@ int set_port_params( JNIEnv *env, int fd, int cspeed, int dataBits,
 
 		    On linux the setserial man page covers this.
 		*/
+		
 
 #if defined(TIOCGSERIAL)
-		sstruct.custom_divisor = ( sstruct.baud_base/cspeed );
+		if ( ioctl( fd, TIOCGSERIAL, &sstruct ) < 0 )	//sstruct is initialised here!
+		{
+			report( "set_port_params: Cannot Get Serial Port Settings\n" );
+			return(1);
+		}
+		sstruct.custom_divisor = ( sstruct.baud_base/speed );
 		cspeed = B38400;
-#endif /* TIOCGSERIAL */
 		if(     cfsetispeed( &ttyset, cspeed ) < 0 ||
 			cfsetospeed( &ttyset, cspeed ) < 0 )
 		{
@@ -927,16 +977,21 @@ int set_port_params( JNIEnv *env, int fd, int cspeed, int dataBits,
 			report( "nativeSetSerialPortParams: Cannot Set Speed\n" );
 			return( 1 );
 		}
-#if defined(TIOCSSERIAL)
 		/*  It is assumed Win32 does this for us */
 		if (	sstruct.baud_base < 1 ||
 		ioctl( fd, TIOCSSERIAL, &sstruct ) < 0 )
 		{
 			return( 1 );
 		}
-#endif /* TIOCSSERIAL */
+#else	/* TIOCSSERIAL */
+		/* OK, we tried everything */
+		report( "nativeSetSerialPortParams: Cannot Set Speed\n" );
+		return( 1 );
+#endif	/* TIOCSSERIAL */
 	}
 
+	if (translate_port_params(env, &(ttyset.c_cflag), dataBits, stopBits, parity))
+		return (1);
 	if( tcsetattr( fd, TCSANOW, &ttyset ) < 0 )
 	{
 		report("tcsetattr returns nonzero value!\n");
@@ -958,14 +1013,13 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeSetSerialPortParams)(
 	jint parity )
 {
 	int fd = get_java_var( env, jobj,"fd","I" );
-	int cspeed = translate_speed( env, speed );
 
 	ENTER( "RXTXPort:nativeSetSerialPortParams" );
 	report_time_start( );
 
-	if (cspeed < 0 )
+	if (speed < 0 )
 	{
-		report(" invalid cspeed\n");
+		report(" invalid speed\n");
 /*
     For some reason the native exceptions are not being caught.  Moving this
     to the Java side fixed the issue.  taj.
@@ -976,7 +1030,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeSetSerialPortParams)(
 	}
 
 
-	if( set_port_params( env, fd, cspeed, dataBits, stopBits, parity ) )
+	if( set_port_params( env, fd, speed, dataBits, stopBits, parity ) )
 	{
 		report("set_port_params failed\n");
 		LEAVE( "RXTXPort:nativeSetSerialPortParams" );
@@ -989,6 +1043,7 @@ JNIEXPORT jboolean JNICALL RXTXPort(nativeSetSerialPortParams)(
 		return(1);
 	}
 
+	set_java_vars( env, jobj, fd );
 	LEAVE( "RXTXPort:nativeSetSerialPortParams" );
 	report_time_end( );
 	return(0);
@@ -2400,7 +2455,6 @@ JNIEXPORT void JNICALL RXTXPort(nativeStaticSetSerialPortParams) (JNIEnv *env,
 	int fd;
 	int  pid = -1;
 	const char *filename = (*env)->GetStringUTFChars( env, jstr, 0 );
-	int cspeed = translate_speed( env, baudrate );
 
 
 	ENTER( "RXTXPort:nativeStaticSetSerialPortParams" );
@@ -2429,7 +2483,7 @@ JNIEXPORT void JNICALL RXTXPort(nativeStaticSetSerialPortParams) (JNIEnv *env,
 		return;
 	}
 
-	if (cspeed == -1)
+	if (baudrate < 0)
 	{
 		(*env)->ReleaseStringUTFChars( env, jstr, filename );
 		throw_java_exception( env, UNSUPPORTED_COMM_OPERATION,
@@ -2437,7 +2491,7 @@ JNIEXPORT void JNICALL RXTXPort(nativeStaticSetSerialPortParams) (JNIEnv *env,
 		return;
 	}
 
-	if( set_port_params( env, fd, cspeed, dataBits, stopBits, parity ) )
+	if( set_port_params( env, fd, baudrate, dataBits, stopBits, parity ) )
 	{
 		(*env)->ReleaseStringUTFChars( env, jstr, filename );
 		LEAVE( "RXTXPort:nativeStatic SetSerialPortParams" );
@@ -3864,8 +3918,10 @@ int has_line_status_register_access( int fd )
 	if( !ioctl( fd, TIOCSERGETLSR, &change ) ) {
 		return(1);
 	}
+	report( "has_line_status_register_access: Port does not support TIOCSERGETLSR\n" );
+#else  /* TIOCSERGETLSR */
+	report( "has_line_status_register_access: System does not support TIOCSERGETLSR\n" );
 #endif /* TIOCSERGETLSR */
-	report( "has_line_status_register_acess: Port does not support TIOCSERGETLSR\n" );
 	return( 0 );
 }
 
