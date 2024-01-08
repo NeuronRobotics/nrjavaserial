@@ -3081,6 +3081,11 @@ int read_byte_array( JNIEnv *env,
 	struct event_info_struct *eis = ( struct event_info_struct * )
 		get_java_var_long( env, *jobj,"eis","J" );
 
+	if (eis == NULL) {
+		throw_java_exception(env, IO_EXCEPTION, "read_byte_array",
+			"Unable to read byte array");
+		return -1;
+	}
 	report_time_start();
 	flag = eis->eventflags[SPE_DATA_AVAILABLE];
 	eis->eventflags[SPE_DATA_AVAILABLE] = 0;
