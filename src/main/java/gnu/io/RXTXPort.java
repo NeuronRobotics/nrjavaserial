@@ -256,14 +256,13 @@ public class RXTXPort extends SerialPort
 		if (debug)
 			z.reportln( "RXTXPort:setSerialPortParams(" +
 				b + " " + d + " " + s + " " + p + ") called");
+		speed = b;
+		dataBits = ( s == STOPBITS_1_5 ) ? DATABITS_5 : d;
+		stopBits = s;
+		parity = p;
 		if ( nativeSetSerialPortParams( b, d, s, p ) )
 			throw new UnsupportedCommOperationException(
 				"Invalid Parameter" );
-		speed = b;
-		if( s== STOPBITS_1_5 ) dataBits = DATABITS_5;
-		else dataBits = d;
-		stopBits = s;
-		parity = p;
 			z.reportln( "RXTXPort:setSerialPortParams(" +
 				b + " " + d + " " + s + " " + p +
 				") returning");
