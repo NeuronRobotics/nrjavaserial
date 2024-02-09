@@ -6,7 +6,11 @@ on:
 jobs:
   natives-linux-windows:
     name: Linux (x86/ARM/PPC) and Windows native library compilation
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:18.04
+      env:
+        GCC: gcc-8
 
     defaults:
       run:
@@ -14,15 +18,20 @@ jobs:
 
     steps:
       - name: Checkout the target branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup Java
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v3
         with:
+          distribution: temurin
           java-version: 8
+          # Don't need the dependency cache here (or in any of the other native
+          # library compilation steps), because we're not invoking the Java
+          # compiler in this step. We only need the JDK for its headers.
       - name: Install build prerequisites
         run: |
-          sudo apt update
-          sudo make crosstools
+          apt-get update
+          apt-get --assume-yes install make $GCC
+          make crosstools
 
       - name: Build the Linux and Windows native libraries
         run: |
@@ -33,25 +42,25 @@ jobs:
       # exactly to the directories inside `src/main/c/resources/native`. That
       # way, the Java build job can pull down all artifacts and unpack them
       # into that directory to overwrite the versions in-repo. This is sadly
-      # necessary because the actions/download-artifact@v2 action flattens
+      # necessary because the actions/download-artifact@v3 action flattens
       # paths inside artifacts. If it retained full relative paths, we could
       # put Linux and Windows natives inside the same artifact, and we could be
       # flexible with the artifact names. But it doesn't, so we can't, and we
       # can't.
       - name: Upload Linux native libraries
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: linux
           path: src/main/c/resources/native/linux
       - name: Upload Windows native libraries
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: windows
           path: src/main/c/resources/native/windows
 
   natives-macos:
     name: macOS native library compilation
-    runs-on: macos-10.15
+    runs-on: macos-latest
 
     defaults:
       run:
@@ -59,10 +68,11 @@ jobs:
 
     steps:
       - name: Checkout the target branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup Java
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v3
         with:
+          distribution: temurin
           java-version: 8
 
       - name: Build the macOS native libraries
@@ -71,18 +81,16 @@ jobs:
           make osx
 
       - name: Upload macOS native libraries
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: osx
           path: src/main/c/resources/native/osx/libNRJavaSerial.jnilib
 
   natives-freebsd:
     name: FreeBSD native library compilation
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     container:
-      image: empterdose/freebsd-cross-build:9.3
-      env:
-        JAVA_HOME: /usr/lib/jvm/default-jvm
+      image: empterdose/freebsd-cross-build:11.4
 
     defaults:
       run:
@@ -90,30 +98,35 @@ jobs:
 
     steps:
       - name: Checkout the target branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 8
+      - name: Fake the FreeBSD Java headers
         # This feels extremely dirty, but the only native header we care about
         # is `jni_md.h`, and it is exactly identical between Linux and FreeBSD
         # (at least in OpenJDK 8).
         run: |
-          apk add openjdk8
           ln -s $JAVA_HOME/include/linux $JAVA_HOME/include/freebsd
 
       - name: Build the FreeBSD native libraries
         run: |
           make clean-freebsd
-          settarget i386-freebsd9 make freebsd32
-          settarget x86_64-freebsd9 make freebsd64
+          settarget i386-freebsd11 make freebsd32
+          settarget x86_64-freebsd11 make freebsd64
+          settarget arm64-freebsd11 make freebsdarm64v8
 
       - name: Upload FreeBSD native libraries
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: freebsd
           path: src/main/c/resources/native/freebsd
 
   java:
     name: Java compilation
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
 
     needs:
       - natives-linux-windows
@@ -126,18 +139,20 @@ jobs:
       # don't regress formatting when compared with the master branch, we need
       # to have a local copy of the master branch for comparison.
       - name: Checkout the master branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: master
       - name: Checkout the target branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup Java
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v3
         with:
+          distribution: temurin
           java-version: 8
+          cache: gradle
 
       - name: Download native libraries
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: src/main/c/resources/native
 
@@ -146,9 +161,9 @@ jobs:
 
       - name: Determine commit hash for artifact filename
         id: vars
-        run: echo "::set-output name=short-rev::$(git rev-parse --short HEAD)"
+        run: echo "short-rev=$(git rev-parse --short HEAD)" >>$GITHUB_OUTPUT
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: nrjavaserial-${{steps.vars.outputs.short-rev}}
           path: build/libs/*.jar

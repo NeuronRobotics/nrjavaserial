@@ -1,79 +1,96 @@
 plugins {
-	id "biz.aQute.bnd.builder" version "5.0.1"
-	id "com.diffplug.spotless" version "5.9.0"
+	id 'base'
+	// The application of the Bnd plugin triggers a Gradle warning:
+	//
+	//     The AbstractTask.getConvention() method has been deprecated. This is
+	//     scheduled to be removed in Gradle 9.0. Consult the upgrading guide
+	//     for further information: https://docs.gradle.org/8.3/userguide/
+	//     upgrading_version_8.html#deprecated_access_to_conventions
+	//
+	// This warning is caused by Bnd itself, and there is nothing we can do
+	// about it in our own configuration. This will be resolved [in Bnd v7.0].
+	//
+	// [in Bnd v7.0]: https://github.com/bndtools/bnd/issues/5714#issuecomment-1635684935
+	id 'biz.aQute.bnd.builder' version '6.4.0'
+	// This is the [last version] of Spotless which runs on Java 8. Even though
+	// our toolchain configuration allows us to run Gradle on a higher Java
+	// version than we use to build, Java 8 is a pretty fixed target, so as
+	// long as we're not able to take advantage of any newer language features,
+	// we're probably not losing much by sticking with an older linter.
+	//
+	// [last version]: https://github.com/diffplug/spotless/issues/1337
+	// [toolchain]: https://docs.gradle.org/current/userguide/toolchains.html
+	id 'com.diffplug.spotless' version '6.13.0'
+	id 'eclipse'
+	id 'java'
+	id 'maven-publish'
+	id 'signing'
 }
-
-apply plugin: 'java'
-apply plugin: 'eclipse'
-apply plugin: 'maven'
-apply plugin: 'signing'
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
-File buildDir = file(".");
+File buildDir = file('.');
 Properties props = new Properties()
-props.load(new FileInputStream(buildDir.getAbsolutePath() + "/src/main/resources/com/neuronrobotics/nrjavaserial/build.properties"))
+props.load(new FileInputStream("${buildDir.getAbsolutePath()}/src/main/resources/com/neuronrobotics/nrjavaserial/build.properties"))
 
-group = "com.neuronrobotics"
-archivesBaseName = "nrjavaserial"
-version = props."app.version"
+group = 'com.neuronrobotics'
+base.archivesName = props.'app.name'
+version = props.'app.version'
 
 sourceSets {
 	test {
 		java {
-			srcDirs = ["test/src"]
+			srcDirs = ['test/src']
 		}
 	}
 	main {
 		resources {
-			srcDirs = ["src/main/resources", "src/main/c/resources"]
-			includes = ["**/*.so","**/*.dll", "**/*.jnilib","**/*.properties"]
+			srcDirs = ['src/main/resources', 'src/main/c/resources']
+			includes = ['**/*.so','**/*.dll', '**/*.jnilib', '**/*.properties']
 		}
 	}
 }
 
-jar.archiveName = "nrjavaserial-${props.'app.version'}.jar"
-
 repositories {
 	mavenCentral()
-	jcenter()
 }
 
 dependencies {
-	compile fileTree(dir: 'libs', includes: ['*.jar'])
-	testCompile 'junit:junit:4.12'
-	compile 'commons-net:commons-net:3.9.0'
+	testImplementation 'junit:junit:4.12'
+	implementation 'commons-net:commons-net:3.9.0'
 	compileOnly 'net.java.dev.jna:jna:4.4.0'
 	compileOnly 'net.java.dev.jna:jna-platform:4.4.0'
 }
 
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(8)
+	}
+
+	withJavadocJar()
+	withSourcesJar()
+}
+
 jar {
-	jar.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-	bnd("Created-By": "Commonwealth Robotics Cooperative",
-		"Specification-Title": props."app.name",
-		"Specification-Version": props."app.version",
-		"Specification-Vendor": "Commonwealth Robotics Cooperative",
-		"Implementation-Title": props."app.name",
-		"Implementation-Version" : props."app.version",
-		"Implementation-Vendor": "Commonwealth Robotics Cooperative",
-		"Import-Package": "com.sun.jna.platform.win32;resolution:=optional,org.apache.commons.net.telnet;resolution:=optional,!gnu.io*,*",
-		"Export-Package": "gnu.io*"
-	)
-
-}
-
-task javadocJar(type: Jar) {
-	classifier = 'javadoc'
-	from javadoc
-}
-
-task sourcesJar(type: Jar) {
-	classifier = 'sources'
-	from (sourceSets.main.allSource) {
-		exclude 'native/'
+	bundle {
+		bnd(
+			'Specification-Title': props.'app.name',
+			'Specification-Version': props.'app.version',
+			'Specification-Vendor': 'Commonwealth Robotics Cooperative',
+			'Implementation-Title': props.'app.name',
+			'Implementation-Version' : props.'app.version',
+			'Implementation-Vendor': 'Commonwealth Robotics Cooperative',
+			'Import-Package': 'com.sun.jna.platform.win32;resolution:=optional,org.apache.commons.net.telnet;resolution:=optional,!gnu.io*,*',
+			'Export-Package': 'gnu.io*',
+		)
 	}
 }
+
+// withSourcesJar() creates the sourcesJar task which, by default, packages
+// sourceSets.main.allSource. Including native libraries in this source set is
+// the easiest way to include them the final library archive, but we don't want
+// an extra half meg of binaries to be included in the source archive.
+sourcesJar.exclude('native/')
 
 spotless {
 	enforceCheck false
@@ -93,84 +110,146 @@ spotless {
 		eclipse()
 	}
 }
-/*
-signing {
-	required {
-		gradle.taskGraph.hasTask("uploadArchives")
+
+// You can provide OSSRH publication credentials in three ways. Either:
+//
+// 1. Pass the username and password properties – ossrhUsername and
+//    ossrhPassword – on the command line:
+//
+//     ./gradlew ... -PossrhUsername=username -PossrhPassword=password
+//
+// 2. Configure those properties in ~/.gradle/gradle.properties.
+// 3. Set the OSSRHUSERNAME and OSSRHPASSWORD environment variables to the
+//    username and password, respectively.
+publishing {
+	def ossrhUsername = findProperty('ossrhUsername')
+	def ossrhPassword = findProperty('ossrhPassword')
+
+	if (System.env.OSSRHUSERNAME && System.env.OSSRHPASSWORD) {
+		ossrhUsername = System.env.OSSRHUSERNAME
+		ossrhPassword = System.env.OSSRHPASSWORD
 	}
-	sign configurations.archives
-}
 
-artifacts {
-	archives javadocJar
-	archives sourcesJar
-	archives jar
-}
-
-//import org.gradle.plugins.signing.Sign
-//
-//gradle.taskGraph.whenReady { taskGraph ->
-//	if (taskGraph.allTasks.any { it instanceof Sign }) {
-//		// Use Java 6's console to read from the console (no good for
-//		// a CI environment)
-//		Console console = System.console()
-//		console.printf "\n\nWe have to sign some things in this build." +
-//					   "\n\nPlease enter your signing details.\n\n"
-//
-//		def id = console.readLine("PGP Key Id: ")
-//		def file = console.readLine("PGP Secret Key Ring File (absolute path): ")
-//		def password = console.readPassword("PGP Private Key Password: ")
-//
-//		allprojects { ext."signing.keyId" = id }
-//		allprojects { ext."signing.secretKeyRingFile" = file }
-//		allprojects { ext."signing.password" = password }
-//
-//		console.printf "\nThanks.\n\n"
-//	}
-//}
-
-uploadArchives {
 	repositories {
-		mavenDeployer {
-			beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-		repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-			authentication(userName: ossrhUsername, password: ossrhPassword)
+		// A Nexus Repository instance running on localhost. Useful for
+		// debugging the publishing process. Named “localhost”, not “local”, to
+		// avoid confusion with the publishToMavenLocal task, which publishes
+		// to the local Maven cache at ~/.m2/repository.
+		maven {
+			name = 'localhost'
+			url = 'http://localhost:8081/repository/maven-releases/'
+			allowInsecureProtocol = true
+			credentials {
+				username = ossrhUsername
+				password = ossrhPassword
+			}
 		}
 
-		snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-			authentication(userName: ossrhUsername, password: ossrhPassword)
+		maven {
+			name = 'ossrh'
+			url = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+			credentials {
+				username = ossrhUsername
+				password = ossrhPassword
+			}
 		}
 
+		maven {
+			name = 'ossrhSnapshots'
+			url = 'https://oss.sonatype.org/content/repositories/snapshots/'
+			credentials {
+				username = ossrhUsername
+				password = ossrhPassword
+			}
+		}
+	}
 
-			pom.project {
-				name 'NRJavaSerial'
-				packaging 'jar'
-				description 'A fork of the RXTX library with a focus on ease of use and embeddability in other libraries.'
-				url 'http://neuronrobotics.com'
+	publications {
+		nrJavaSerial(MavenPublication) {
+			pom {
+				// By default, the artifact ID is derived from the name of the
+				// directory housing this file. If we don't specifically
+				// override that, we'll end up with an unexpected artifact ID
+				// if the project directory is called something other than
+				// “nrjavaserial”.
+				artifactId = props.'app.name'
+				name = 'NRJavaSerial'
+				description = 'A fork of the RXTX library with a focus on ease of use and embeddability in other libraries.'
+				url = 'https://nrjs.org'
+
+				from components.java
 
 				scm {
-					connection			'scm:git:https://github.com/NeuronRobotics/nrjavaserial.git'
-					developerConnection	'scm:git:git@github.com:NeuronRobotics/nrjavaserial.git'
-					url					'https://github.com/NeuronRobotics/nrjavaserial'
+					connection = 'scm:git:https://github.com/NeuronRobotics/nrjavaserial.git'
+					developerConnection = 'scm:git:git@github.com:NeuronRobotics/nrjavaserial.git'
+					url = 'https://github.com/NeuronRobotics/nrjavaserial'
 				}
 
 				licenses {
 					license {
-						name	'The Apache License, Version 2.0'
-						url		'http://www.apache.org/licenses/LICENSE-2.0.txt'
+						name = 'RXTX License v 2.1 - LGPL v 2.1 + Linking Over Controlled Interface'
+						url = 'https://raw.githubusercontent.com/NeuronRobotics/nrjavaserial/master/LICENSE'
 					}
 				}
 
 				developers {
 					developer {
-						id		'madhephaestus'
-						name	'Kevin Harrington'
-						email	'kharrington@neuronrobotics.com'
+						id = 'madhephaestus'
+						name = 'Kevin Harrington'
+						email = 'kharrington@neuronrobotics.com'
+					}
+					developer {
+						id = 'MrDOS'
+						name = 'Samuel Coleman'
+						email = 'samuel@seenet.ca'
 					}
 				}
 			}
 		}
 	}
 }
-*/
+
+// You can provide a signatory in three ways. Either:
+//
+// 1. Pass the signatory properties – signing.keyId, signing.secretKeyRingFile,
+//    and signing.password – on the command line:
+//
+//     ./gradlew ... \
+//         -Psigning.keyId=7FD6B0A1 \
+//         -Psigning.secretKeyRingFile=/path/to/.gnupg/secring.gpg \
+//         -Psigning.password=secret
+//
+// 2. Configure those properties in ~/.gradle/gradle.properties.
+// 3. Set the SIGNINGKEY and SIGNINGPASSWORD environment variables to an
+//    ASCII-armored PGP key and password, respectively.
+//
+// For more details on the behaviour of the properties and their expected
+// values, see the signing plugin documentation:
+//
+//     https://docs.gradle.org/current/userguide/signing_plugin.html#sec:signatory_credentials
+//
+// If a signatory has not been configured, or if the signing.skip property is
+// set, artifacts will not be signed prior to publication.
+//
+// This signing block must appear after the publishing block in order to refer
+// to the specific publication to be signed.
+signing {
+	if (project.hasProperty('signing.skip')) {
+		// We've been explicitly told not to sign artifacts, even if we have a
+		// configured signatory.
+		return
+	} else if (System.env.SIGNINGKEY && System.env.SIGNINGPASSWORD) {
+		useInMemoryPgpKeys(System.env.SIGNINGKEY, System.env.SIGNINGPASSWORD)
+	} else if (findProperty('signing.keyId') &&
+		findProperty('signing.secretKeyRingFile') &&
+		findProperty('signing.password')) {
+		// No special configuration necessary for properties: the signing plugin
+		// self-configures from the signing.keyId, signing.secretKeyRingFile, and
+		// signing.password properties when populated.
+	} else {
+		// No signatory is configured; skip signing.
+		return
+	}
+
+	sign publishing.publications.nrJavaSerial
+}
