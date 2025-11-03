@@ -730,7 +730,6 @@ JNIEXPORT jint JNICALL RXTXPort(open)(
        {
                snprintf( message, sizeof(message), "open: exclusive access denied for %s\n",
                        filename );
-               report( message );
                report_error( message );
 
                close(fd);
