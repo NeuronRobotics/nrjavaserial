@@ -655,6 +655,7 @@ public class RXTXCommDriver implements CommDriver
 						"ttyUSB", // for USB frobs
 						"ttyAMA", // Raspberry Pi
 						"rfcomm",       // bluetooth serial device
+						"hidraw",
 						"ttyircomm", // linux IrCommdevices (IrDA serial emu)
 						"ttyACM",// linux CDC ACM devices
 						"DyIO",// NRDyIO
@@ -677,6 +678,7 @@ public class RXTXCommDriver implements CommDriver
 						"holter",    // custom card for heart monitoring
 						"modem",     // linux symbolic link to modem.
 						"rfcomm",       // bluetooth serial device
+						"hidraw",
 						"ttyircomm", // linux IrCommdevices (IrDA serial emu)
 						"ttycosa0c", // linux COSA/SRP synchronous serial card
 						"ttycosa1c", // linux COSA/SRP synchronous serial card
