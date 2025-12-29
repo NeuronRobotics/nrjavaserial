@@ -164,8 +164,8 @@ arm32v7:
 
 # Requires gcc-arm-linux-gnueabihf.
 arm32v7HF: export CC := arm-linux-gnueabihf-gcc
-arm32v7HF: export CFLAGS += $(LINUX_CFLAGS) -march=armv7-a
-arm32v7HF: export LDFLAGS += -march=armv7-a
+arm32v7HF: export CFLAGS += $(LINUX_CFLAGS) -march=armv7-a -mfpu=vfpv3-d16 -marm
+arm32v7HF: export LDFLAGS += -march=armv7-a -mfpu=vfpv3-d16 -marm
 arm32v7HF: export platform := linux/ARM_32
 arm32v7HF: export variant := v7_HF
 arm32v7HF:
@@ -182,8 +182,8 @@ arm32v8:
 
 # Requires gcc-arm-linux-gnueabihf.
 arm32v8HF: export CC := arm-linux-gnueabihf-gcc
-arm32v8HF: export CFLAGS += $(LINUX_CFLAGS) -march=armv8-a
-arm32v8HF: export LDFLAGS += -march=armv8-a
+arm32v8HF: export CFLAGS += $(LINUX_CFLAGS) -march=armv8-a -mfpu=neon-vfpv4 -marm
+arm32v8HF: export LDFLAGS += -march=armv8-a -mfpu=neon-vfpv4 -marm
 arm32v8HF: export platform := linux/ARM_32
 arm32v8HF: export variant := v8_HF
 arm32v8HF:

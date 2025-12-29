@@ -1,11 +1,10 @@
 plugins {
-	id "biz.aQute.bnd.builder" version "5.0.1"
-	id "com.diffplug.spotless" version "5.9.0"
+	id "biz.aQute.bnd.builder" version "7.0.0"
+	id "com.diffplug.spotless" version "6.25.0"
 }
 
 apply plugin: 'java'
 apply plugin: 'eclipse'
-apply plugin: 'maven'
 apply plugin: 'signing'
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
@@ -32,44 +31,45 @@ sourceSets {
 	}
 }
 
-jar.archiveName = "nrjavaserial-${props.'app.version'}.jar"
+jar.archiveFileName = "nrjavaserial-${props.'app.version'}.jar"
 
 repositories {
 	mavenCentral()
-	jcenter()
 }
 
 dependencies {
-	compile fileTree(dir: 'libs', includes: ['*.jar'])
-	testCompile 'junit:junit:4.12'
-	compile 'commons-net:commons-net:3.9.0'
+	implementation fileTree(dir: 'libs', includes: ['*.jar'])
+	testImplementation 'junit:junit:4.12'
+	implementation 'commons-net:commons-net:3.9.0'
 	compileOnly 'net.java.dev.jna:jna:4.4.0'
 	compileOnly 'net.java.dev.jna:jna-platform:4.4.0'
 }
 
 jar {
-	jar.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
-	bnd("Created-By": "Commonwealth Robotics Cooperative",
-		"Specification-Title": props."app.name",
-		"Specification-Version": props."app.version",
-		"Specification-Vendor": "Commonwealth Robotics Cooperative",
-		"Implementation-Title": props."app.name",
-		"Implementation-Version" : props."app.version",
-		"Implementation-Vendor": "Commonwealth Robotics Cooperative",
-		"Import-Package": "com.sun.jna.platform.win32;resolution:=optional,org.apache.commons.net.telnet;resolution:=optional,!gnu.io*,*",
-		"Export-Package": "gnu.io*"
-	)
+	bundle {
+		bnd("Created-By": "Commonwealth Robotics Cooperative",
+			"Specification-Title": props."app.name",
+			"Specification-Version": props."app.version",
+			"Specification-Vendor": "Commonwealth Robotics Cooperative",
+			"Implementation-Title": props."app.name",
+			"Implementation-Version" : props."app.version",
+			"Implementation-Vendor": "Commonwealth Robotics Cooperative",
+			"Import-Package": "com.sun.jna.platform.win32;resolution:=optional,org.apache.commons.net.telnet;resolution:=optional,!gnu.io*,*",
+			"Export-Package": "gnu.io*"
+		)
+	}
 
 }
 
 task javadocJar(type: Jar) {
-	classifier = 'javadoc'
+	archiveClassifier = 'javadoc'
 	from javadoc
 }
 
 task sourcesJar(type: Jar) {
-	classifier = 'sources'
+	archiveClassifier = 'sources'
 	from (sourceSets.main.allSource) {
 		exclude 'native/'
 	}
