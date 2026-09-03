@@ -106,12 +106,17 @@ public class RXTXPort extends SerialPort
 					z.reportln( "RXTXPort:MontitorThread:run()"); 
 				monThreadisInterrupted=false;
 				eventLoop();
-	            eis = 0;
 				if (debug)
 					z.reportln( "eventLoop() returned, this is invalid."); 
 			}catch(Throwable ex) {
 				HARDWARE_FAULT=true;
 				sendEvent(SerialPortEvent.HARDWARE_ERROR, true);
+			}finally{
+				/*
+				 * eis points into this thread's native stack frame; it becomes
+				 * invalid as soon as this thread terminates.
+				 */
+				eis = 0;
 			}
 		}
 		protected void finalize() throws Throwable 
