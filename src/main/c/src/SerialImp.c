@@ -4199,6 +4199,39 @@ fail:
 }
 
 /*----------------------------------------------------------
+clear_java_eis
+
+   accept:      JNIEnv and the RXTXPort object owning the event loop.
+   perform:     reset the Java field "eis" to 0, keeping a pending
+                exception intact.
+   return:      none
+   exceptions:  none
+   comments:    JNI calls are not allowed while an exception is pending,
+                so an exception thrown by the caller is saved and
+                rethrown around the field access.
+----------------------------------------------------------*/
+static void clear_java_eis( JNIEnv *env, jobject jobj )
+{
+	jthrowable pending = (*env)->ExceptionOccurred( env );
+	jclass jclazz;
+	jfieldID jeis;
+
+	if( pending ) (*env)->ExceptionClear( env );
+
+	jclazz = (*env)->GetObjectClass( env, jobj );
+	jeis = (*env)->GetFieldID( env, jclazz, "eis", "J" );
+	if( jeis ) (*env)->SetLongField( env, jobj, jeis, 0 );
+	else (*env)->ExceptionClear( env );
+	(*env)->DeleteLocalRef( env, jclazz );
+
+	if( pending )
+	{
+		(*env)->Throw( env, pending );
+		(*env)->DeleteLocalRef( env, pending );
+	}
+}
+
+/*----------------------------------------------------------
 finalize_event_info_struct
 
    accept:      event_info_struct for this thread.
@@ -4209,6 +4242,11 @@ finalize_event_info_struct
 ----------------------------------------------------------*/
 void finalize_event_info_struct( struct event_info_struct *eis )
 {
+	/*
+	 * The struct lives on the monitor thread's stack, so the pointer stored
+	 * in the Java object must not outlive this function.
+	 */
+	clear_java_eis( eis->env, *eis->jobj );
 	if( eis->jclazz)
 	{
 		(*eis->env)->DeleteLocalRef( eis->env, eis->jclazz );
