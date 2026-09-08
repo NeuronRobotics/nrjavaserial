@@ -1,9 +1,9 @@
 plugins {
-	id "biz.aQute.bnd.builder" version "5.0.1"
-	id "com.diffplug.spotless" version "5.9.0"
+	id("base")
+	id("biz.aQute.bnd.builder") version "7.4.0"
+	id("com.diffplug.spotless") version "8.10.2"
 	id("eclipse")
 	id("java")
-	id("maven")
 	id("signing")
 }
 
@@ -14,7 +14,7 @@ Properties props = new Properties()
 props.load(new FileInputStream(buildDir.getAbsolutePath() + "/src/main/resources/com/neuronrobotics/nrjavaserial/build.properties"))
 
 group = "com.neuronrobotics"
-archivesBaseName = "nrjavaserial"
+base.archivesName = props."app.name"
 version = props."app.version"
 
 sourceSets {
@@ -43,21 +43,32 @@ dependencies {
 }
 
 java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(8)
+	}
+
 	withJavadocJar()
 	withSourcesJar()
 }
 
 jar {
-	bnd("Created-By": "Commonwealth Robotics Cooperative",
-		"Specification-Title": props."app.name",
-		"Specification-Version": props."app.version",
-		"Specification-Vendor": "Commonwealth Robotics Cooperative",
-		"Implementation-Title": props."app.name",
-		"Implementation-Version" : props."app.version",
-		"Implementation-Vendor": "Commonwealth Robotics Cooperative",
-		"Import-Package": "com.sun.jna.platform.win32;resolution:=optional,org.apache.commons.net.telnet;resolution:=optional,!gnu.io*,*",
-		"Export-Package": "gnu.io*"
-	)
+	bundle {
+		bnd(
+			"Specification-Title": props."app.name",
+			"Specification-Version": props."app.version",
+			"Specification-Vendor": "Commonwealth Robotics Cooperative",
+			"Implementation-Title": props."app.name",
+			"Implementation-Version" : props."app.version",
+			"Implementation-Vendor": "Commonwealth Robotics Cooperative",
+			"Import-Package": [
+				"com.sun.jna.platform.win32;resolution:=optional",
+				"org.apache.commons.net.telnet;resolution:=optional",
+				"!gnu.io*",
+				"*",
+			].join(","),
+			"Export-Package": "gnu.io*",
+		)
+	}
 }
 
 // withSourcesJar() creates the sourcesJar task which, by default, packages
@@ -74,7 +85,7 @@ spotless {
 		target '*.gradle'
 
 		trimTrailingWhitespace()
-		indentWithTabs()
+		leadingSpacesToTabs()
 		endWithNewline()
 	}
 

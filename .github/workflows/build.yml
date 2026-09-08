@@ -4,6 +4,10 @@ on:
   - pull_request
 
 jobs:
+  # All of the natives-* jobs require the JDK only for its JNI headers. Those
+  # are necessarily stable over time, so we only need a higher version than
+  # Java 8 for actually running Gradle to build the library.
+
   natives-linux-windows:
     name: Linux (x86/ARM/PPC) and Windows native library compilation
     runs-on: ubuntu-latest
@@ -189,7 +193,7 @@ jobs:
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: 8
+          java-version: 25
           cache: gradle
 
       - name: Download native libraries
