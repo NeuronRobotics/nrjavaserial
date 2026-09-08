@@ -107,41 +107,62 @@ spotless {
 		eclipse()
 	}
 }
-/*
+
+// You can provide a signatory in three ways. Either:
+//
+// 1. Pass the signatory properties – signing.keyId, signing.secretKeyRingFile,
+//    and signing.password – on the command line:
+//
+//     ./gradlew ... \
+//         -Psigning.keyId=key-id \
+//         -Psigning.secretKeyRingFile=/path/to/.gnupg/secring.gpg \
+//         -Psigning.password=secret
+//
+// 2. Configure those properties in ~/.gradle/gradle.properties.
+// 3. Set the SIGNING_KEY and SIGNING_PASSWORD environment variables to an
+//    ASCII-armored PGP key and password, respectively.
+//
+// For more details on the behaviour of the properties and their expected
+// values, see the signing plugin documentation:
+//
+//     https://docs.gradle.org/current/userguide/signing_plugin.html#sec:signatory_credentials
+//
+// If a signatory has not been configured, or if the signing.skip property is
+// set, artifacts will not be signed prior to publication.
+//
+// This signing block must appear after the publishing block in order to refer
+// to the specific publication to be signed.
 signing {
-	required {
-		gradle.taskGraph.hasTask("uploadArchives")
+	if (project.hasProperty("signing.skip")) {
+		// We've been explicitly told not to sign artifacts, even if we have a
+		// configured signatory.
+	} else if (System.getenv("SIGNING_KEY") != null
+		&& System.getenv("SIGNING_PASSWORD") != null) {
+		useInMemoryPgpKeys(
+			System.getenv("SIGNING_KEY"),
+			System.getenv("SIGNING_PASSWORD"))
+
+		sign(configurations.archives.get())
+	} else if (findProperty("signing.keyId") != null
+		&& findProperty("signing.secretKeyRingFile") != null
+		&& findProperty("signing.password") != null) {
+		// No special configuration necessary for properties: the signing
+		// plugin self-configures from the signing.keyId,
+		// signing.secretKeyRingFile, and signing.password properties when
+		// populated.
+
+		sign(configurations.archives.get())
+	} else {
+		// No signatory is configured; skip signing.
 	}
-	sign configurations.archives
 }
 
+/*
 artifacts {
 	archives javadocJar
 	archives sourcesJar
 	archives jar
 }
-
-//import org.gradle.plugins.signing.Sign
-//
-//gradle.taskGraph.whenReady { taskGraph ->
-//	if (taskGraph.allTasks.any { it instanceof Sign }) {
-//		// Use Java 6's console to read from the console (no good for
-//		// a CI environment)
-//		Console console = System.console()
-//		console.printf "\n\nWe have to sign some things in this build." +
-//					   "\n\nPlease enter your signing details.\n\n"
-//
-//		def id = console.readLine("PGP Key Id: ")
-//		def file = console.readLine("PGP Secret Key Ring File (absolute path): ")
-//		def password = console.readPassword("PGP Private Key Password: ")
-//
-//		allprojects { ext."signing.keyId" = id }
-//		allprojects { ext."signing.secretKeyRingFile" = file }
-//		allprojects { ext."signing.password" = password }
-//
-//		console.printf "\nThanks.\n\n"
-//	}
-//}
 
 uploadArchives {
 	repositories {
