@@ -24,11 +24,6 @@ base.archivesName = props["app.name"] as String
 version = props["app.version"] as String
 
 sourceSets {
-	test {
-		java {
-			srcDirs("test/src")
-		}
-	}
 	main {
 		resources {
 			srcDirs("src/main/resources", "src/main/c/resources")
