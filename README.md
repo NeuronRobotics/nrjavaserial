@@ -184,6 +184,26 @@ try{
 serial.disconnect();
 ```
 
+# Testing
+
+In a regular build environment,
+unit tests can be run as normal
+via the Gradle `test` task:
+
+```
+$ ./gradlew test
+```
+
+If you want to run the test suite
+on a non-development machine,
+the `testShadowJar` task
+will generate a self-contained executable JAR:
+
+```
+$ ./gradlew testShadowJar
+$ java -jar build/libs/nrjavaserial-*-test.jar execute --select-package=gnu.io
+```
+
 ## Contributors
 
 ### Code Contributors

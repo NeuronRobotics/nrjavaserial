@@ -1,10 +1,13 @@
 import java.io.FileInputStream
 import java.util.Properties
 
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
 	id("base")
 	id("biz.aQute.bnd.builder") version "7.4.0"
 	id("com.diffplug.spotless") version "8.10.2"
+	id("com.gradleup.shadow") version "9.6.1"
 	id("eclipse")
 	id("java")
 	id("maven-publish")
@@ -39,6 +42,7 @@ repositories {
 dependencies {
 	testImplementation("org.junit.jupiter:junit-jupiter:5.14.4")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	testRuntimeOnly("org.junit.platform:junit-platform-console")
 	implementation("commons-net:commons-net:3.9.0")
 	compileOnly("net.java.dev.jna:jna:4.4.0")
 	compileOnly("net.java.dev.jna:jna-platform:4.4.0")
@@ -57,6 +61,29 @@ tasks.test {
 	useJUnitPlatform()
 	testLogging {
 			events("passed", "skipped", "failed")
+	}
+}
+
+tasks.assemble {
+	dependsOn("testShadowJar")
+}
+
+// Out of the box, the Shadow plugin registers a `shadowJar` task which
+// generates a shadowed JAR in `build/libs/` with an `-all.jar` suffix. This
+// sort of thing is fine for applications, but we only want to shadow our
+// executable test JAR, so we'll disable this default task.
+tasks.shadowJar {
+	isEnabled = false
+}
+
+tasks.register<ShadowJar>("testShadowJar") {
+	archiveClassifier = "test"
+
+	from(sourceSets.map { it.output })
+	configurations = project.configurations.testRuntimeClasspath.map { listOf(it) }
+
+	manifest {
+		attributes(mapOf("Main-Class" to "org.junit.platform.console.ConsoleLauncher"))
 	}
 }
 
