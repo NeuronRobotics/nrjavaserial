@@ -7,6 +7,7 @@ plugins {
 	id("com.diffplug.spotless") version "8.10.2"
 	id("eclipse")
 	id("java")
+	id("maven-publish")
 	id("signing")
 }
 
@@ -142,7 +143,7 @@ signing {
 			System.getenv("SIGNING_KEY"),
 			System.getenv("SIGNING_PASSWORD"))
 
-		sign(configurations.archives.get())
+		sign(publishing.publications)
 	} else if (findProperty("signing.keyId") != null
 		&& findProperty("signing.secretKeyRingFile") != null
 		&& findProperty("signing.password") != null) {
@@ -151,61 +152,85 @@ signing {
 		// signing.secretKeyRingFile, and signing.password properties when
 		// populated.
 
-		sign(configurations.archives.get())
+		sign(publishing.publications)
 	} else {
 		// No signatory is configured; skip signing.
 	}
 }
 
-/*
-artifacts {
-	archives javadocJar
-	archives sourcesJar
-	archives jar
-}
+// You can provide publication configuration in three ways. Either:
+//
+// 1. Pass the username and password properties on the command line:
+//
+//     ./gradlew publish \
+//         -Ppublishing.url=http://some-nexus-server/repository/maven-releases/
+//         -Ppublishing.username=username
+//         -Ppublishing.password=password
+//
+// 2. Configure those properties in ~/.gradle/gradle.properties.
+// 3. Set the PUBLISHING_URL, PUBLISHING_USERNAME, and PUBLISHING_PASSWORD
+//    environment variables to the URL, username, and password, respectively.
+publishing {
+	var publishingUrl = findProperty("publishing.url") as String?
+	var publishingUsername = findProperty("publishing.username") as String?
+	var publishingPassword = findProperty("publishing.password") as String?
 
-uploadArchives {
+	if (System.getenv("PUBLISHING_URL") != null
+		&& System.getenv("PUBLISHING_USERNAME") != null
+		&& System.getenv("PUBLISHING_PASSWORD") != null) {
+		publishingUrl = System.getenv("PUBLISHING_URL")
+		publishingUsername = System.getenv("PUBLISHING_USERNAME")
+		publishingPassword = System.getenv("PUBLISHING_PASSWORD")
+	}
+
 	repositories {
-		mavenDeployer {
-			beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-		repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-			authentication(userName: ossrhUsername, password: ossrhPassword)
+		maven {
+			name = "externallyConfigured"
+			url = uri(publishingUrl ?: "http://localhost:8081/repository/maven-releases/")
+			isAllowInsecureProtocol = true
+			credentials {
+				username = publishingUsername
+				password = publishingPassword
+			}
 		}
+	}
 
-		snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-			authentication(userName: ossrhUsername, password: ossrhPassword)
-		}
+	publications {
+		register<MavenPublication>("nrJavaSerial") {
+			pom {
+				// By default, the artifact ID is derived from the name of the
+				// directory housing this file. If we don't specifically
+				// override that, we'll end up with an unexpected artifact ID
+				// if the project directory is called something other than
+				// “nrjavaserial”.
+				artifactId = props["app.name"] as String
+				name = "NRJavaSerial"
+				description = "A fork of the RXTX library with a focus on ease of use and embeddability in other libraries."
+				url = "https://nrjs.org"
 
-
-			pom.project {
-				name 'NRJavaSerial'
-				packaging 'jar'
-				description 'A fork of the RXTX library with a focus on ease of use and embeddability in other libraries.'
-				url 'http://neuronrobotics.com'
+				from(components["java"])
 
 				scm {
-					connection			'scm:git:https://github.com/NeuronRobotics/nrjavaserial.git'
-					developerConnection	'scm:git:git@github.com:NeuronRobotics/nrjavaserial.git'
-					url					'https://github.com/NeuronRobotics/nrjavaserial'
+					connection = "scm:git:https://github.com/NeuronRobotics/nrjavaserial.git"
+					developerConnection = "scm:git:git@github.com:NeuronRobotics/nrjavaserial.git"
+					url = "https://github.com/NeuronRobotics/nrjavaserial"
 				}
 
 				licenses {
 					license {
-						name	'The Apache License, Version 2.0'
-						url		'http://www.apache.org/licenses/LICENSE-2.0.txt'
+						name = "RXTX License v 2.1 - LGPL v 2.1 + Linking Over Controlled Interface"
+						url = "https://raw.githubusercontent.com/NeuronRobotics/nrjavaserial/master/LICENSE"
 					}
 				}
 
 				developers {
 					developer {
-						id		'madhephaestus'
-						name	'Kevin Harrington'
-						email	'kharrington@neuronrobotics.com'
+						id = "madhephaestus"
+						name = "Kevin Harrington"
+						email = "kharrington@neuronrobotics.com"
 					}
 				}
 			}
 		}
 	}
 }
-*/
