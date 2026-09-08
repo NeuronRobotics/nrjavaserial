@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
 	id("base")
 	id("biz.aQute.bnd.builder") version "7.4.0"
@@ -7,26 +10,28 @@ plugins {
 	id("signing")
 }
 
-[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+tasks.withType<JavaCompile> {
+	options.encoding = "UTF-8"
+}
 
-File buildDir = file(".");
-Properties props = new Properties()
-props.load(new FileInputStream(buildDir.getAbsolutePath() + "/src/main/resources/com/neuronrobotics/nrjavaserial/build.properties"))
+val buildDir = file(".")
+val props = Properties()
+props.load(FileInputStream("${buildDir.getAbsolutePath()}/src/main/resources/com/neuronrobotics/nrjavaserial/build.properties"))
 
 group = "com.neuronrobotics"
-base.archivesName = props."app.name"
-version = props."app.version"
+base.archivesName = props["app.name"] as String
+version = props["app.version"] as String
 
 sourceSets {
 	test {
 		java {
-			srcDirs = ["test/src"]
+			srcDirs("test/src")
 		}
 	}
 	main {
 		resources {
-			srcDirs = ["src/main/resources", "src/main/c/resources"]
-			includes = ["**/*.so","**/*.dll", "**/*.jnilib","**/*.properties"]
+			srcDirs("src/main/resources", "src/main/c/resources")
+			include("**/*.so", "**/*.dll", "**/*.jnilib", "**/*.properties")
 		}
 	}
 }
@@ -38,8 +43,8 @@ repositories {
 dependencies {
 	testImplementation("junit:junit:4.12")
 	implementation("commons-net:commons-net:3.9.0")
-	compileOnly 'net.java.dev.jna:jna:4.4.0'
-	compileOnly 'net.java.dev.jna:jna-platform:4.4.0'
+	compileOnly("net.java.dev.jna:jna:4.4.0")
+	compileOnly("net.java.dev.jna:jna-platform:4.4.0")
 }
 
 java {
@@ -51,23 +56,28 @@ java {
 	withSourcesJar()
 }
 
-jar {
+// Matches both org.gradle.api.tasks.Copy and org.gradle.jvm.tasks.Jar.
+tasks.withType<AbstractCopyTask> {
+	duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+tasks.jar {
 	bundle {
-		bnd(
-			"Specification-Title": props."app.name",
-			"Specification-Version": props."app.version",
-			"Specification-Vendor": "Commonwealth Robotics Cooperative",
-			"Implementation-Title": props."app.name",
-			"Implementation-Version" : props."app.version",
-			"Implementation-Vendor": "Commonwealth Robotics Cooperative",
-			"Import-Package": [
+		bnd(mapOf(
+			"Specification-Title" to props["app.name"],
+			"Specification-Version" to props["app.version"],
+			"Specification-Vendor" to "Commonwealth Robotics Cooperative",
+			"Implementation-Title" to props["app.name"],
+			"Implementation-Version" to props["app.version"],
+			"Implementation-Vendor" to "Commonwealth Robotics Cooperative",
+			"Import-Package" to listOf(
 				"com.sun.jna.platform.win32;resolution:=optional",
 				"org.apache.commons.net.telnet;resolution:=optional",
 				"!gnu.io*",
 				"*",
-			].join(","),
-			"Export-Package": "gnu.io*",
-		)
+			).joinToString(","),
+			"Export-Package" to "gnu.io*",
+		))
 	}
 }
 
@@ -75,14 +85,16 @@ jar {
 // sourceSets.main.allSource. Including native libraries in that source set is
 // the easiest way to include them the final library archive, but we don't want
 // an extra half meg of binaries to be included in the source archive.
-sourcesJar.exclude("native/")
+tasks.named<Jar>("sourcesJar") {
+	exclude("native/")
+}
 
 spotless {
-	enforceCheck false
-	ratchetFrom 'origin/master'
+	isEnforceCheck = false
+	ratchetFrom = "origin/master"
 
-	format 'misc', {
-		target '*.gradle'
+	format("misc") {
+		target("*.gradle")
 
 		trimTrailingWhitespace()
 		leadingSpacesToTabs()
