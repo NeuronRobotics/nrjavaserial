@@ -104,7 +104,7 @@ public class NativeResource {
 
 	private void loadLib(String name) throws NativeResourceException {
 		try {
-			if(OSUtil.isARM()) {
+			if (OSUtil.isARM() && !OSUtil.isOSX()) {
 				//System.err.println("Attempting arm variants");
 				for(String libName : OSUtil.is64Bit() ? ARM64_LIBS : ARM32_LIBS) {
 					try {

@@ -224,16 +224,34 @@ ppc:
 	$(MAKE) -f natives.mk
 
 # Requires a macOS host.
-osx: export CFLAGS += -I$(JAVA_HOME)/include/darwin \
-                      -target x86_64-apple-macos10.7
-osx: export LDFLAGS := -target x86_64-apple-macos10.7 \
-                       -dynamiclib \
-                       -framework IOKit \
-                       -framework CoreFoundation
-osx: export objects := fuserImp.o SerialImp.o
-osx: export platform := osx
-osx: export lib_type := jnilib
-osx:
+osx: resources/native/osx/libNRJavaSerial.jnilib
+resources/native/osx/libNRJavaSerial.jnilib: osxintel osxarm64
+	lipo -create -output $@ \
+	     resources/native/osx/libNRJavaSerialintel.jnilib \
+	     resources/native/osx/libNRJavaSerialarm64.jnilib
+
+MACOS_CFLAGS := -I$(JAVA_HOME)/include/darwin
+MACOS_LDFLAGS := -dynamiclib -framework IOKit -framework CoreFoundation
+MACOS_OBJECTS := fuserImp.o SerialImp.o
+
+# Requires a macOS host.
+osxintel: export CFLAGS += $(MACOS_CFLAGS) -target x86_64-apple-macos10.7
+osxintel: export LDFLAGS := $(MACOS_LDFLAGS) -target x86_64-apple-macos10.7
+osxintel: export objects := $(MACOS_OBJECTS)
+osxintel: export platform := osx
+osxintel: export variant := intel
+osxintel: export lib_type := jnilib
+osxintel:
+	$(MAKE) -f natives.mk
+
+# Requires a macOS host, Xcode 12.2+, and an AArch64 JDK in JAVA_HOME.
+osxarm64: export CFLAGS += $(MACOS_CFLAGS) -target arm64-apple-macos11
+osxarm64: export LDFLAGS := $(MACOS_LDFLAGS) -target arm64-apple-macos11
+osxarm64: export objects := $(MACOS_OBJECTS)
+osxarm64: export platform := osx
+osxarm64: export variant := arm64
+osxarm64: export lib_type := jnilib
+osxarm64:
 	$(MAKE) -f natives.mk
 
 freebsd: freebsd32 freebsd64
