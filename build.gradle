@@ -35,7 +35,6 @@ jar.archiveName = "nrjavaserial-${props.'app.version'}.jar"
 
 repositories {
 	mavenCentral()
-	jcenter()
 }
 
 dependencies {
