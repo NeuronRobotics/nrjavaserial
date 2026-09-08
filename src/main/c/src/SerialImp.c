@@ -3777,23 +3777,142 @@ fail:
 	return;
 }
 
-/*----------------------------------------------------------
-unlock_monitor_thread
-
-   accept:      event_info_struct
-   perform:     unlock the monitor thread so event notification can start.
-   return:      none
-   exceptions:  none
-   comments:    Events can be missed otherwise.
-----------------------------------------------------------*/
-
-void unlock_monitor_thread( struct event_info_struct *eis )
+/**
+ * Write-lock the monitor thread to protect state mutation.
+ *
+ * Blocks until the write lock comes available.
+ *
+ * @param [in] env the JNI environment
+ * @param [in] obj an RXTXPort instance
+ * @return 0 on success; 1 on error
+ */
+int lock_monitor_thread(JNIEnv *env, jobject jobj)
 {
-	JNIEnv *env = eis->env;
-	jobject jobj = *(eis->jobj);
+	jfieldID monitorThreadStateWriteLockField = (*env)->GetFieldID(
+		env,
+		(*env)->GetObjectClass(env, jobj),
+		"monitorThreadStateWriteLock",
+		"Ljava/util/concurrent/locks/Lock;");
+	if ((*env)->ExceptionCheck(env)) {
+		return 1;
+	}
 
-	jfieldID jfid = (*env)->GetFieldID( env, (*env)->GetObjectClass( env, jobj ), "MonitorThreadLock", "Z" );
-	(*env)->SetBooleanField( env, jobj, jfid, (jboolean) 0 );
+	jobject monitorThreadStateWriteLock = (*env)->GetObjectField(
+		env,
+		jobj,
+		monitorThreadStateWriteLockField);
+	if ((*env)->ExceptionCheck(env)) {
+		return 1;
+	}
+
+	jmethodID lock = (*env)->GetMethodID(
+		env,
+		(*env)->GetObjectClass(env, monitorThreadStateWriteLock),
+		"lock",
+		"()V");
+	if ((*env)->ExceptionCheck(env)) {
+		return 1;
+	}
+
+	(*env)->CallVoidMethod(env, monitorThreadStateWriteLock, lock);
+	if ((*env)->ExceptionCheck(env)) {
+		return 1;
+	}
+
+	return 0;
+}
+
+/**
+ * Signal that the monitor thread is ready for work.
+ *
+ * In order to signal the condition, the current thread must already hold the
+ * write lock.
+ *
+ * @param [in] env the JNI environment
+ * @param [in] obj an RXTXPort instance
+ * @return 0 on success; 1 on error
+ */
+int signal_monitor_thread_ready(JNIEnv *env, jobject jobj)
+{
+	jfieldID monitorThreadReadyField = (*env)->GetFieldID(
+		env,
+		(*env)->GetObjectClass(env, jobj),
+		"monitorThreadReady",
+		"Ljava/util/concurrent/locks/Condition;");
+	if ((*env)->ExceptionCheck(env)) {
+		return 1;
+	}
+
+	jobject monitorThreadReady = (*env)->GetObjectField(
+		env,
+		jobj,
+		monitorThreadReadyField);
+	if ((*env)->ExceptionCheck(env)) {
+		return 1;
+	}
+
+	jmethodID signal = (*env)->GetMethodID(
+		env,
+		(*env)->GetObjectClass(env, monitorThreadReady),
+		"signal",
+		"()V");
+	if ((*env)->ExceptionCheck(env)) {
+		return 1;
+	}
+
+	(*env)->CallVoidMethod(env, monitorThreadReady, signal);
+	if ((*env)->ExceptionCheck(env)) {
+		return 1;
+	}
+
+	return 0;
+}
+
+/**
+ * Unlock the write lock on the monitor thread to permit read and write access
+ * by other threads.
+ *
+ * In order to unlock the monitor thread, the current thread must already hold
+ * the write lock.
+ *
+ * @param [in] env the JNI environment
+ * @param [in] obj an RXTXPort instance
+ * @return 0 on success; 1 on error
+ */
+int unlock_monitor_thread(JNIEnv *env, jobject jobj)
+{
+	jfieldID monitorThreadStateWriteLockField = (*env)->GetFieldID(
+		env,
+		(*env)->GetObjectClass(env, jobj),
+		"monitorThreadStateWriteLock",
+		"Ljava/util/concurrent/locks/Lock;");
+	if ((*env)->ExceptionCheck(env)) {
+		return 1;
+	}
+
+	jobject monitorThreadStateWriteLock = (*env)->GetObjectField(
+		env,
+		jobj,
+		monitorThreadStateWriteLockField);
+	if ((*env)->ExceptionCheck(env)) {
+		return 1;
+	}
+
+	jmethodID unlock = (*env)->GetMethodID(
+		env,
+		(*env)->GetObjectClass(env, monitorThreadStateWriteLock),
+		"unlock",
+		"()V");
+	if ((*env)->ExceptionCheck(env)) {
+		return 1;
+	}
+
+	(*env)->CallVoidMethod(env, monitorThreadStateWriteLock, unlock);
+	if ((*env)->ExceptionCheck(env)) {
+		return 1;
+	}
+
+	return 0;
 }
 
 /*----------------------------------------------------------
@@ -4239,6 +4358,8 @@ RXTXPort.eventLoop
 ----------------------------------------------------------*/
 JNIEXPORT void JNICALL RXTXPort(eventLoop)( JNIEnv *env, jobject jobj )
 {
+	if (lock_monitor_thread(env, jobj)) goto end;
+
 #ifdef WIN32
 	int i = 0;
 #endif /* WIN32 */
@@ -4251,16 +4372,37 @@ JNIEXPORT void JNICALL RXTXPort(eventLoop)( JNIEnv *env, jobject jobj )
 	ENTER( "eventLoop\n" );
 	if ( !initialise_event_info_struct( &eis ) ) goto end;
 	if ( !init_threads( &eis ) ) goto end;
-	unlock_monitor_thread( &eis );
+
+	if (signal_monitor_thread_ready(env, jobj)) goto end;
+	if (unlock_monitor_thread(env, jobj)) goto end;
+
 	do{
 		report_time_eventLoop( );
 		do {
 			if(RXTXPort(nativeavailable)( env, jobj )<0){
 				report("eventLoop: Hardware Missing\n");
-				finalize_threads( &eis );
-				finalize_event_info_struct( &eis );
-				LEAVE("eventLoop:error");
-				return;
+				/* The hardware is gone, so we need to stop the monitor thread.
+				 * Conveniently, this function is supposed to be an infinite
+				 * loop, so once we return from it to Java-land, the thread will
+				 * close up shop. However, that also means that we need to make
+				 * sure any native cleanup happens before we return, or else it
+				 * will never run. We'll trigger that by the usual method to
+				 * ensure platform-specific cleanup happens (e.g., killing the
+				 * drain loop). That will also set `eis.closing`, so the
+				 * function will return as usual in the next block.
+				 *
+				 * `nativeavailable()` has thrown an exception at this point, so
+				 * in order to call anything else which uses exceptions (like
+				 * the locking functions), we'll temporarily clear the exception
+				 * then reset it before continuing. */
+				jthrowable hardwareException = (*env)->ExceptionOccurred(env);
+				(*env)->ExceptionClear(env);
+
+				if (lock_monitor_thread(env, jobj)) goto end;
+				RXTXPort(interruptEventLoop)(env, jobj);
+				if (unlock_monitor_thread(env, jobj)) goto end;
+
+				(*env)->Throw(env, hardwareException);
 			}
 			/* nothing goes between this call and select */
 			if( eis.closing )
@@ -4949,7 +5091,22 @@ JNIEXPORT void JNICALL RXTXPort(interruptEventLoop)(JNIEnv *env,
 			usleep(1000);
 		}
 	}
+
 	index->eventloop_interrupted = 1;
+
+	jfieldID monThreadisInterruptedField = (*env)->GetFieldID(
+		env,
+		(*env)->GetObjectClass(env, jobj),
+		"monThreadisInterrupted",
+		"Z");
+	if ((*env)->ExceptionCheck(env)) {
+		return;
+	}
+	(*env)->SetBooleanField(env, jobj, monThreadisInterruptedField, JNI_TRUE);
+	if ((*env)->ExceptionCheck(env)) {
+		return;
+	}
+
 	/*
 	Many OS's need a thread running to determine if output buffer is
 	empty.  For Linux and Win32 it is not needed.  So closing is used to
