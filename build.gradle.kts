@@ -37,7 +37,8 @@ repositories {
 }
 
 dependencies {
-	testImplementation("junit:junit:4.12")
+	testImplementation("org.junit.jupiter:junit-jupiter:5.14.4")
+	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	implementation("commons-net:commons-net:3.9.0")
 	compileOnly("net.java.dev.jna:jna:4.4.0")
 	compileOnly("net.java.dev.jna:jna-platform:4.4.0")
@@ -50,6 +51,13 @@ java {
 
 	withJavadocJar()
 	withSourcesJar()
+}
+
+tasks.test {
+	useJUnitPlatform()
+	testLogging {
+			events("passed", "skipped", "failed")
+	}
 }
 
 // Matches both org.gradle.api.tasks.Copy and org.gradle.jvm.tasks.Jar.
