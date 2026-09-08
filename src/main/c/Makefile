@@ -58,6 +58,14 @@ include JAVA_HOME.mk
 
 include platform.mk
 
+# Most of the time, GCC is called `gcc` and is installed from a `gcc` package.
+# However, sometimes a distribution packages multiple versions of GCC. In this
+# case, both the binary and package names of non-default versions are suffixed
+# (e.g., `gcc-8`). We can't use the standard CC variable to adapt to this,
+# because each target already overrides that variable with the name of the
+# appropriate cross compiler.
+GCC ?= gcc
+
 # In all cases, we want to include the system JNI headers, our own headers,
 # crank the optimization level, and compile position-independent code so that
 # it will work as a library (dlopen(3) et al. can load it into any memory).
@@ -87,13 +95,13 @@ all:
 	$(error $(NO_TARGET_PLATFORM_SPECIFIED))
 
 crosstools:
-	apt install --install-recommends \
-	            gcc-i686-linux-gnu \
-	            gcc-arm-linux-gnueabi \
-	            gcc-arm-linux-gnueabihf \
-	            gcc-aarch64-linux-gnu \
+	apt-get --assume-yes install \
+	            $(GCC)-i686-linux-gnu \
+	            $(GCC)-arm-linux-gnueabi \
+	            $(GCC)-arm-linux-gnueabihf \
+	            $(GCC)-aarch64-linux-gnu \
 	            gcc-mingw-w64 \
-	            gcc-powerpc-linux-gnu
+	            $(GCC)-powerpc-linux-gnu
 
 # Does not include Android, because Android toolchains are large, not commonly
 # available, and the resulting library is not typically desired.
@@ -108,7 +116,7 @@ LINUX_CFLAGS += -U_FORTIFY_SOURCE
 endif
 
 # Requires gcc-i686-linux-gnu.
-linux32: export CC := i686-linux-gnu-gcc
+linux32: export CC := i686-linux-gnu-$(GCC)
 linux32: export CFLAGS += $(LINUX_CFLAGS) -m32
 linux32: export LDFLAGS += -m32
 linux32: export platform := linux/x86_32
@@ -116,6 +124,7 @@ linux32:
 	$(MAKE) -f natives.mk
 
 # Requires gcc.
+linux64: export CC := $(GCC)
 linux64: export CFLAGS += $(LINUX_CFLAGS) -m64
 linux64: export platform := linux/x86_64
 linux64:
@@ -127,7 +136,7 @@ arm: arm32v5 \
      arm32v8 arm32v8HF arm64v8
 
 # Requires gcc-arm-linux-gnueabi.
-arm32v5: export CC := arm-linux-gnueabi-gcc
+arm32v5: export CC := arm-linux-gnueabi-$(GCC)
 arm32v5: export CFLAGS += $(LINUX_CFLAGS) -march=armv5t
 arm32v5: export LDFLAGS += -march=armv5t
 arm32v5: export platform := linux/ARM_32
@@ -136,7 +145,7 @@ arm32v5:
 	$(MAKE) -f natives.mk
 
 # Requires gcc-arm-linux-gnueabi.
-arm32v6: export CC := arm-linux-gnueabi-gcc
+arm32v6: export CC := arm-linux-gnueabi-$(GCC)
 arm32v6: export CFLAGS += $(LINUX_CFLAGS) -march=armv6
 arm32v6: export LDFLAGS += -march=armv6
 arm32v6: export platform := linux/ARM_32
@@ -145,16 +154,16 @@ arm32v6:
 	$(MAKE) -f natives.mk
 
 # Requires gcc-arm-linux-gnueabihf.
-arm32v6HF: export CC := arm-linux-gnueabihf-gcc
-arm32v6HF: export CFLAGS += $(LINUX_CFLAGS) -march=armv6 -mfpu=vfp -marm
-arm32v6HF: export LDFLAGS += -march=armv6 -mfpu=vfp -marm
+arm32v6HF: export CC := arm-linux-gnueabihf-$(GCC)
+arm32v6HF: export CFLAGS += $(LINUX_CFLAGS) -march=armv6+fp -marm
+arm32v6HF: export LDFLAGS += -march=armv6+fp -marm
 arm32v6HF: export platform := linux/ARM_32
 arm32v6HF: export variant := v6_HF
 arm32v6HF:
 	$(MAKE) -f natives.mk
 
 # Requires gcc-arm-linux-gnueabi.
-arm32v7: export CC := arm-linux-gnueabi-gcc
+arm32v7: export CC := arm-linux-gnueabi-$(GCC)
 arm32v7: export CFLAGS += $(LINUX_CFLAGS) -march=armv7-a
 arm32v7: export LDFLAGS += -march=armv7-a
 arm32v7: export platform := linux/ARM_32
@@ -163,16 +172,16 @@ arm32v7:
 	$(MAKE) -f natives.mk
 
 # Requires gcc-arm-linux-gnueabihf.
-arm32v7HF: export CC := arm-linux-gnueabihf-gcc
-arm32v7HF: export CFLAGS += $(LINUX_CFLAGS) -march=armv7-a
-arm32v7HF: export LDFLAGS += -march=armv7-a
+arm32v7HF: export CC := arm-linux-gnueabihf-$(GCC)
+arm32v7HF: export CFLAGS += $(LINUX_CFLAGS) -march=armv7-a+fp
+arm32v7HF: export LDFLAGS += -march=armv7-a+fp
 arm32v7HF: export platform := linux/ARM_32
 arm32v7HF: export variant := v7_HF
 arm32v7HF:
 	$(MAKE) -f natives.mk
 
 # Requires gcc-arm-linux-gnueabi.
-arm32v8: export CC := arm-linux-gnueabi-gcc
+arm32v8: export CC := arm-linux-gnueabi-$(GCC)
 arm32v8: export CFLAGS += $(LINUX_CFLAGS) -march=armv8-a
 arm32v8: export LDFLAGS += -march=armv8-a
 arm32v8: export platform := linux/ARM_32
@@ -181,18 +190,18 @@ arm32v8:
 	$(MAKE) -f natives.mk
 
 # Requires gcc-arm-linux-gnueabihf.
-arm32v8HF: export CC := arm-linux-gnueabihf-gcc
-arm32v8HF: export CFLAGS += $(LINUX_CFLAGS) -march=armv8-a
-arm32v8HF: export LDFLAGS += -march=armv8-a
+arm32v8HF: export CC := arm-linux-gnueabihf-$(GCC)
+arm32v8HF: export CFLAGS += $(LINUX_CFLAGS) -march=armv8-a -mfpu=neon-fp-armv8
+arm32v8HF: export LDFLAGS += -march=armv8-a -mfpu=neon-fp-armv8
 arm32v8HF: export platform := linux/ARM_32
 arm32v8HF: export variant := v8_HF
 arm32v8HF:
 	$(MAKE) -f natives.mk
 
 # Requires gcc-aarch64-linux-gnu.
-arm64v8: export CC := aarch64-linux-gnu-gcc
-arm64v8: export CFLAGS += $(LINUX_CFLAGS) -march=armv8-a
-arm64v8: export LDFLAGS += -march=armv8-a
+arm64v8: export CC := aarch64-linux-gnu-$(GCC)
+arm64v8: export CFLAGS += $(LINUX_CFLAGS) -march=armv8-a+fp
+arm64v8: export LDFLAGS += -march=armv8-a+fp
 arm64v8: export platform := linux/ARM_64
 arm64v8: export variant := v8
 arm64v8:
@@ -208,15 +217,19 @@ android:
 	$(MAKE) -f natives.mk
 
 # Requires gcc-powerpc-linux-gnu.
-ppc: export CC := powerpc-linux-gnu-gcc
+ppc: export CC := powerpc-linux-gnu-$(GCC)
 ppc: export CFLAGS += $(LINUX_CFLAGS)
 ppc: export platform := linux/PPC
 ppc:
 	$(MAKE) -f natives.mk
 
 # Requires a macOS host.
-osx: export CFLAGS += -I$(JAVA_HOME)/include/darwin -arch x86_64
-osx: export LDFLAGS := -arch x86_64 -dynamiclib -framework JavaVM -framework IOKit -framework CoreFoundation
+osx: export CFLAGS += -I$(JAVA_HOME)/include/darwin \
+                      -target x86_64-apple-macos10.7
+osx: export LDFLAGS := -target x86_64-apple-macos10.7 \
+                       -dynamiclib \
+                       -framework IOKit \
+                       -framework CoreFoundation
 osx: export objects := fuserImp.o SerialImp.o
 osx: export platform := osx
 osx: export lib_type := jnilib
