@@ -202,7 +202,7 @@ jobs:
           path: src/main/c/resources/native
 
       - name: Build the Java library
-        run: ./gradlew build
+        run: ./gradlew assemble
 
       - name: Determine commit hash for artifact filename
         id: vars
@@ -213,3 +213,102 @@ jobs:
         with:
           name: nrjavaserial-${{steps.vars.outputs.short-rev}}
           path: build/libs/*.jar
+
+  # These smoke tests provide only the most rudimentary assurance that the
+  # native libraries built correctly. Eventually, it would be wonderful to do
+  # hardware-in-the-loop testing (either by running the tests in VMs where we
+  # can control the serial port configuration, or with actual hardware). For
+  # now, this coverage helps ensure that we haven't catastrophically broken the
+  # most basic operational fundamentals on the most accessible test platforms.
+
+  smoke-test-linux-x86_64-8:
+    name: Linux (x86_64) Java 8 smoke test
+    runs-on: ubuntu-latest
+
+    needs:
+      - java
+
+    steps:
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 8
+
+      - name: Download tests
+        uses: actions/download-artifact@v8
+        with:
+          pattern: nrjavaserial-*
+
+      - name: Run tests
+        run: |
+          java -jar nrjavaserial-*-test.jar execute --select-package=gnu.io
+
+  smoke-test-macos-x86_64-8:
+    name: macOS (x86_64) Java 8 smoke test
+    runs-on: macos-15-intel
+
+    needs:
+      - java
+
+    steps:
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: zulu
+          java-version: 8
+
+      - name: Download tests
+        uses: actions/download-artifact@v8
+        with:
+          pattern: nrjavaserial-*
+
+      - name: Run tests
+        run: |
+          java -jar nrjavaserial-*-test.jar execute --select-package=gnu.io
+
+  smoke-test-macos-arm64-8:
+    name: macOS (arm64) Java 8 smoke test
+    runs-on: macos-latest
+
+    needs:
+      - java
+
+    steps:
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: zulu
+          java-version: 8
+
+      - name: Download tests
+        uses: actions/download-artifact@v8
+        with:
+          pattern: nrjavaserial-*
+
+      - name: Run tests
+        run: |
+          java -jar nrjavaserial-*-test.jar execute --select-package=gnu.io
+
+  smoke-test-windows-x86_64-8:
+    name: Windows (x86_64) Java 8 smoke test
+    runs-on: windows-latest
+
+    needs:
+      - java
+
+    steps:
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 8
+
+      - name: Download tests
+        uses: actions/download-artifact@v8
+        with:
+          pattern: nrjavaserial-*
+
+      - name: Run tests
+        run: |
+          java -jar (Get-Item .\nrjavaserial-*-test.jar).FullName execute --select-package=gnu.io
