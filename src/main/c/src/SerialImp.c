@@ -4424,11 +4424,11 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
 		fd=localOpen ( name, O_RDONLY | O_NONBLOCK |O_NOCTTY);
 		int cmd=FD_CLOEXEC|F_SETFL;
 		//report_error("\ntestRead(): Setting ownership flags");
-		ret= fcntl(fd,F_SETOWN,getpid());
+		fcntl(fd,F_SETOWN,getpid());
 		//report_error( strerror(errno) );
 
 		//report_error("\ntestRead(): Forcing unlock flags");
-		ret = fcntl(fd,F_UNLCK);
+		fcntl(fd,F_UNLCK);
 		//report_error( strerror(errno) );
 
 		//report_error("\ntestRead(): Setting read/write flags");
