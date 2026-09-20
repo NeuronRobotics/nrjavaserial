@@ -373,7 +373,10 @@ int configure_port( int fd )
 
 	if( fd < 0 ) goto fail;
 
-	if( tcgetattr( fd, &ttyset ) < 0 ) goto fail;
+	if( tcgetattr( fd, &ttyset ) < 0 ) {
+		if (errno == EINVAL || errno == ENOTTY) return 0;
+		goto fail;
+	}
 	ttyset.c_iflag = INPCK;
 	ttyset.c_lflag = 0;
 	ttyset.c_oflag = 0;
