@@ -4650,7 +4650,7 @@ createSerialIterator(io_iterator_t *serialIterator)
 char *
 getRegistryString(io_object_t sObj, char *propName)
 {
-    static char resultStr[256];
+    char* resultStr = malloc(256);
     CFTypeRef   nameCFstring;
     resultStr[0] = 0;
     nameCFstring = IORegistryEntryCreateCFProperty(sObj,
@@ -4658,7 +4658,7 @@ getRegistryString(io_object_t sObj, char *propName)
                                                    kCFAllocatorDefault, 0);
     if (nameCFstring)
     {
-        CFStringGetCString(nameCFstring, resultStr, sizeof(resultStr), kCFStringEncodingASCII);
+        CFStringGetCString(nameCFstring, resultStr, 256, kCFStringEncodingASCII);
         CFRelease(nameCFstring);
     }
     return resultStr;
@@ -4702,12 +4702,15 @@ registerKnownSerialPorts(JNIEnv *env, jobject jobj, jint portType) /* dima */
             {
  /* begin dima */
             	jstring	tempJstring;
-				tempJstring = (*env)->NewStringUTF(env,getRegistryString(theObject, kIODialinDeviceKey));
+                char* temp = getRegistryString(theObject, kIODialinDeviceKey);
+                tempJstring = (*env)->NewStringUTF(env,temp);
+                free(temp);
                 (*env)->CallStaticVoidMethod(env, cls, mid,tempJstring,portType,jobj);/* dima */
  				(*env)->DeleteLocalRef(env,tempJstring);
                 numPorts++;
-
- 				tempJstring = (*env)->NewStringUTF(env,getRegistryString(theObject, kIOCalloutDeviceKey));
+                temp = getRegistryString(theObject, kIOCalloutDeviceKey);
+                tempJstring = (*env)->NewStringUTF(env,temp);
+                free(temp);
                (*env)->CallStaticVoidMethod(env, cls, mid,tempJstring,portType,jobj);/* dima */
  				(*env)->DeleteLocalRef(env,tempJstring);
                 numPorts++;
@@ -4775,7 +4778,7 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(isPortPrefixValid)(JNIEnv *env,
 	jobject jobj, jstring tty_name)
 {
 	jboolean result;
-	static struct stat mystat;
+	struct stat mystat;
 	char teststring[256];
 	int fd,i;
 	const char *name = (*env)->GetStringUTFChars(env, tty_name, 0);
