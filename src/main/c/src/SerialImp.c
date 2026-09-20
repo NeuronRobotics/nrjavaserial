@@ -734,11 +734,16 @@ JNIEXPORT jint JNICALL RXTXPort(open)(
                report_error( message );
 
                close(fd);
+		UNLOCK(filename, pid);
                goto fail;
        }
 #endif /* OPEN_EXCL */
 
-	if( configure_port( fd ) ) goto fail;
+	if( configure_port( fd ) ) {
+		close(fd);
+		UNLOCK(filename, pid);
+		goto fail;
+	}
 	(*env)->ReleaseStringUTFChars( env, jstr, filename );
 	snprintf( message, sizeof(message), "open: fd returned is %i\n", fd );
 	report( message );
