@@ -4422,17 +4422,12 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
 		//report_warning("\ntestRead(): Attempting to open: ");
 		//report_warning(name);
 		fd=localOpen ( name, O_RDONLY | O_NONBLOCK |O_NOCTTY);
-		int cmd=FD_CLOEXEC|F_SETFL;
 		//report_error("\ntestRead(): Setting ownership flags");
 		ret= fcntl(fd,F_SETOWN,getpid());
 		//report_error( strerror(errno) );
 
 		//report_error("\ntestRead(): Forcing unlock flags");
 		ret = fcntl(fd,F_UNLCK);
-		//report_error( strerror(errno) );
-
-		//report_error("\ntestRead(): Setting read/write flags");
-		ret= fcntl(fd,cmd,O_RDWR | O_NOCTTY | O_NONBLOCK);
 		//report_error( strerror(errno) );
 #else
 		fd=localOpen ( name, O_RDWR | O_NOCTTY | O_NONBLOCK );
