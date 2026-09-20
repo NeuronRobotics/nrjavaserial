@@ -4458,15 +4458,16 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
 		int saved_flags;
 		struct termios saved_termios;
 
-		if (tcgetattr(fd, &ttyset) < 0) {
-			ret = JNI_FALSE;
-			goto END;
-		}
-
 		/* save, restore later */
 		if ( ( saved_flags = fcntl(fd, F_GETFL ) ) < 0 )
 		{
 			report_warning( "testRead() fcntl(F_GETFL) failed\n" );
+			ret = JNI_FALSE;
+			goto END;
+		}
+
+		if (tcgetattr(fd, &ttyset) < 0) {
+			if (errno == EINVAL || errno == ENOTTY) goto NOT_TERMINAL;
 			ret = JNI_FALSE;
 			goto END;
 		}
@@ -4490,7 +4491,7 @@ JNIEXPORT jboolean  JNICALL RXTXCommDriver(testRead)(
 			tcsetattr( fd, TCSANOW, &saved_termios );
 			goto END;
 		}
-
+NOT_TERMINAL:
 /*
 
               The following may mess up if both EAGAIN and EWOULDBLOCK
