@@ -1291,9 +1291,15 @@ drain_loop()
 void *drain_loop( void *arg )
 {
 	struct event_info_struct *eis = ( struct event_info_struct * ) arg;
+	sigset_t drain_signal;
 	/* char msg[80]; */
 	int i;
 	pthread_detach( pthread_self() );
+
+	/* Allow close() to interrupt tcdrain without changing the monitor's mask. */
+	sigemptyset( &drain_signal );
+	sigaddset( &drain_signal, SIGABRT );
+	pthread_sigmask( SIG_UNBLOCK, &drain_signal, NULL );
 
 	for(i=0;;i++)
 	{
@@ -1414,44 +1420,23 @@ int init_threads( struct event_info_struct *eis )
 {
 	jfieldID jeis;
 #if !defined(TIOCSERGETLSR) & !defined(WIN32)
-	sigset_t newmask, oldmask;
-	struct sigaction newaction, oldaction;
+	struct sigaction newaction = { 0 };
 	pthread_t tid;
 
 	report_time_start( );
 	report("init_threads:  start\n");
-	/* ignore child thread status changes */
-	sigemptyset(&newmask);
-	sigaddset(&newmask, SIGCHLD);
 
-	/* install our own signal hander */
+	/* Leave SIGCHLD under the host application's control. */
 	newaction.sa_handler = warn_sig_abort;
 	sigemptyset( &newaction.sa_mask );
 #ifdef SA_INTERRUPT
 	newaction.sa_flags = SA_INTERRUPT;
 #endif /* SA_INTERRUPT */
-#ifdef SA_RESTART
-	/* JOE: do not demand restart! we are handling EINTR */
-/*	newaction.sa_flags = SA_RESTART;*/
-#endif /* SA_RESTART */
 
-	sigaction(SIGABRT, &newaction, &oldaction);
-	sigaction(SIGCHLD, &newaction, &oldaction);
-	sigaction(SIGALRM, &newaction, &oldaction);
-	sigaction(SIGCONT, &newaction, &oldaction);
-/*
-	sigaction(SIGPOLL, &newaction, &oldaction);
-	sigaction(SIGTRAP, &newaction, &oldaction);
-	sigaction(SIGBUS, &newaction, &oldaction);
-	sigaction(SIGSEGV, &newaction, &oldaction);
-	sigaction(SIGFPE, &newaction, &oldaction);
-	sigaction(SIGILL, &newaction, &oldaction);
-
-	sigfillset(&newmask);
-	sigprocmask( SIG_SETMASK, &newmask, &oldmask );
-	pthread_sigmask( SIG_BLOCK, &newmask, &oldmask );
-*/
-	sigprocmask( SIG_SETMASK, &newmask, &oldmask );
+	/* Do not set SA_RESTART: the drain thread needs to handle EINTR. */
+	sigaction(SIGABRT, &newaction, NULL);
+	sigaction(SIGALRM, &newaction, NULL);
+	sigaction(SIGCONT, &newaction, NULL);
 
 	report("init_threads: creating drain_loop\n");
 	pthread_create( &tid, NULL, drain_loop, (void *) eis );
