@@ -252,6 +252,9 @@ jobs:
       - java
 
     steps:
+      - name: Checkout the target branch
+        uses: actions/checkout@v7
+
       - name: Setup Java
         uses: actions/setup-java@v6
         with:
@@ -266,6 +269,9 @@ jobs:
       - name: Run tests
         run: |
           java -jar nrjavaserial-*-test.jar execute --select-package=gnu.io
+
+      - name: Verify serial ports preserve SIGCHLD
+        run: ./src/test/macos/test-sigchld.sh nrjavaserial-*-test.jar
 
   smoke-test-macos-arm64-8:
     name: macOS (arm64) Java 8 smoke test
@@ -275,6 +281,9 @@ jobs:
       - java
 
     steps:
+      - name: Checkout the target branch
+        uses: actions/checkout@v7
+
       - name: Setup Java
         uses: actions/setup-java@v6
         with:
@@ -289,6 +298,9 @@ jobs:
       - name: Run tests
         run: |
           java -jar nrjavaserial-*-test.jar execute --select-package=gnu.io
+
+      - name: Verify serial ports preserve SIGCHLD
+        run: ./src/test/macos/test-sigchld.sh nrjavaserial-*-test.jar
 
   smoke-test-windows-x86_64-8:
     name: Windows (x86_64) Java 8 smoke test

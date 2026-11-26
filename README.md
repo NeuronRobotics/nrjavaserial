@@ -153,6 +153,17 @@ Our OS X natives target OS X 10.5, so to build them, you'll need an appropriate
 SDK installed. [This StackOverflow answer](http://stackoverflow.com/a/6293605)
 provides pointers for getting the appropriate SDK installed.
 
+## Testing subprocess handling on macOS
+
+Run this regression test with a JDK, Clang, and an NRJavaSerial JAR containing
+a macOS native library for your JDK's architecture. It uses a private
+pseudo-terminal and checks that opening and closing the port preserve the
+JVM's SIGCHLD action and that Java obtains a short-lived child's exit status.
+
+```sh
+./src/test/macos/test-sigchld.sh path/to/nrjavaserial.jar
+```
+
 # How to use NRSerialPort objects
 ```
 import gnu.io.NRSerialPort;
